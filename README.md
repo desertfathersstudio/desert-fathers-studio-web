@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Desert Fathers Studio — Website
 
-## Getting Started
+Next.js 16 storefront for [desertfathersstudio.com](https://desertfathersstudio.com).
 
-First, run the development server:
+## Folder structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+dfs-website/
+├── app/
+│   ├── (d2c)/              ← Public storefront (desertfathersstudio.com)
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── wholesale/          ← Wholesale portal (wholesale.desertfathersstudio.com)
+│   ├── admin/              ← Admin dashboard (admin.desertfathersstudio.com)
+│   ├── layout.tsx          ← Root layout (fonts, html/body shell)
+│   └── globals.css         ← Brand token system + base styles
+├── components/
+│   ├── shared/             ← Logo, StickerCard — used by all three fronts
+│   ├── d2c/                ← Nav, HeroSection, FeaturedProducts, BrandStory, Footer
+│   ├── wholesale/
+│   └── admin/
+├── lib/
+│   └── utils.ts            ← cn() helper
+├── types/                  ← Shared TypeScript types
+├── hooks/                  ← Custom React hooks
+├── proxy.ts                ← Subdomain routing (Next.js 16 proxy)
+├── PRODUCT.md              ← Impeccable context: brand, users, tone, anti-references
+└── DESIGN.md               ← Impeccable context: colors, typography, components
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### How subdomain routing works
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`proxy.ts` reads the `host` header and rewrites internally:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| URL | Serves from |
+|---|---|
+| `desertfathersstudio.com` | `app/(d2c)/` |
+| `wholesale.desertfathersstudio.com` | `app/wholesale/` |
+| `admin.desertfathersstudio.com` | `app/admin/` |
 
-## Learn More
+**Local dev:** use query params to simulate subdomains:
+- `localhost:3000` → D2C storefront
+- `localhost:3000?front=wholesale` → Wholesale portal
+- `localhost:3000?front=admin` → Admin dashboard
 
-To learn more about Next.js, take a look at the following resources:
+## Local development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+## Deploys
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Hosted on Vercel. Every push to `main` triggers a production deploy. PRs get preview URLs automatically.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Manual deploy: `vercel --prod`
+
+## Design skills
+
+All three skill sets are installed and active when Claude Code opens this project.
+
+| Skill | Location | How to invoke |
+|---|---|---|
+| **Taste Skill** (9 sub-skills) | `.agents/skills/` | "Apply the high-end-visual-design skill" / "use design-taste-frontend" |
+| **Emil Kowalski** | `.agents/skills/emil-design-eng/` | "Apply Emil's design principles to this component" |
+| **Impeccable** (23 commands) | `.claude/skills/impeccable/` | `/impeccable polish`, `/impeccable audit`, `/impeccable critique`, `/impeccable bolder`, `/impeccable animate`, `/impeccable colorize`, etc. |
+
+Impeccable reads `PRODUCT.md` and `DESIGN.md` at project root for brand context. Keep both files updated as the design evolves.
+
+## Environment variables
+
+Copy `.env.example` → `.env.local` and fill in values.
+
+| Variable | Service |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` + `ANON_KEY` + `SERVICE_ROLE_KEY` | Supabase |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` + `SECRET_KEY` + `WEBHOOK_SECRET` | Stripe |
+| `RESEND_API_KEY` | Resend |
+
+## Next steps
+
+- [ ] **Catalog page** — `/catalog` with category filter, search, sort
+- [ ] **Product detail** — `/product/[id]` with add-to-cart
+- [ ] **Cart + checkout** — Stripe Payment Element, confirmation email via Resend
+- [ ] **Supabase schema** — products, orders, wholesale accounts tables
+- [ ] **Wholesale auth** — Supabase Auth gating on wholesale subdomain
+- [ ] **Admin dashboard** — order management, inventory (replace Google Sheets)
+- [ ] **Real images** — swap placehold.co for actual sticker Drive photos
+- [ ] **Custom domain** — point desertfathersstudio.com + subdomains at Vercel
+- [ ] **Analytics** — add Vercel Analytics or Plausible
