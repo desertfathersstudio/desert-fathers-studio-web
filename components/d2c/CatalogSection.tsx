@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   CATALOG,
   CATEGORY_LABELS,
@@ -10,8 +11,8 @@ import {
   type Sticker,
 } from "@/lib/catalog";
 
-export function CatalogSection() {
-  const [active, setActive] = useState<CategoryKey>("all");
+export function CatalogSection({ initialCategory }: { initialCategory?: CategoryKey }) {
+  const [active, setActive] = useState<CategoryKey>(initialCategory ?? "all");
 
   const grouped = useMemo(() => {
     return CATEGORY_ORDER.map((key) => ({
@@ -21,7 +22,14 @@ export function CatalogSection() {
     })).filter((g) => g.items.length > 0);
   }, []);
 
-  const visible = active === "all" ? grouped : grouped.filter((g) => g.key === active);
+  const packGroup = useMemo(() => grouped.find((g) => g.key === "packs"), [grouped]);
+
+  const flatStickers = useMemo(() => {
+    return CATEGORY_ORDER.filter((k) => k !== "packs").flatMap((key) =>
+      CATALOG.filter((s) => s.category === key)
+    );
+  }, []);
+
   const totalDesigns = CATALOG.filter((s) => !s.isPack).length;
 
   return (
@@ -61,31 +69,21 @@ export function CatalogSection() {
           ))}
         </div>
 
-        {/* Grouped sections */}
-        <div className="space-y-24 md:space-y-32">
-          {visible.map(({ key, label, items }) => (
-            <div key={key}>
-              {active === "all" && (
-                <p
-                  className="text-[10px] uppercase tracking-[0.22em] font-medium mb-8"
-                  style={{
-                    color: "var(--text-muted)",
-                    paddingBottom: "1rem",
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  {label}
-                </p>
-              )}
-
-              {key === "packs" ? (
-                <PackRow items={items} />
-              ) : (
-                <StickerGrid items={items} />
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Content */}
+        {active === "all" ? (
+          <div className="space-y-10">
+            {packGroup && <PackRow items={packGroup.items} />}
+            <StickerGrid items={flatStickers} />
+          </div>
+        ) : (
+          <div>
+            {active === "packs" && packGroup ? (
+              <PackRow items={packGroup.items} />
+            ) : (
+              <StickerGrid items={grouped.find((g) => g.key === active)?.items ?? []} />
+            )}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -122,56 +120,56 @@ function PackRow({ items }: { items: Sticker[] }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
       {items.map((pack) => (
-        <article
-          key={pack.id}
-          className="group cursor-pointer"
-          style={{
-            borderRadius: "var(--radius-card)",
-            overflow: "hidden",
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <div className="relative aspect-square overflow-hidden">
-            <Image
-              src={`/stickers/${pack.filename}`}
-              alt={pack.name}
-              fill
-              className="object-contain p-10 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
-              sizes="(max-width: 640px) 100vw, 50vw"
-            />
-          </div>
-          <div
-            className="px-6 py-5"
-            style={{ borderTop: "1px solid var(--border)" }}
+        <Link key={pack.id} href={`/shop/${pack.id}`} className="group block">
+          <article
+            style={{
+              borderRadius: "var(--radius-card)",
+              overflow: "hidden",
+              background: "var(--bg-card)",
+              border: "1px solid var(--border)",
+            }}
           >
-            <p
-              className="text-[10px] uppercase tracking-[0.18em] mb-1"
-              style={{ color: "var(--gold)", fontFamily: "var(--font-sans)" }}
+            <div className="relative aspect-square overflow-hidden">
+              <Image
+                src={`/stickers/${pack.filename}`}
+                alt={pack.name}
+                fill
+                className="object-contain p-10 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+                sizes="(max-width: 640px) 100vw, 50vw"
+              />
+            </div>
+            <div
+              className="px-6 py-5"
+              style={{ borderTop: "1px solid var(--border)" }}
             >
-              Set of {pack.packSize}
-            </p>
-            <h3
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontSize: "1.2rem",
-                color: "var(--text)",
-              }}
-            >
-              {pack.name}
-            </h3>
-            <p
-              className="mt-1.5 text-sm font-medium"
-              style={{
-                color: "var(--brand)",
-                fontVariantNumeric: "tabular-nums",
-                fontFamily: "var(--font-sans)",
-              }}
-            >
-              ${pack.price.toFixed(2)}
-            </p>
-          </div>
-        </article>
+              <p
+                className="text-[10px] uppercase tracking-[0.18em] mb-1"
+                style={{ color: "var(--gold)", fontFamily: "var(--font-sans)" }}
+              >
+                Set of {pack.packSize}
+              </p>
+              <h3
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "1.2rem",
+                  color: "var(--text)",
+                }}
+              >
+                {pack.name}
+              </h3>
+              <p
+                className="mt-1.5 text-sm font-medium"
+                style={{
+                  color: "var(--brand)",
+                  fontVariantNumeric: "tabular-nums",
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                ${pack.price.toFixed(2)}
+              </p>
+            </div>
+          </article>
+        </Link>
       ))}
     </div>
   );
@@ -179,7 +177,7 @@ function PackRow({ items }: { items: Sticker[] }) {
 
 function StickerGrid({ items }: { items: Sticker[] }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
       {items.map((sticker) => (
         <StickerItem key={sticker.id} sticker={sticker} />
       ))}

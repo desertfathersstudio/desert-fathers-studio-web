@@ -56,13 +56,6 @@ export function HeroSection() {
               >
                 Browse the catalog
               </Link>
-              <Link
-                href="#story"
-                className="text-sm font-medium transition-opacity hover:opacity-60"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Our story →
-              </Link>
             </div>
 
             <p
@@ -118,7 +111,7 @@ export function HeroSection() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              70¢ per sticker
+              $1.50 per sticker
             </span>
           </div>
 
