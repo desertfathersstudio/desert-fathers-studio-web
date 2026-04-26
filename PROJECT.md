@@ -5,6 +5,17 @@ Homepage polish: font system, accessibility fixes, animation — before building
 
 ---
 
+## Working Agreements
+
+- Never push without running `/predeploy` first
+- Every session starts: "Read PROJECT.md, what's next?"
+- Every session ends: "Update PROJECT.md, commit it"
+- Don't open more than one frontend issue at a time
+- Skills run order: `typeset` → `animate` → `layout` → `harden` → `polish` → `audit`
+- After audit, check score improvement before declaring done
+
+---
+
 ## Active Backlog (Priority Order)
 
 ### P1 — Fix before any public share
