@@ -86,8 +86,8 @@ export function HeroSection() {
               }}
             >
               <Image
-                src="https://placehold.co/512x512/f5f0e8/6b1d3b?text=☩"
-                alt="Featured Coptic icon sticker"
+                src="/stickers/Pantokrator.png"
+                alt="Pantokrator — Christ the Almighty, Coptic icon sticker"
                 fill
                 className="object-contain p-8"
                 priority
@@ -105,8 +105,8 @@ export function HeroSection() {
               }}
             >
               <Image
-                src="https://placehold.co/400x400/faf7f2/b5853a?text=✦"
-                alt="Coptic icon sticker"
+                src="/stickers/Ti Theotokos.png"
+                alt="Ti Theotokos — the Mother of God, Coptic icon sticker"
                 fill
                 className="object-contain p-6"
               />
