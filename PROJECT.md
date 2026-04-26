@@ -13,6 +13,8 @@ Homepage polish: font system, accessibility fixes, animation — before building
 - Don't open more than one frontend issue at a time
 - Skills run order: `typeset` → `animate` → `layout` → `harden` → `polish` → `audit`
 - After audit, check score improvement before declaring done
+- **Priority override:** When fresh feedback conflicts with the active backlog, pause the current task, reprioritize explicitly, and update PROJECT.md so nothing is lost
+- **Batch related changes:** Group edits that touch the same surface into one `/superpowers` run — if changes share components or files, they belong together
 
 ---
 
