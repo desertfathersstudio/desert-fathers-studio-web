@@ -4,26 +4,26 @@ import Link from "next/link";
 export function HeroSection() {
   return (
     <section
-      className="relative min-h-screen flex items-center pt-16"
-      style={{ background: "var(--bg)" }}
+      className="relative flex items-center pt-16"
+      style={{ background: "var(--bg)", minHeight: "62vh" }}
     >
-      <div className="w-full max-w-7xl mx-auto px-6 md:px-10 py-20 md:py-28">
-        <div className="grid md:grid-cols-[1fr_auto] gap-16 md:gap-24 items-center">
+      <div className="w-full max-w-7xl mx-auto px-6 md:px-10 py-12 md:py-16">
+        <div className="grid md:grid-cols-[1fr_auto] gap-12 md:gap-20 items-center">
 
           {/* Text column */}
-          <div className="max-w-xl">
+          <div className="max-w-lg">
             <p
-              className="reveal reveal-1 text-[11px] uppercase tracking-[0.2em] font-medium mb-6"
+              className="reveal reveal-1 text-[11px] uppercase tracking-[0.2em] font-medium mb-5"
               style={{ color: "var(--gold)" }}
             >
               Coptic Orthodox Icon Stickers
             </p>
 
             <h1
-              className="reveal reveal-2 leading-[1.1] mb-8"
+              className="reveal reveal-2 leading-[1.1] mb-6"
               style={{
                 fontFamily: "var(--font-serif)",
-                fontSize: "clamp(3rem, 7vw, 5.5rem)",
+                fontSize: "clamp(2.4rem, 5vw, 4rem)",
                 fontWeight: 300,
                 color: "var(--text)",
                 letterSpacing: "-0.01em",
@@ -37,8 +37,8 @@ export function HeroSection() {
             </h1>
 
             <p
-              className="reveal reveal-3 text-lg leading-relaxed mb-10"
-              style={{ color: "var(--text-muted)", maxWidth: "38ch" }}
+              className="reveal reveal-3 leading-relaxed mb-8"
+              style={{ color: "var(--text-muted)", maxWidth: "38ch", fontSize: "1rem" }}
             >
               Hand-designed icon stickers rooted in Coptic tradition — for your Bible,
               planner, water bottle, or anywhere faith travels with you.
@@ -47,10 +47,10 @@ export function HeroSection() {
             <div className="reveal reveal-4 flex flex-wrap items-center gap-4">
               <Link
                 href="#catalog"
-                className="inline-flex items-center gap-2 px-7 py-3.5 font-medium text-sm transition-opacity hover:opacity-85"
+                className="inline-flex items-center gap-2 px-6 py-3 font-medium text-sm transition-opacity hover:opacity-85"
                 style={{
                   background: "var(--brand)",
-                  color: "#fff",
+                  color: "var(--text-inverse)",
                   borderRadius: "var(--radius-btn)",
                 }}
               >
@@ -58,29 +58,27 @@ export function HeroSection() {
               </Link>
               <Link
                 href="#story"
-                className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70"
+                className="text-sm font-medium transition-opacity hover:opacity-60"
                 style={{ color: "var(--text-muted)" }}
               >
                 Our story →
               </Link>
             </div>
 
-            {/* Social proof */}
             <p
-              className="reveal reveal-4 mt-10 text-xs"
-              style={{ color: "var(--text-muted)", opacity: 0.7 }}
+              className="reveal reveal-4 mt-8 text-xs"
+              style={{ color: "var(--text-muted)", opacity: 0.6 }}
             >
               Handmade in Chicago · Trusted by Coptic Sunday schools across the US
             </p>
           </div>
 
           {/* Image cluster */}
-          <div className="hidden md:block relative w-[380px] h-[480px] shrink-0">
-            {/* Main sticker */}
+          <div className="hidden md:block relative w-[300px] h-[380px] shrink-0">
             <div
-              className="absolute top-0 right-0 w-64 h-64 overflow-hidden shadow-xl"
+              className="absolute top-0 right-0 w-56 h-56 overflow-hidden shadow-lg"
               style={{
-                borderRadius: "16px",
+                borderRadius: "14px",
                 transform: "rotate(2deg)",
                 background: "var(--bg-card)",
               }}
@@ -89,16 +87,15 @@ export function HeroSection() {
                 src="/stickers/Pantokrator.png"
                 alt="Pantokrator — Christ the Almighty, Coptic icon sticker"
                 fill
-                className="object-contain p-8"
+                className="object-contain p-7"
                 priority
               />
             </div>
 
-            {/* Second sticker */}
             <div
-              className="absolute bottom-12 left-0 w-52 h-52 overflow-hidden shadow-lg"
+              className="absolute bottom-8 left-0 w-44 h-44 overflow-hidden shadow-md"
               style={{
-                borderRadius: "14px",
+                borderRadius: "12px",
                 transform: "rotate(-3deg)",
                 background: "var(--bg-card)",
                 border: "1px solid var(--border)",
@@ -108,27 +105,26 @@ export function HeroSection() {
                 src="/stickers/Ti Theotokos.png"
                 alt="Ti Theotokos — the Mother of God, Coptic icon sticker"
                 fill
-                className="object-contain p-6"
+                className="object-contain p-5"
               />
             </div>
 
-            {/* Accent label */}
             <span
-              className="absolute bottom-4 right-8 text-xs font-medium px-3 py-1.5"
+              className="absolute bottom-2 right-6 text-xs font-medium px-3 py-1.5"
               style={{
                 background: "var(--gold-light)",
-                color: "#fff",
+                color: "var(--text-inverse)",
                 borderRadius: "999px",
-                fontFamily: "var(--font-inter)",
+                fontFamily: "var(--font-sans)",
               }}
             >
               70¢ per sticker
             </span>
           </div>
+
         </div>
       </div>
 
-      {/* Bottom divider */}
       <div
         className="absolute bottom-0 inset-x-0 h-px"
         style={{ background: "var(--border)" }}
