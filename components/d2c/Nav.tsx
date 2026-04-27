@@ -11,7 +11,6 @@ import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/catalog";
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
   { href: "/shop?category=packs", label: "Packs" },
-  { href: "/wholesale", label: "Wholesale" },
   { href: "#story", label: "About" },
 ];
 
@@ -195,17 +194,6 @@ export function Nav() {
                     ))}
                   </div>
                 )}
-              </div>
-
-              <div style={{ borderBottom: "1px solid var(--border)" }}>
-                <Link
-                  href="/wholesale"
-                  onClick={closeMobile}
-                  className="flex items-center w-full py-4 text-sm font-medium transition-opacity hover:opacity-60"
-                  style={{ color: "var(--text)" }}
-                >
-                  Sunday Schools
-                </Link>
               </div>
 
               <div style={{ borderBottom: "1px solid var(--border)" }}>

@@ -1,11 +1,12 @@
-import Link from "next/link";
 import { Nav } from "@/components/d2c/Nav";
 import { HeroSection } from "@/components/d2c/HeroSection";
 import { FeaturedCollections } from "@/components/d2c/FeaturedCollections";
+import { HomepageGrid } from "@/components/d2c/HomepageGrid";
+import { ProductFeatures } from "@/components/d2c/ProductFeatures";
 import { TrustSection } from "@/components/d2c/TrustSection";
 import { BrandStory } from "@/components/d2c/BrandStory";
 import { Footer } from "@/components/d2c/Footer";
-import { HomepageGrid } from "@/components/d2c/HomepageGrid";
+import { BookOpen, NotebookPen, Laptop, Droplets, Gift } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -15,7 +16,8 @@ export default function HomePage() {
         <HeroSection />
         <FeaturedCollections />
         <HomepageGrid />
-        <UseCaseStrip />
+        <ProductFeatures />
+        <UseCasesSection />
         <TrustSection />
         <BrandStory />
       </main>
@@ -24,50 +26,110 @@ export default function HomePage() {
   );
 }
 
-function UseCaseStrip() {
+const USE_CASES = [
+  {
+    icon: BookOpen,
+    label: "Bible",
+    headline: "Mark every holy season.",
+    body: "Slip a saint into the margin. Let Holy Week live in the pages where you read it.",
+  },
+  {
+    icon: NotebookPen,
+    label: "Planner",
+    headline: "Begin each week in prayer.",
+    body: "A sticker at the top of Sunday is a small altar before the week begins.",
+  },
+  {
+    icon: Laptop,
+    label: "MacBook",
+    headline: "Faith on every workspace.",
+    body: "Carry the Pantokrator into every meeting. Let your desk be a little shrine.",
+  },
+  {
+    icon: Droplets,
+    label: "Water Bottle",
+    headline: "Sacred art on every sip.",
+    body: "Waterproof by design — because saints belong everywhere life takes you.",
+  },
+  {
+    icon: Gift,
+    label: "Gifts",
+    headline: "The gift that means something.",
+    body: "For baptisms, name days, graduations — a sticker carries more than it weighs.",
+  },
+] as const;
+
+function UseCasesSection() {
   return (
     <section
-      className="py-16 md:py-20"
-      style={{ background: "var(--cream)", borderTop: "1px solid var(--border)" }}
+      className="py-20 md:py-28"
+      style={{ background: "var(--navy)", borderTop: "1px solid rgba(255,255,255,0.06)" }}
     >
-      <div className="max-w-5xl mx-auto px-6 md:px-10 text-center">
-        {/* Gold hairline divider */}
-        <div
-          className="mx-auto mb-8 h-px w-16"
-          style={{ background: "var(--gold)", opacity: 0.5 }}
-          aria-hidden
-        />
+      <div className="max-w-7xl mx-auto px-6 md:px-10">
+        {/* Heading */}
+        <div className="mb-14 md:mb-16">
+          <p
+            className="text-[11px] uppercase tracking-[0.28em] font-medium mb-3"
+            style={{ color: "var(--gold)" }}
+          >
+            Put your faith everywhere
+          </p>
+          <h2
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(1.9rem, 3.5vw, 2.8rem)",
+              fontWeight: 300,
+              color: "#F8F4EC",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Sacred art travels with you.
+          </h2>
+        </div>
 
-        <p
-          className="text-[11px] uppercase tracking-[0.28em] font-medium mb-4"
-          style={{ color: "var(--gold)" }}
-        >
-          Perfect for
-        </p>
-
-        <p
-          style={{
-            fontFamily: "var(--font-serif)",
-            fontSize: "clamp(1.4rem, 3vw, 2rem)",
-            fontWeight: 300,
-            color: "var(--text)",
-            lineHeight: 1.5,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Sunday school classrooms, thoughtful gifts,
-          <br className="hidden sm:block" /> church bookstores, and{" "}
-          <em style={{ color: "var(--brand)", fontStyle: "italic" }}>
-            personal devotion
-          </em>
-          .
-        </p>
-
-        <div
-          className="mx-auto mt-8 h-px w-16"
-          style={{ background: "var(--gold)", opacity: 0.5 }}
-          aria-hidden
-        />
+        {/* Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+          {USE_CASES.map(({ icon: Icon, label, headline, body }) => (
+            <div
+              key={label}
+              className="flex flex-col p-6 rounded-2xl"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <div
+                className="w-10 h-10 flex items-center justify-center rounded-xl mb-5"
+                style={{ background: "rgba(184,137,62,0.18)", border: "1px solid rgba(184,137,62,0.25)" }}
+              >
+                <Icon size={18} style={{ color: "var(--gold)" }} strokeWidth={1.5} />
+              </div>
+              <p
+                className="text-[10px] uppercase tracking-widest mb-2"
+                style={{ color: "var(--gold)", opacity: 0.8 }}
+              >
+                {label}
+              </p>
+              <h3
+                className="leading-snug mb-2"
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "1.05rem",
+                  fontWeight: 400,
+                  color: "#F8F4EC",
+                }}
+              >
+                {headline}
+              </h3>
+              <p
+                className="text-xs leading-relaxed mt-auto pt-3"
+                style={{ color: "rgba(248,244,236,0.5)" }}
+              >
+                {body}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

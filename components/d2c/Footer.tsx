@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 
 export function Footer() {
@@ -25,6 +26,13 @@ export function Footer() {
         >
           Ordering for a class or youth group?
         </h3>
+        <p
+          className="mb-6 text-sm leading-relaxed mx-auto"
+          style={{ color: "rgba(248,244,236,0.55)", maxWidth: "44ch" }}
+        >
+          We offer bulk pricing from $0.70 / sticker for parishes, Sunday schools,
+          and church bookstores. Fill out a quick inquiry form and we'll be in touch.
+        </p>
         <Link
           href="/wholesale"
           className="inline-flex text-sm font-medium px-6 py-3 transition-opacity hover:opacity-80"
@@ -45,12 +53,30 @@ export function Footer() {
           <div>
             <Logo variant="light" className="mb-5" />
             <p
-              className="text-sm leading-relaxed max-w-xs"
+              className="text-sm leading-relaxed max-w-xs mb-6"
               style={{ color: "rgba(248,244,236,0.5)" }}
             >
               Coptic Orthodox icon stickers, hand-designed for everyday faithful
               life.
             </p>
+            {/* Secure checkout badge */}
+            <div
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(248,244,236,0.55)",
+              }}
+            >
+              <Lock size={11} style={{ color: "var(--gold)" }} />
+              <span>Secure Checkout · SSL Encrypted</span>
+            </div>
+            <div
+              className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg text-[10px] font-medium tracking-wide"
+              style={{ color: "rgba(248,244,236,0.35)" }}
+            >
+              VISA · MASTERCARD · AMEX · DISCOVER
+            </div>
           </div>
 
           {/* Shop */}
@@ -92,13 +118,9 @@ export function Footer() {
             </p>
             <ul className="space-y-3">
               {[
-                { label: "Sunday Schools", href: "/wholesale" },
+                { label: "Wholesale Inquiry", href: "/wholesale" },
                 { label: "Our Story", href: "#story" },
-                { label: "Etsy Shop", href: "https://etsy.com" },
-                {
-                  label: "Contact",
-                  href: "mailto:hello@desertfathersstudio.com",
-                },
+                { label: "Contact Us", href: "mailto:desertfathersstudio@gmail.com" },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <Link
@@ -122,19 +144,22 @@ export function Footer() {
               Legal
             </p>
             <ul className="space-y-3">
-              {["Privacy Policy", "Terms of Service", "Shipping Policy"].map(
-                (item) => (
-                  <li key={item}>
-                    <Link
-                      href="#"
-                      className="text-sm transition-opacity hover:opacity-60"
-                      style={{ color: "rgba(248,244,236,0.65)" }}
-                    >
-                      {item}
-                    </Link>
-                  </li>
-                )
-              )}
+              {[
+                { label: "Privacy Policy", href: "/legal/privacy" },
+                { label: "Terms of Service", href: "/legal/terms" },
+                { label: "Shipping Policy", href: "/legal/shipping" },
+                { label: "Return Policy", href: "/legal/returns" },
+              ].map(({ label, href }) => (
+                <li key={label}>
+                  <Link
+                    href={href}
+                    className="text-sm transition-opacity hover:opacity-60"
+                    style={{ color: "rgba(248,244,236,0.65)" }}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -147,17 +172,8 @@ export function Footer() {
             color: "rgba(248,244,236,0.35)",
           }}
         >
-          <p>
-            © {new Date().getFullYear()} Desert Fathers Studio. All rights
-            reserved.
-          </p>
-          {/* Cross mark */}
-          <span
-            aria-hidden
-            style={{ color: "var(--gold)", opacity: 0.5, fontSize: "1rem" }}
-          >
-            ☩
-          </span>
+          <p>© {new Date().getFullYear()} Desert Fathers Studio. All rights reserved.</p>
+          <span aria-hidden style={{ color: "var(--gold)", opacity: 0.5, fontSize: "1rem" }}>☩</span>
           <p>Made with faith in Chicago, IL</p>
         </div>
       </div>
