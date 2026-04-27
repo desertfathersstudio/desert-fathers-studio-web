@@ -10,7 +10,7 @@ export function proxy(request: NextRequest) {
     const front = url.searchParams.get("front");
     if (front === "wholesale") {
       url.searchParams.delete("front");
-      url.pathname = `/wholesale${url.pathname}`;
+      url.pathname = `/wholesale-portal${url.pathname}`;
       return NextResponse.rewrite(url);
     }
     if (front === "admin") {
@@ -25,7 +25,7 @@ export function proxy(request: NextRequest) {
   const subdomain = host.split(".")[0];
 
   if (subdomain === "wholesale") {
-    url.pathname = `/wholesale${url.pathname}`;
+    url.pathname = `/wholesale-portal${url.pathname}`;
     return NextResponse.rewrite(url);
   }
 
