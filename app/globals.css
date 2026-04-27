@@ -2,19 +2,21 @@
 
 /* ── Brand tokens ──────────────────────────────────────────────────── */
 :root {
-  --brand:          #6b1d3b;
+  --brand:          #6B1F2A;
   --brand-light:    #8b2d4f;
   --brand-dark:     #4a1228;
-  --gold:           #b5853a;
+  --gold:           #B8893E;
   --gold-light:     #d4a853;
+  --navy:           #1C2A3A;
+  --cream:          #EFE7D6;
 
-  --bg:             #faf7f2;
+  --bg:             #F8F4EC;
   --bg-card:        #f5f0e8;
   --bg-dark:        #1a0e05;
 
   --text:           #2a1a0e;
   --text-muted:     #7a6a5a;
-  --text-inverse:   #faf7f2;
+  --text-inverse:   #F8F4EC;
 
   --border:         #e4d8c8;
   --border-dark:    #c8b89a;
@@ -29,6 +31,8 @@
   --color-brand-dark:   var(--brand-dark);
   --color-gold:         var(--gold);
   --color-gold-light:   var(--gold-light);
+  --color-navy:         var(--navy);
+  --color-cream:        var(--cream);
   --color-bg:           var(--bg);
   --color-bg-card:      var(--bg-card);
   --color-bg-dark:      var(--bg-dark);
@@ -51,7 +55,7 @@ body {
   min-height: 100dvh;
 }
 
-/* ── Scroll-reveal animation ───────────────────────────────────────── */
+/* ── Scroll-reveal (CSS fallback for non-FM sections) ──────────────── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -66,3 +70,11 @@ body {
 .reveal-2 { animation-delay: 0.22s; }
 .reveal-3 { animation-delay: 0.34s; }
 .reveal-4 { animation-delay: 0.46s; }
+
+/* ── Reduced motion ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    animation: none;
+  }
+}

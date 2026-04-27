@@ -4,10 +4,9 @@ import { Logo } from "@/components/shared/Logo";
 export function Footer() {
   return (
     <footer style={{ background: "var(--bg-dark)", color: "var(--text-inverse)" }}>
-
       {/* Wholesale CTA band */}
       <div
-        className="py-12 px-6 md:px-10 text-center"
+        className="py-14 px-6 md:px-10 text-center"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
       >
         <p
@@ -17,7 +16,7 @@ export function Footer() {
           Sunday Schools &amp; Parishes
         </p>
         <h3
-          className="mb-4"
+          className="mb-5"
           style={{
             fontFamily: "var(--font-serif)",
             fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
@@ -47,26 +46,36 @@ export function Footer() {
             <Logo variant="light" className="mb-5" />
             <p
               className="text-sm leading-relaxed max-w-xs"
-              style={{ color: "rgba(250,247,242,0.5)" }}
+              style={{ color: "rgba(248,244,236,0.5)" }}
             >
-              Coptic Orthodox icon stickers, hand-designed for everyday faithful life.
+              Coptic Orthodox icon stickers, hand-designed for everyday faithful
+              life.
             </p>
           </div>
 
           {/* Shop */}
           <div>
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--gold)" }}>
+            <p
+              className="text-xs uppercase tracking-widest mb-4"
+              style={{ color: "var(--gold)" }}
+            >
               Shop
             </p>
             <ul className="space-y-3">
-              {["All Stickers", "Saints", "Feasts", "Holy Week Pack", "Resurrection Pack"].map((item) => (
-                <li key={item}>
+              {[
+                { label: "All Stickers", href: "/shop" },
+                { label: "Saints", href: "/shop?category=saints" },
+                { label: "Holy Week Pack", href: "/shop/holy-week-pack" },
+                { label: "Resurrection Pack", href: "/shop/resurrection-pack" },
+                { label: "Packs", href: "/shop?category=packs" },
+              ].map(({ label, href }) => (
+                <li key={label}>
                   <Link
-                    href="#"
+                    href={href}
                     className="text-sm transition-opacity hover:opacity-60"
-                    style={{ color: "rgba(250,247,242,0.65)" }}
+                    style={{ color: "rgba(248,244,236,0.65)" }}
                   >
-                    {item}
+                    {label}
                   </Link>
                 </li>
               ))}
@@ -75,7 +84,10 @@ export function Footer() {
 
           {/* Community */}
           <div>
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--gold)" }}>
+            <p
+              className="text-xs uppercase tracking-widest mb-4"
+              style={{ color: "var(--gold)" }}
+            >
               Community
             </p>
             <ul className="space-y-3">
@@ -83,13 +95,16 @@ export function Footer() {
                 { label: "Sunday Schools", href: "/wholesale" },
                 { label: "Our Story", href: "#story" },
                 { label: "Etsy Shop", href: "https://etsy.com" },
-                { label: "Contact", href: "mailto:hello@desertfathersstudio.com" },
+                {
+                  label: "Contact",
+                  href: "mailto:hello@desertfathersstudio.com",
+                },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <Link
                     href={href}
                     className="text-sm transition-opacity hover:opacity-60"
-                    style={{ color: "rgba(250,247,242,0.65)" }}
+                    style={{ color: "rgba(248,244,236,0.65)" }}
                   >
                     {label}
                   </Link>
@@ -100,33 +115,49 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--gold)" }}>
+            <p
+              className="text-xs uppercase tracking-widest mb-4"
+              style={{ color: "var(--gold)" }}
+            >
               Legal
             </p>
             <ul className="space-y-3">
-              {["Privacy Policy", "Terms of Service", "Shipping Policy"].map((item) => (
-                <li key={item}>
-                  <Link
-                    href="#"
-                    className="text-sm transition-opacity hover:opacity-60"
-                    style={{ color: "rgba(250,247,242,0.65)" }}
-                  >
-                    {item}
-                  </Link>
-                </li>
-              ))}
+              {["Privacy Policy", "Terms of Service", "Shipping Policy"].map(
+                (item) => (
+                  <li key={item}>
+                    <Link
+                      href="#"
+                      className="text-sm transition-opacity hover:opacity-60"
+                      style={{ color: "rgba(248,244,236,0.65)" }}
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                )
+              )}
             </ul>
           </div>
         </div>
 
+        {/* Bottom bar */}
         <div
           className="mt-16 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs"
           style={{
             borderTop: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(250,247,242,0.35)",
+            color: "rgba(248,244,236,0.35)",
           }}
         >
-          <p>© {new Date().getFullYear()} Desert Fathers Studio. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} Desert Fathers Studio. All rights
+            reserved.
+          </p>
+          {/* Cross mark */}
+          <span
+            aria-hidden
+            style={{ color: "var(--gold)", opacity: 0.5, fontSize: "1rem" }}
+          >
+            ☩
+          </span>
           <p>Made with faith in Chicago, IL</p>
         </div>
       </div>

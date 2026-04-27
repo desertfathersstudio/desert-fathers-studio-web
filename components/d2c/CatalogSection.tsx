@@ -10,9 +10,31 @@ import {
   type CategoryKey,
   type Sticker,
 } from "@/lib/catalog";
+import { StickerCard, type StickerProduct } from "@/components/shared/StickerCard";
+import { useCart } from "@/lib/cart";
+import { useLightbox } from "@/lib/lightbox";
 
-export function CatalogSection({ initialCategory }: { initialCategory?: CategoryKey }) {
+function toCardProduct(s: Sticker): StickerProduct {
+  return {
+    id: s.id,
+    name: s.name,
+    price: s.price,
+    imageUrl: `/stickers/${s.filename}`,
+    category: s.category,
+    isNew: s.isNew,
+    isPack: s.isPack,
+    packSize: s.packSize,
+  };
+}
+
+export function CatalogSection({
+  initialCategory,
+}: {
+  initialCategory?: CategoryKey;
+}) {
   const [active, setActive] = useState<CategoryKey>(initialCategory ?? "all");
+  const { add } = useCart();
+  const { open: openLightbox } = useLightbox();
 
   const grouped = useMemo(() => {
     return CATEGORY_ORDER.map((key) => ({
@@ -22,20 +44,24 @@ export function CatalogSection({ initialCategory }: { initialCategory?: Category
     })).filter((g) => g.items.length > 0);
   }, []);
 
-  const packGroup = useMemo(() => grouped.find((g) => g.key === "packs"), [grouped]);
+  const packGroup = useMemo(
+    () => grouped.find((g) => g.key === "packs"),
+    [grouped]
+  );
 
-  const flatStickers = useMemo(() => {
-    return CATEGORY_ORDER.filter((k) => k !== "packs").flatMap((key) =>
-      CATALOG.filter((s) => s.category === key)
-    );
-  }, []);
+  const flatStickers = useMemo(
+    () =>
+      CATEGORY_ORDER.filter((k) => k !== "packs").flatMap((key) =>
+        CATALOG.filter((s) => s.category === key)
+      ),
+    []
+  );
 
-  const totalDesigns = CATALOG.filter((s) => !s.isPack).length;
+  const totalDesigns = CATALOG.length;
 
   return (
     <section id="catalog" style={{ background: "var(--bg)" }}>
       <div className="max-w-7xl mx-auto px-6 md:px-10 pt-20 md:pt-28 pb-28 md:pb-40">
-
         {/* Header */}
         <div className="mb-10">
           <p
@@ -57,7 +83,7 @@ export function CatalogSection({ initialCategory }: { initialCategory?: Category
         </div>
 
         {/* Filter pills */}
-        <div className="flex flex-wrap gap-2 mb-16">
+        <div className="flex flex-wrap gap-2 mb-14">
           <Pill label="All" active={active === "all"} onClick={() => setActive("all")} />
           {CATEGORY_ORDER.map((key) => (
             <Pill
@@ -71,16 +97,20 @@ export function CatalogSection({ initialCategory }: { initialCategory?: Category
 
         {/* Content */}
         {active === "all" ? (
-          <div className="space-y-10">
+          <div className="space-y-12">
             {packGroup && <PackRow items={packGroup.items} />}
-            <StickerGrid items={flatStickers} />
+            <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} />
           </div>
         ) : (
           <div>
             {active === "packs" && packGroup ? (
               <PackRow items={packGroup.items} />
             ) : (
-              <StickerGrid items={grouped.find((g) => g.key === active)?.items ?? []} />
+              <StickerGrid
+                items={grouped.find((g) => g.key === active)?.items ?? []}
+                onAdd={add}
+                onOpenLightbox={openLightbox}
+              />
             )}
           </div>
         )}
@@ -125,22 +155,28 @@ function PackRow({ items }: { items: Sticker[] }) {
             style={{
               borderRadius: "var(--radius-card)",
               overflow: "hidden",
-              background: "var(--bg-card)",
               border: "1px solid var(--border)",
             }}
           >
-            <div className="relative aspect-square overflow-hidden">
+            {/* White image frame */}
+            <div
+              className="relative aspect-square overflow-hidden"
+              style={{ background: "#fff" }}
+            >
               <Image
                 src={`/stickers/${pack.filename}`}
                 alt={pack.name}
                 fill
-                className="object-contain p-10 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+                className="object-contain p-12 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
                 sizes="(max-width: 640px) 100vw, 50vw"
               />
             </div>
             <div
               className="px-6 py-5"
-              style={{ borderTop: "1px solid var(--border)" }}
+              style={{
+                background: "var(--bg-card)",
+                borderTop: "1px solid var(--border)",
+              }}
             >
               <p
                 className="text-[10px] uppercase tracking-[0.18em] mb-1"
@@ -175,68 +211,25 @@ function PackRow({ items }: { items: Sticker[] }) {
   );
 }
 
-function StickerGrid({ items }: { items: Sticker[] }) {
+function StickerGrid({
+  items,
+  onAdd,
+  onOpenLightbox,
+}: {
+  items: Sticker[];
+  onAdd: (s: Sticker) => void;
+  onOpenLightbox: (items: Sticker[], index: number) => void;
+}) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
-      {items.map((sticker) => (
-        <StickerItem key={sticker.id} sticker={sticker} />
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
+      {items.map((sticker, i) => (
+        <StickerCard
+          key={sticker.id}
+          product={toCardProduct(sticker)}
+          onAddToCart={() => onAdd(sticker)}
+          onOpen={() => onOpenLightbox(items, i)}
+        />
       ))}
     </div>
-  );
-}
-
-function StickerItem({ sticker }: { sticker: Sticker }) {
-  return (
-    <article className="group cursor-pointer">
-      <div
-        className="relative aspect-square overflow-hidden"
-        style={{
-          background: "var(--bg-card)",
-          borderRadius: "var(--radius-card)",
-        }}
-      >
-        <Image
-          src={`/stickers/${sticker.filename}`}
-          alt={sticker.name}
-          fill
-          className="object-contain p-5 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-        />
-        {sticker.isNew && (
-          <span
-            className="absolute top-2.5 left-2.5 text-[9px] font-semibold uppercase tracking-[0.1em] px-2 py-1"
-            style={{
-              background: "var(--gold)",
-              color: "var(--text-inverse)",
-              borderRadius: "3px",
-            }}
-          >
-            New
-          </span>
-        )}
-      </div>
-      <div className="pt-2.5 pb-1">
-        <h3
-          className="leading-snug"
-          style={{
-            fontFamily: "var(--font-serif)",
-            fontSize: "0.95rem",
-            color: "var(--text)",
-          }}
-        >
-          {sticker.name}
-        </h3>
-        <p
-          className="mt-0.5 text-sm font-medium"
-          style={{
-            color: "var(--brand)",
-            fontVariantNumeric: "tabular-nums",
-            fontFamily: "var(--font-sans)",
-          }}
-        >
-          ${sticker.price.toFixed(2)}
-        </p>
-      </div>
-    </article>
   );
 }
