@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
   { href: "/shop?category=packs", label: "Packs" },
   { href: "#story", label: "About" },
+  { href: "/suggestions", label: "Suggestions" },
 ];
 
 export function Nav() {
@@ -204,6 +205,17 @@ export function Nav() {
                   style={{ color: "var(--text)" }}
                 >
                   About
+                </Link>
+              </div>
+
+              <div style={{ borderBottom: "1px solid var(--border)" }}>
+                <Link
+                  href="/suggestions"
+                  onClick={closeMobile}
+                  className="flex items-center w-full py-4 text-sm font-medium transition-opacity hover:opacity-60"
+                  style={{ color: "var(--text)" }}
+                >
+                  Suggestions
                 </Link>
               </div>
             </motion.div>
