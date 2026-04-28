@@ -91,7 +91,7 @@ export function CartDrawer() {
                       Your cart is empty
                     </h3>
                     <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)", maxWidth: "26ch", margin: "0 auto" }}>
-                      Fill it with sacred art — stickers for your Bible, journal, or a loved one&apos;s gift.
+                      Add something meaningful — for your Bible, laptop, or a gift.
                     </p>
                   </div>
                   <Link
