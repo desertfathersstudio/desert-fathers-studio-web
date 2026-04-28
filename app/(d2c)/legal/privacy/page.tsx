@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <main style={{ background: "var(--bg)", paddingTop: 64 }}>
         <LegalPage title="Privacy Policy" updated="April 27, 2026">
           <Section title="1. Who We Are">
-            <p>Desert Fathers Studio ("we," "our," or "us") is a small Coptic Christian art business based in Chicago, Illinois. We sell hand-designed icon stickers at desertfathersstudio.com.</p>
+            <p>Desert Fathers Studio ("we," "our," or "us") is a small Coptic Christian art business. We sell hand-designed icon stickers at desertfathersstudio.com.</p>
             <p>Questions? Reach us at <a href="mailto:desertfathersstudio@gmail.com">desertfathersstudio@gmail.com</a></p>
           </Section>
 

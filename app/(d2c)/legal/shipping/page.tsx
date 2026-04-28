@@ -10,7 +10,7 @@ export default function ShippingPage() {
       <main style={{ background: "var(--bg)", paddingTop: 64 }}>
         <LegalPage title="Shipping Policy" updated="April 27, 2026">
           <Section title="Processing Time">
-            <p>Orders are processed within <strong>1–3 business days</strong> (Monday–Friday, excluding US federal holidays) from our studio in Chicago, IL. During peak seasons (Christmas, Holy Week, Pascha) please allow an extra 1–2 days.</p>
+            <p>Orders are processed within <strong>1–3 business days</strong> (Monday–Friday, excluding US federal holidays). During peak seasons (Christmas, Holy Week, Pascha) please allow an extra 1–2 days.</p>
             <p>You'll receive an email with tracking information once your order ships.</p>
           </Section>
 

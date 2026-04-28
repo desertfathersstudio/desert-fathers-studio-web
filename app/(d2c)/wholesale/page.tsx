@@ -157,7 +157,7 @@ export default function WholesaleInquiryPage() {
                   </div>
                   <div className="sm:col-span-2">
                     <label htmlFor="location" style={labelStyle}>City &amp; State</label>
-                    <input id="location" name="location" style={inputStyle} placeholder="Chicago, IL" />
+                    <input id="location" name="location" style={inputStyle} placeholder="City, State" />
                   </div>
                 </div>
               </div>

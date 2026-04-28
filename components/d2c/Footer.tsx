@@ -174,7 +174,7 @@ export function Footer() {
         >
           <p>© {new Date().getFullYear()} Desert Fathers Studio. All rights reserved.</p>
           <span aria-hidden style={{ color: "var(--gold)", opacity: 0.5, fontSize: "1rem" }}>☩</span>
-          <p>Made with faith in Chicago, IL</p>
+          <p>Made with faith</p>
         </div>
       </div>
     </footer>
