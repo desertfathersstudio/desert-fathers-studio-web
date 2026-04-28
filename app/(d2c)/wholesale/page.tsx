@@ -78,9 +78,8 @@ export default function WholesaleInquiryPage() {
             className="mx-auto text-sm leading-relaxed"
             style={{ color: "var(--text-muted)", maxWidth: "46ch" }}
           >
-            We offer bulk pricing starting at $0.70 / sticker for parishes, Sunday
-            schools, and church bookstores. Fill out the form below and we'll respond
-            within 1–2 business days.
+            We offer bulk pricing for parishes, Sunday schools, and church bookstores.
+            Fill out the form below and we'll respond within 1–2 business days.
           </p>
         </div>
 

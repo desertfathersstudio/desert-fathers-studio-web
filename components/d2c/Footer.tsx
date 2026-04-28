@@ -30,7 +30,7 @@ export function Footer() {
           className="mb-6 text-sm leading-relaxed mx-auto"
           style={{ color: "rgba(248,244,236,0.55)", maxWidth: "44ch" }}
         >
-          We offer bulk pricing from $0.70 / sticker for parishes, Sunday schools,
+          We offer bulk pricing for parishes, Sunday schools,
           and church bookstores. Fill out a quick inquiry form and we'll be in touch.
         </p>
         <Link
