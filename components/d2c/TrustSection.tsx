@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { Shield, Truck, Users, Heart } from "lucide-react";
+import { Shield, Truck, Heart } from "lucide-react";
 
 const PILLARS = [
   {
@@ -13,12 +13,7 @@ const PILLARS = [
   {
     icon: Truck,
     title: "Fast Shipping",
-    body: "Orders ship within 2–3 business days from Chicago, carefully packed and protected.",
-  },
-  {
-    icon: Users,
-    title: "Bulk Pricing",
-    body: "Wholesale rates for parishes, Sunday schools, and church bookstores — as low as $0.70 each.",
+    body: "Orders ship within 2–3 business days, carefully packed and protected.",
   },
   {
     icon: Heart,
@@ -63,7 +58,7 @@ export function TrustSection() {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-10">
           {PILLARS.map((p, i) => {
             const Icon = p.icon;
             return (
