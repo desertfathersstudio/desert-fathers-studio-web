@@ -63,7 +63,9 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.2 }}
             >
-              Rooted in the Coptic tradition.
+              Rooted in the{" "}
+              <span style={{ fontStyle: "italic", color: "var(--gold)" }}>Coptic</span>{" "}
+              tradition.
             </motion.h1>
 
             <motion.p
