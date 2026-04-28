@@ -36,16 +36,6 @@ const COLLECTIONS = [
     image: "/stickers/Pantokrator.png",
     accentColor: "var(--navy)",
   },
-  {
-    id: "wholesale",
-    title: "Sunday School Bulk",
-    badge: "From $0.70 / sticker",
-    description:
-      "Wholesale pricing for parishes, Sunday schools, and church bookstores.",
-    href: "/wholesale",
-    image: "/stickers/St. George.png",
-    accentColor: "var(--brand-dark)",
-  },
 ] as const;
 
 export function FeaturedCollections() {
@@ -92,7 +82,7 @@ export function FeaturedCollections() {
         </motion.div>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {COLLECTIONS.map((col, i) => (
             <motion.div key={col.id} {...fadeProps(i * 0.08 + 0.06)}>
               <Link href={col.href} className="group block h-full">
