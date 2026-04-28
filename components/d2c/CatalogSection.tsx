@@ -24,6 +24,7 @@ function toCardProduct(s: Sticker): StickerProduct {
     isNew: s.isNew,
     isPack: s.isPack,
     packSize: s.packSize,
+    packOnly: s.packOnly,
   };
 }
 
@@ -226,7 +227,7 @@ function StickerGrid({
         <StickerCard
           key={sticker.id}
           product={toCardProduct(sticker)}
-          onAddToCart={() => onAdd(sticker)}
+          onAddToCart={sticker.packOnly ? undefined : () => onAdd(sticker)}
           onOpen={() => onOpenLightbox(items, i)}
         />
       ))}

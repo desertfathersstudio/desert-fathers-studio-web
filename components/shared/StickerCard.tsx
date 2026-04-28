@@ -13,6 +13,7 @@ export interface StickerProduct {
   isNew?: boolean;
   isPack?: boolean;
   packSize?: number;
+  packOnly?: boolean;
 }
 
 interface StickerCardProps {
@@ -111,6 +112,20 @@ export function StickerCard({
               }}
             >
               {product.packSize} stickers
+            </span>
+          )}
+
+          {product.packOnly && (
+            <span
+              className="absolute top-2 right-2 text-[9px] font-medium uppercase tracking-wide px-2 py-0.5"
+              style={{
+                background: "var(--text-muted)",
+                color: "#fff",
+                borderRadius: 3,
+                opacity: 0.75,
+              }}
+            >
+              Pack only
             </span>
           )}
         </div>
