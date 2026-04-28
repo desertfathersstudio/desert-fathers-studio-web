@@ -130,26 +130,26 @@ export function StickerCard({
           )}
         </div>
 
-        {/* Add to cart — appears on hover */}
+        {/* Add to cart — slides up from below the image, never covers it */}
         {onAddToCart && (
-          <button
-            className="absolute inset-x-2.5 bottom-2.5 py-2 text-xs font-medium text-center
-                       opacity-0 translate-y-1 pointer-events-none
-                       group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto
-                       transition-all duration-200"
-            style={{
-              background: "var(--brand)",
-              color: "#fff",
-              borderRadius: 7,
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart();
-            }}
-            aria-label={`Add ${product.name} to cart`}
+          <div
+            className="translate-y-full group-hover:translate-y-0 transition-transform duration-200"
           >
-            Add to cart
-          </button>
+            <button
+              className="w-full py-2 text-xs font-medium text-center"
+              style={{
+                background: "var(--brand)",
+                color: "#fff",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToCart();
+              }}
+              aria-label={`Add ${product.name} to cart`}
+            >
+              Add to cart
+            </button>
+          </div>
         )}
       </div>
 
