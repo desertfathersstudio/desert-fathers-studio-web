@@ -30,32 +30,32 @@ const USE_CASES = [
   {
     icon: BookOpen,
     label: "Bible",
-    headline: "Mark every holy season.",
-    body: "Slip a saint into the margin. Let Holy Week live in the pages where you read it.",
+    headline: "Keep it where you read.",
+    body: "Add a small reminder to the pages you return to most.",
   },
   {
     icon: NotebookPen,
     label: "Planner",
-    headline: "Begin each week in prayer.",
-    body: "A sticker at the top of Sunday is a small altar before the week begins.",
+    headline: "Start your week with purpose.",
+    body: "A simple habit that keeps you grounded through the week.",
   },
   {
     icon: Laptop,
     label: "MacBook",
-    headline: "Faith on every workspace.",
-    body: "Carry the Pantokrator into every meeting. Let your desk be a little shrine.",
+    headline: "A quiet reminder at your desk.",
+    body: "Faith doesn't stay at church — it follows you into your work.",
   },
   {
     icon: Droplets,
     label: "Water Bottle",
-    headline: "Sacred art on every sip.",
-    body: "Waterproof by design — because saints belong everywhere life takes you.",
+    headline: "Made to go with you.",
+    body: "Durable, simple, and built for everyday use.",
   },
   {
     icon: Gift,
     label: "Gifts",
-    headline: "The gift that means something.",
-    body: "For baptisms, name days, graduations — a sticker carries more than it weighs.",
+    headline: "Give something that lasts.",
+    body: "Thoughtful, personal, and easy to share.",
   },
 ] as const;
 
@@ -83,7 +83,7 @@ function UseCasesSection() {
               letterSpacing: "-0.01em",
             }}
           >
-            Sacred art travels with you.
+            Take your faith with you.
           </h2>
         </div>
 
