@@ -6,7 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useLightbox } from "@/lib/lightbox";
 import { useCart } from "@/lib/cart";
-import { CATEGORY_LABELS } from "@/lib/catalog";
+import { CATALOG, CATEGORY_LABELS } from "@/lib/catalog";
+
+function getPackForSticker(category: string) {
+  if (category === "holy-week") return CATALOG.find((s) => s.id === "holy-week-pack") ?? null;
+  if (category === "resurrection") return CATALOG.find((s) => s.id === "resurrection-pack") ?? null;
+  return null;
+}
 
 
 export function StickerLightbox() {
@@ -80,9 +86,19 @@ export function StickerLightbox() {
     touchStartX.current = null;
   };
 
+  const pack = sticker ? getPackForSticker(sticker.category) : null;
+  const isPackOnly = !!sticker?.packOnly;
+  const isPackWithIndividual = !!(pack && !isPackOnly && sticker);
+
   const handleAdd = () => {
     if (!sticker) return;
     add(sticker, qty);
+    close();
+  };
+
+  const handleAddPack = () => {
+    if (!pack) return;
+    add(pack, 1);
     close();
   };
 
@@ -286,78 +302,112 @@ export function StickerLightbox() {
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
-                      ${sticker.price.toFixed(2)} each
+                      {isPackOnly && pack
+                        ? <>${pack.price.toFixed(2)} <span style={{ fontSize: "0.8rem", fontWeight: 400, color: "var(--text-muted)" }}>— {pack.name}</span></>
+                        : <>${sticker.price.toFixed(2)} each</>
+                      }
                     </p>
 
-                    {/* Qty stepper */}
-                    <div className="mt-auto">
-                      <p
-                        className="text-xs mb-2"
-                        style={{ color: "var(--text-muted)" }}
-                      >
-                        Quantity
-                      </p>
-                      <div className="flex items-center gap-2 mb-4">
+                    <div className="mt-auto flex flex-col gap-3">
+                      {/* Pack-only: add the full pack */}
+                      {isPackOnly && pack && (
                         <button
-                          onClick={() => setQtyLocal((q) => Math.max(1, q - 1))}
-                          className="flex items-center justify-center w-9 h-9 text-lg font-medium rounded-lg transition-opacity hover:opacity-70"
+                          onClick={handleAddPack}
+                          className="w-full py-3 text-sm font-medium transition-opacity hover:opacity-85"
                           style={{
-                            border: "1px solid var(--border)",
-                            color: "var(--text)",
-                            background: "var(--bg)",
+                            background: "var(--brand)",
+                            color: "#fff",
+                            borderRadius: "var(--radius-btn)",
+                            fontFamily: "var(--font-sans)",
                           }}
-                          aria-label="Decrease quantity"
                         >
-                          −
+                          Add {pack.name} to cart — ${pack.price.toFixed(2)}
                         </button>
-                        <input
-                          type="number"
-                          min={1}
-                          max={99}
-                          value={qty}
-                          onChange={(e) => {
-                            const v = parseInt(e.target.value, 10);
-                            if (!isNaN(v) && v >= 1) setQtyLocal(Math.min(v, 99));
-                          }}
-                          className="text-center text-sm font-medium"
-                          style={{
-                            width: 52,
-                            border: "1px solid var(--border)",
-                            borderRadius: 8,
-                            padding: "7px 4px",
-                            background: "var(--bg)",
-                            color: "var(--text)",
-                            fontVariantNumeric: "tabular-nums",
-                            outline: "none",
-                          }}
-                          aria-label="Quantity"
-                        />
-                        <button
-                          onClick={() => setQtyLocal((q) => Math.min(99, q + 1))}
-                          className="flex items-center justify-center w-9 h-9 text-lg font-medium rounded-lg transition-opacity hover:opacity-70"
-                          style={{
-                            border: "1px solid var(--border)",
-                            color: "var(--text)",
-                            background: "var(--bg)",
-                          }}
-                          aria-label="Increase quantity"
-                        >
-                          +
-                        </button>
-                      </div>
+                      )}
 
-                      <button
-                        onClick={handleAdd}
-                        className="w-full py-3 text-sm font-medium transition-opacity hover:opacity-85"
-                        style={{
-                          background: "var(--brand)",
-                          color: "#fff",
-                          borderRadius: "var(--radius-btn)",
-                          fontFamily: "var(--font-sans)",
-                        }}
-                      >
-                        Add to cart — ${(sticker.price * qty).toFixed(2)}
-                      </button>
+                      {/* Standard or individually-purchasable: qty stepper + add single */}
+                      {!isPackOnly && (
+                        <>
+                          <div>
+                            <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
+                              Quantity
+                            </p>
+                            <div className="flex items-center gap-2 mb-4">
+                              <button
+                                onClick={() => setQtyLocal((q) => Math.max(1, q - 1))}
+                                className="flex items-center justify-center w-9 h-9 text-lg font-medium rounded-lg transition-opacity hover:opacity-70"
+                                style={{ border: "1px solid var(--border)", color: "var(--text)", background: "var(--bg)" }}
+                                aria-label="Decrease quantity"
+                              >
+                                −
+                              </button>
+                              <input
+                                type="number"
+                                min={1}
+                                max={99}
+                                value={qty}
+                                onChange={(e) => {
+                                  const v = parseInt(e.target.value, 10);
+                                  if (!isNaN(v) && v >= 1) setQtyLocal(Math.min(v, 99));
+                                }}
+                                className="text-center text-sm font-medium"
+                                style={{
+                                  width: 52,
+                                  border: "1px solid var(--border)",
+                                  borderRadius: 8,
+                                  padding: "7px 4px",
+                                  background: "var(--bg)",
+                                  color: "var(--text)",
+                                  fontVariantNumeric: "tabular-nums",
+                                  outline: "none",
+                                }}
+                                aria-label="Quantity"
+                              />
+                              <button
+                                onClick={() => setQtyLocal((q) => Math.min(99, q + 1))}
+                                className="flex items-center justify-center w-9 h-9 text-lg font-medium rounded-lg transition-opacity hover:opacity-70"
+                                style={{ border: "1px solid var(--border)", color: "var(--text)", background: "var(--bg)" }}
+                                aria-label="Increase quantity"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={handleAdd}
+                            className="w-full py-3 text-sm font-medium transition-opacity hover:opacity-85"
+                            style={{
+                              background: "var(--brand)",
+                              color: "#fff",
+                              borderRadius: "var(--radius-btn)",
+                              fontFamily: "var(--font-sans)",
+                            }}
+                          >
+                            {isPackWithIndividual
+                              ? `Add this sticker — $${(sticker.price * qty).toFixed(2)}`
+                              : `Add to cart — $${(sticker.price * qty).toFixed(2)}`
+                            }
+                          </button>
+
+                          {/* Also offer the full pack for exception stickers */}
+                          {isPackWithIndividual && pack && (
+                            <button
+                              onClick={handleAddPack}
+                              className="w-full py-3 text-sm font-medium transition-opacity hover:opacity-70"
+                              style={{
+                                border: "1px solid var(--border-dark)",
+                                color: "var(--text)",
+                                borderRadius: "var(--radius-btn)",
+                                fontFamily: "var(--font-sans)",
+                                background: "transparent",
+                              }}
+                            >
+                              Add full {pack.name} — ${pack.price.toFixed(2)}
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </motion.div>
               </div>

@@ -165,17 +165,26 @@ export function StickerCard({
         >
           {product.name}
         </h3>
-        <p
-          className="mt-0.5 text-sm font-medium"
-          style={{
-            color: "var(--brand)",
-            fontVariantNumeric: "tabular-nums",
-            fontFamily: "var(--font-sans)",
-            fontSize: "0.85rem",
-          }}
-        >
-          ${product.price.toFixed(2)}
-        </p>
+        {product.packOnly ? (
+          <p
+            className="mt-0.5 text-xs"
+            style={{ color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}
+          >
+            Part of pack
+          </p>
+        ) : (
+          <p
+            className="mt-0.5 text-sm font-medium"
+            style={{
+              color: "var(--brand)",
+              fontVariantNumeric: "tabular-nums",
+              fontFamily: "var(--font-sans)",
+              fontSize: "0.85rem",
+            }}
+          >
+            ${product.price.toFixed(2)}
+          </p>
+        )}
       </div>
     </motion.article>
   );
