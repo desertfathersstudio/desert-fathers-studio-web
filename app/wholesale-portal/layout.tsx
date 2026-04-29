@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Wholesale Portal",
@@ -6,5 +7,10 @@ export const metadata: Metadata = {
 };
 
 export default function WholesaleLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <Toaster position="bottom-center" duration={2500} />
+    </>
+  );
 }
