@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 
 function getOriginAndRpId(req: NextRequest) {
   const host  = req.headers.get("host") ?? "localhost";
@@ -10,43 +10,36 @@ function getOriginAndRpId(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const sb = await createSupabaseServer();
+  const challenge = req.cookies.get("passkey_auth_challenge")?.value;
+  if (!challenge) {
+    return NextResponse.json({ error: "Challenge expired — try again." }, { status: 400 });
+  }
+
   const body = await req.json();
   const credentialId: string = body.credential?.id;
-
   if (!credentialId) {
     return NextResponse.json({ error: "Missing credential ID" }, { status: 400 });
   }
 
-  // Fetch the stored passkey by credential_id
-  const { data: passkey } = await sb
+  // Service role — user has no session yet, RLS would block reads
+  const svc = createSupabaseService();
+
+  const { data: passkey } = await svc
     .from("admin_passkeys")
     .select("*")
     .eq("credential_id", credentialId)
     .single();
 
   if (!passkey) {
-    return NextResponse.json({ error: "Passkey not found" }, { status: 404 });
-  }
-
-  // Fetch the stored challenge
-  const { data: challengeRow } = await sb
-    .from("admin_passkeys")
-    .select("public_key")
-    .eq("credential_id", "auth-challenge-global")
-    .single();
-
-  if (!challengeRow) {
-    return NextResponse.json({ error: "No challenge found" }, { status: 400 });
+    return NextResponse.json({ error: "Passkey not registered. Set up Face ID after signing in with your password first." }, { status: 404 });
   }
 
   let verification;
   try {
     const { origin, rpID } = getOriginAndRpId(req);
-    // In v13, credential.id is a Base64URL string; publicKey is Uint8Array
     verification = await verifyAuthenticationResponse({
       response:          body.credential,
-      expectedChallenge: challengeRow.public_key,
+      expectedChallenge: challenge,
       expectedOrigin:    origin,
       expectedRPID:      rpID,
       credential: {
@@ -64,15 +57,31 @@ export async function POST(req: NextRequest) {
   }
 
   // Update counter
-  await sb.from("admin_passkeys")
+  await svc.from("admin_passkeys")
     .update({ counter: verification.authenticationInfo.newCounter })
     .eq("credential_id", credentialId);
 
-  // Sign the user in via magic link exchange isn't possible server-side without a token.
-  // Return the user_id; the client will call supabase.auth.signInWithOtp to get a session
-  // by re-using the magic link flow, or we use a custom admin JWT approach.
-  // For simplicity: return user_id and let the client proceed to /admin/inventory
-  // after verifying (the user is already authenticated in a prior session via passkey gesture).
-  // The recommended production flow is a custom JWT or service-role session exchange.
-  return NextResponse.json({ verified: true, userId: passkey.user_id });
+  // Generate a one-time sign-in link for the user via admin API
+  const { data: userData } = await svc.auth.admin.getUserById(passkey.user_id);
+  if (!userData?.user?.email) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  const host  = req.headers.get("host") ?? "localhost";
+  const proto = req.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const redirectTo = `${proto}://${host}/admin/auth/callback`;
+
+  const { data: linkData, error: linkErr } = await svc.auth.admin.generateLink({
+    type:    "magiclink",
+    email:   userData.user.email,
+    options: { redirectTo },
+  });
+
+  if (linkErr || !linkData?.properties?.action_link) {
+    return NextResponse.json({ error: linkErr?.message ?? "Could not generate sign-in link" }, { status: 500 });
+  }
+
+  const res = NextResponse.json({ verified: true, actionLink: linkData.properties.action_link });
+  res.cookies.set("passkey_auth_challenge", "", { maxAge: 0, path: "/" });
+  return res;
 }

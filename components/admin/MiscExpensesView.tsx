@@ -4,32 +4,35 @@ import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
-import type { GiftsLog } from "@/lib/admin/types";
-import { GIVEAWAY_REASONS } from "@/lib/admin/types";
 
-type MinProduct = { id: string; sku: string; name: string; image_url: string | null };
+export interface MiscExpense {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string;
+  notes: string | null;
+  created_at: string;
+}
 
-export function GiveawaysView({
-  giveaways: initialGiveaways,
-  products,
-}: {
-  giveaways: GiftsLog[];
-  products: MinProduct[];
-}) {
-  const [giveaways, setGiveaways] = useState<GiftsLog[]>(initialGiveaways);
-  const [logOpen, setLogOpen]     = useState(false);
+const CATEGORIES = ["Packaging", "Shipping Supplies", "Marketing", "Software", "Equipment", "Fees", "Other"];
 
-  // Stats
-  const totalQty = giveaways.reduce((s, g) => s + g.qty, 0);
-  const thisMonth = giveaways.filter((g) => g.date.startsWith(new Date().toISOString().slice(0, 7))).reduce((s, g) => s + g.qty, 0);
+export function MiscExpensesView({ expenses: initialExpenses }: { expenses: MiscExpense[] }) {
+  const [expenses, setExpenses] = useState<MiscExpense[]>(initialExpenses);
+  const [addOpen, setAddOpen] = useState(false);
+
+  const total = expenses.reduce((s, e) => s + e.amount, 0);
+  const thisMonth = expenses
+    .filter((e) => e.date.startsWith(new Date().toISOString().slice(0, 7)))
+    .reduce((s, e) => s + e.amount, 0);
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this giveaway entry?")) return;
+    if (!confirm("Delete this expense?")) return;
     const sb = createSupabaseBrowser();
-    const { error } = await sb.from("gifts_log").delete().eq("id", id);
+    const { error } = await sb.from("misc_expenses").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
-    setGiveaways((prev) => prev.filter((g) => g.id !== id));
-    toast.success("Entry deleted");
+    setExpenses((prev) => prev.filter((e) => e.id !== id));
+    toast.success("Expense deleted");
   }
 
   return (
@@ -38,9 +41,9 @@ export function GiveawaysView({
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "0.75rem", marginBottom: "1.25rem" }}>
         {[
-          { label: "Total Given",      value: totalQty },
-          { label: "This Month",       value: thisMonth },
-          { label: "Total Entries",    value: giveaways.length },
+          { label: "Total Spent",  value: `$${total.toFixed(2)}` },
+          { label: "This Month",   value: `$${thisMonth.toFixed(2)}` },
+          { label: "# Entries",    value: expenses.length },
         ].map((s) => (
           <div key={s.label} style={{ background: "#fff", border: "1px solid #e8ddd5", borderRadius: 10, padding: "0.875rem 1rem" }}>
             <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 600, color: "#9a7080", textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.label}</p>
@@ -52,34 +55,34 @@ export function GiveawaysView({
       {/* Toolbar */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
         <button
-          onClick={() => setLogOpen(true)}
+          onClick={() => setAddOpen(true)}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#6b1d3b", color: "#fff", border: "none", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
         >
           <Plus size={14} />
-          Log Giveaway
+          Add Expense
         </button>
       </div>
 
       {/* List */}
-      {giveaways.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#9a7080", fontSize: "0.9rem" }}>No giveaways logged.</div>
+      {expenses.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "3rem", color: "#9a7080", fontSize: "0.9rem" }}>No expenses logged.</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-          {giveaways.map((g) => (
-            <div key={g.id} style={{ background: "#fff", border: "1px solid #e8ddd5", borderRadius: 10, padding: "0.875rem 1rem", display: "flex", alignItems: "center", gap: "0.875rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {expenses.map((expense) => (
+            <div key={expense.id} style={{ background: "#fff", border: "1px solid #e8ddd5", borderRadius: 10, padding: "0.875rem 1rem", display: "flex", alignItems: "center", gap: "0.875rem" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: "0 0 2px", fontWeight: 600, fontSize: "0.88rem", color: "#2a1a0e" }}>
-                  {g.products?.name ?? "Unknown"}
-                  <span style={{ marginLeft: 8, fontWeight: 400, color: "#9a7080", fontSize: "0.78rem" }}>×{g.qty}</span>
-                </p>
-                <p style={{ margin: 0, fontSize: "0.72rem", color: "#9a7080" }}>
-                  {g.date} · {g.reason}
-                  {g.recipient ? ` · ${g.recipient}` : ""}
-                  {g.notes ? ` — ${g.notes}` : ""}
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                  <p style={{ margin: 0, fontWeight: 600, fontSize: "0.88rem", color: "#2a1a0e" }}>{expense.description}</p>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#6b4050", background: "#f5ece8", borderRadius: 4, padding: "2px 6px" }}>{expense.category}</span>
+                </div>
+                <p style={{ margin: "2px 0 0", fontSize: "0.72rem", color: "#9a7080" }}>
+                  {expense.date}
+                  {expense.notes ? ` — ${expense.notes}` : ""}
                 </p>
               </div>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.95rem", color: "#2a1a0e", flexShrink: 0 }}>${expense.amount.toFixed(2)}</p>
               <button
-                onClick={() => handleDelete(g.id)}
+                onClick={() => handleDelete(expense.id)}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4, flexShrink: 0, opacity: 0.6 }}
               >
                 <Trash2 size={14} />
@@ -89,65 +92,41 @@ export function GiveawaysView({
         </div>
       )}
 
-      {logOpen && (
-        <LogGiveawayModal
-          products={products}
-          onClose={() => setLogOpen(false)}
-          onLogged={(entry) => {
-            setGiveaways((prev) => [entry, ...prev]);
-            setLogOpen(false);
-          }}
+      {addOpen && (
+        <AddExpenseModal
+          onClose={() => setAddOpen(false)}
+          onAdded={(e) => { setExpenses((prev) => [e, ...prev]); setAddOpen(false); }}
         />
       )}
     </div>
   );
 }
 
-function LogGiveawayModal({
-  products,
-  onClose,
-  onLogged,
-}: {
-  products: MinProduct[];
-  onClose: () => void;
-  onLogged: (g: GiftsLog) => void;
-}) {
+function AddExpenseModal({ onClose, onAdded }: { onClose: () => void; onAdded: (e: MiscExpense) => void }) {
   const sb = createSupabaseBrowser();
-  const [productId, setProductId] = useState(products[0]?.id ?? "");
-  const [qty, setQty]             = useState(1);
-  const [recipient, setRecipient] = useState("");
-  const [reason, setReason]       = useState<string>(GIVEAWAY_REASONS[0]);
-  const [notes, setNotes]         = useState("");
-  const [date, setDate]           = useState(new Date().toISOString().slice(0, 10));
-  const [saving, setSaving]       = useState(false);
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("Other");
+  const [notes, setNotes] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [saving, setSaving] = useState(false);
 
-  async function handleLog() {
-    if (!productId) { toast.error("Select a product"); return; }
+  async function handleAdd() {
+    if (!description.trim()) { toast.error("Enter a description"); return; }
+    const amt = parseFloat(amount);
+    if (isNaN(amt) || amt <= 0) { toast.error("Enter a valid amount"); return; }
     setSaving(true);
     try {
-      const { error, data } = await sb.rpc("log_giveaway", {
-        p_product_id: productId,
-        p_qty: qty,
-        p_recipient: recipient || null,
-        p_reason: reason,
-        p_notes: notes || null,
-        p_date: date,
-      });
-      if (error) throw error;
-
-      // Fetch the inserted row with product join
-      const { data: entry } = await sb
-        .from("gifts_log")
-        .select("*, products(name, sku)")
-        .eq("product_id", productId)
-        .order("created_at", { ascending: false })
-        .limit(1)
+      const { data, error } = await sb
+        .from("misc_expenses")
+        .insert({ description: description.trim(), amount: amt, category, notes: notes.trim() || null, date })
+        .select()
         .single();
-
-      toast.success("Giveaway logged — inventory updated");
-      if (entry) onLogged(entry as GiftsLog);
+      if (error) throw error;
+      toast.success("Expense added");
+      onAdded(data as MiscExpense);
     } catch (err: unknown) {
-      toast.error((err as Error).message ?? "Failed to log");
+      toast.error((err as Error).message ?? "Failed to add");
     } finally {
       setSaving(false);
     }
@@ -157,20 +136,18 @@ function LogGiveawayModal({
     <Overlay onClose={onClose}>
       <div style={modalStyle}>
         <div style={headerStyle}>
-          <p style={titleStyle}>Log Giveaway</p>
+          <p style={titleStyle}>Add Expense</p>
           <button onClick={onClose} style={closeBtn}>✕</button>
         </div>
         <div style={{ padding: "1.125rem", display: "flex", flexDirection: "column", gap: "0.875rem" }}>
           <div>
-            <Label>Design</Label>
-            <select value={productId} onChange={(e) => setProductId(e.target.value)} style={inputStyle}>
-              {products.map((p) => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
-            </select>
+            <Label>Description</Label>
+            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Poly mailers" style={inputStyle} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div>
-              <Label>Qty</Label>
-              <input type="number" min={1} value={qty} onChange={(e) => setQty(Number(e.target.value))} style={inputStyle} />
+              <Label>Amount ($)</Label>
+              <input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" style={inputStyle} />
             </div>
             <div>
               <Label>Date</Label>
@@ -178,14 +155,10 @@ function LogGiveawayModal({
             </div>
           </div>
           <div>
-            <Label>Reason</Label>
-            <select value={reason} onChange={(e) => setReason(e.target.value)} style={inputStyle}>
-              {GIVEAWAY_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+            <Label>Category</Label>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle}>
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-          </div>
-          <div>
-            <Label>Recipient (optional)</Label>
-            <input value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="Name or org" style={inputStyle} />
           </div>
           <div>
             <Label>Notes (optional)</Label>
@@ -194,7 +167,7 @@ function LogGiveawayModal({
         </div>
         <div style={footerStyle}>
           <button onClick={onClose} style={outlineBtn}>Cancel</button>
-          <button onClick={handleLog} disabled={saving} style={primaryBtn}>{saving ? "Logging…" : "Log Giveaway"}</button>
+          <button onClick={handleAdd} disabled={saving} style={primaryBtn}>{saving ? "Adding…" : "Add Expense"}</button>
         </div>
       </div>
     </Overlay>
@@ -208,6 +181,7 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
     </div>
   );
 }
+
 function Label({ children }: { children: React.ReactNode }) {
   return <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>{children}</label>;
 }

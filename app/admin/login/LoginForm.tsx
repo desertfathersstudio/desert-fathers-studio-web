@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Fingerprint } from "lucide-react";
+import { Fingerprint, Eye, EyeOff } from "lucide-react";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { startAuthentication } from "@simplewebauthn/browser";
 
@@ -29,29 +29,26 @@ const labelStyle: React.CSSProperties = {
 };
 
 export function LoginForm() {
-  const [email, setEmail]       = useState("desertfathersstudio@gmail.com");
-  const [sent, setSent]         = useState(false);
-  const [loading, setLoading]   = useState(false);
+  const [password, setPassword]     = useState("");
+  const [showPw, setShowPw]         = useState(false);
+  const [loading, setLoading]       = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
-  const [error, setError]       = useState("");
+  const [error, setError]           = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
     const supabase = createSupabaseBrowser();
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/admin/auth/callback`,
-      },
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: "desertfathersstudio@gmail.com",
+      password,
     });
     if (authError) {
-      setError(authError.message);
+      setError("Incorrect password");
       setLoading(false);
     } else {
-      setSent(true);
-      setLoading(false);
+      window.location.href = "/admin/inventory";
     }
   }
 
@@ -73,61 +70,20 @@ export function LoginForm() {
       const result = await verRes.json();
       if (!verRes.ok) throw new Error(result.error ?? "Authentication failed");
 
-      // Passkey verified — redirect to admin
-      window.location.href = "/admin/inventory";
+      // Navigate to the magic link — Supabase sets the session then redirects to /admin/auth/callback
+      if (result.actionLink) {
+        window.location.href = result.actionLink;
+      } else {
+        window.location.href = "/admin/inventory";
+      }
     } catch (err: unknown) {
       const msg = (err as Error).message ?? "Passkey sign-in failed";
-      if (!msg.includes("cancel") && !msg.includes("Abort")) {
+      if (!msg.toLowerCase().includes("cancel") && !msg.toLowerCase().includes("abort")) {
         setError(msg);
       }
     } finally {
       setPasskeyLoading(false);
     }
-  }
-
-  if (sent) {
-    return (
-      <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>✉️</div>
-        <p
-          style={{
-            color: "#f5f0ea",
-            fontFamily: "Inter, system-ui, sans-serif",
-            fontWeight: 600,
-            fontSize: "0.95rem",
-            marginBottom: "0.5rem",
-          }}
-        >
-          Check your email
-        </p>
-        <p
-          style={{
-            color: "#8a6070",
-            fontFamily: "Inter, system-ui, sans-serif",
-            fontSize: "0.82rem",
-            lineHeight: 1.6,
-          }}
-        >
-          A sign-in link was sent to{" "}
-          <span style={{ color: "#c4a0b0" }}>{email}</span>. Click it to
-          continue.
-        </p>
-        <button
-          onClick={() => setSent(false)}
-          style={{
-            marginTop: "1.25rem",
-            background: "none",
-            border: "none",
-            color: "#6b1d3b",
-            fontSize: "0.8rem",
-            cursor: "pointer",
-            fontFamily: "Inter, system-ui, sans-serif",
-          }}
-        >
-          Send again
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -141,20 +97,41 @@ export function LoginForm() {
           margin: 0,
         }}
       >
-        Sign in with email
+        Admin Sign In
       </h2>
 
       <div>
-        <label htmlFor="email" style={labelStyle}>Email</label>
-        <input
-          id="email"
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={inputStyle}
-          autoComplete="email"
-        />
+        <label htmlFor="password" style={labelStyle}>Password</label>
+        <div style={{ position: "relative" }}>
+          <input
+            id="password"
+            type={showPw ? "text" : "password"}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ ...inputStyle, paddingRight: "2.5rem" }}
+            autoComplete="current-password"
+            placeholder="Enter password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPw((v) => !v)}
+            style={{
+              position: "absolute",
+              right: "0.75rem",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#8a6070",
+              padding: 0,
+              display: "flex",
+            }}
+          >
+            {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -163,6 +140,7 @@ export function LoginForm() {
             color: "#f87171",
             fontSize: "0.8rem",
             fontFamily: "Inter, system-ui, sans-serif",
+            margin: 0,
           }}
         >
           {error}
@@ -185,10 +163,10 @@ export function LoginForm() {
           transition: "background 0.15s",
         }}
       >
-        {loading ? "Sending…" : "Send Magic Link"}
+        {loading ? "Signing in…" : "Sign In"}
       </button>
 
-      {/* Passkey sign-in */}
+      {/* Passkey / Face ID sign-in */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", margin: "0.25rem 0" }}>
         <div style={{ flex: 1, height: 1, background: "#2d1320" }} />
         <span style={{ fontSize: "0.72rem", color: "#8a6070", fontFamily: "Inter, system-ui, sans-serif" }}>or</span>

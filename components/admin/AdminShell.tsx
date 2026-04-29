@@ -12,6 +12,8 @@ import {
   LogOut,
   Menu,
   X,
+  Receipt,
+  TrendingUp,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
@@ -19,12 +21,14 @@ import { Toaster } from "sonner";
 import { PasskeySetup } from "./PasskeySetup";
 
 const NAV = [
-  { href: "/admin/inventory",   label: "Inventory",    icon: Package },
-  { href: "/admin/orders",      label: "Orders",       icon: ShoppingCart },
-  { href: "/admin/giveaways",   label: "Giveaways",    icon: Gift },
-  { href: "/admin/ideas",       label: "Ideas",        icon: Lightbulb },
-  { href: "/admin/wholesale",   label: "Wholesale",    icon: Users },
-  { href: "/admin/suggestions", label: "Suggestions",  icon: MessageSquare },
+  { href: "/admin/inventory",     label: "Inventory",    icon: Package },
+  { href: "/admin/orders",        label: "Orders",       icon: ShoppingCart },
+  { href: "/admin/giveaways",     label: "Giveaways",    icon: Gift },
+  { href: "/admin/ideas",         label: "Ideas",        icon: Lightbulb },
+  { href: "/admin/money-tracker", label: "Money",        icon: TrendingUp },
+  { href: "/admin/misc-expenses", label: "Expenses",     icon: Receipt },
+  { href: "/admin/wholesale",     label: "Wholesale",    icon: Users },
+  { href: "/admin/suggestions",   label: "Suggestions",  icon: MessageSquare },
 ];
 
 const BOTTOM_TABS = NAV.slice(0, 4); // Inventory, Orders, Giveaways, Ideas on bottom bar

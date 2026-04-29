@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, ChevronDown, ChevronUp, Truck, CheckCircle2, Package, XCircle } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, Truck, CheckCircle2, Package, XCircle, Trash2, ExternalLink, Save } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { MfgOrder, OrderStatus, Supplier } from "@/lib/admin/types";
@@ -18,6 +18,18 @@ const STATUS_META: Record<OrderStatus, { label: string; color: string; bg: strin
 
 const STATUS_ORDER: OrderStatus[] = ["ordered", "shipped", "delivered", "canceled"];
 
+function getTrackingUrl(trackingNumber: string): string {
+  const n = trackingNumber.trim().toUpperCase();
+  if (n.startsWith("1Z")) return `https://www.ups.com/track?tracknum=${n}`;
+  if (/^\d{20,22}$/.test(n) || /^92\d{18,20}$/.test(n) || /^94\d{20}$/.test(n)) {
+    return `https://tools.usps.com/go/TrackConfirmAction?qtc_tLabels1=${n}`;
+  }
+  if (/^\d{12,15}$/.test(n) || /^\d{20}$/.test(n)) {
+    return `https://www.fedex.com/apps/fedextrack/?tracknumbers=${n}`;
+  }
+  return `https://t.17track.net/en#nums=${n}`;
+}
+
 export function OrdersView({
   orders: initialOrders,
   suppliers,
@@ -30,6 +42,8 @@ export function OrdersView({
   const [orders, setOrders] = useState<MfgOrder[]>(initialOrders);
   const [newOrderOpen, setNewOrderOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [trackingEdits, setTrackingEdits] = useState<Record<string, string>>({});
+  const [trackingSaving, setTrackingSaving] = useState<Record<string, boolean>>({});
 
   function toggleExpand(id: string) {
     setExpanded((prev) => {
@@ -61,10 +75,7 @@ export function OrdersView({
   async function handleStatusChange(orderId: string, status: OrderStatus) {
     const sb = createSupabaseBrowser();
     try {
-      const { error } = await sb
-        .from("mfg_orders")
-        .update({ status })
-        .eq("id", orderId);
+      const { error } = await sb.from("mfg_orders").update({ status }).eq("id", orderId);
       if (error) throw error;
       setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
       toast.success("Status updated");
@@ -73,12 +84,46 @@ export function OrdersView({
     }
   }
 
+  async function handleDelete(orderId: string) {
+    if (!confirm("Delete this order? This cannot be undone.")) return;
+    const sb = createSupabaseBrowser();
+    try {
+      const { error } = await sb.from("mfg_orders").delete().eq("id", orderId);
+      if (error) throw error;
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      toast.success("Order deleted");
+    } catch (err: unknown) {
+      toast.error((err as Error).message ?? "Failed to delete");
+    }
+  }
+
+  async function handleSaveTracking(orderId: string) {
+    const tracking = trackingEdits[orderId]?.trim() ?? "";
+    setTrackingSaving((prev) => ({ ...prev, [orderId]: true }));
+    const sb = createSupabaseBrowser();
+    try {
+      const { error } = await sb
+        .from("mfg_orders")
+        .update({ tracking_number: tracking || null })
+        .eq("id", orderId);
+      if (error) throw error;
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, tracking_number: tracking || null } : o))
+      );
+      setTrackingEdits((prev) => { const n = { ...prev }; delete n[orderId]; return n; });
+      toast.success("Tracking saved");
+    } catch (err: unknown) {
+      toast.error((err as Error).message ?? "Failed to save tracking");
+    } finally {
+      setTrackingSaving((prev) => ({ ...prev, [orderId]: false }));
+    }
+  }
+
   function handleOrderAdded(order: MfgOrder) {
     setOrders((prev) => [order, ...prev]);
     setNewOrderOpen(false);
   }
 
-  // Summary stats
   const totalOrdered = orders.filter((o) => o.status === "ordered").length;
   const totalShipped = orders.filter((o) => o.status === "shipped").length;
   const totalCost = orders
@@ -130,30 +175,22 @@ export function OrdersView({
             const meta = STATUS_META[order.status];
             const StatusIcon = meta.icon;
             const isExpanded = expanded.has(order.id);
+            const trackingValue = order.id in trackingEdits ? trackingEdits[order.id] : (order.tracking_number ?? "");
+            const trackingDirty = order.id in trackingEdits && trackingEdits[order.id] !== (order.tracking_number ?? "");
 
             return (
               <div
                 key={order.id}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e8ddd5",
-                  borderRadius: 10,
-                  overflow: "hidden",
-                }}
+                style={{ background: "#fff", border: "1px solid #e8ddd5", borderRadius: 10, overflow: "hidden" }}
               >
                 {/* Card header */}
                 <div
                   style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "0.75rem",
-                    alignItems: "center",
-                    padding: "0.875rem 1rem",
-                    cursor: "pointer",
+                    display: "flex", flexWrap: "wrap", gap: "0.75rem",
+                    alignItems: "center", padding: "0.875rem 1rem", cursor: "pointer",
                   }}
                   onClick={() => toggleExpand(order.id)}
                 >
-                  {/* Status badge */}
                   <span
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 5,
@@ -166,7 +203,6 @@ export function OrdersView({
                     {meta.label}
                   </span>
 
-                  {/* Order ID + supplier */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: 0, fontWeight: 700, fontSize: "0.88rem", color: "#2a1a0e", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {order.order_id}
@@ -177,17 +213,13 @@ export function OrdersView({
                     </p>
                   </div>
 
-                  {/* Cost + qty */}
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
                     <p style={{ margin: 0, fontWeight: 700, fontSize: "0.88rem", color: "#2a1a0e" }}>
                       {order.total_cost != null ? `$${order.total_cost.toFixed(2)}` : "—"}
                     </p>
-                    <p style={{ margin: 0, fontSize: "0.72rem", color: "#9a7080" }}>
-                      {order.total_qty ?? "?"} units
-                    </p>
+                    <p style={{ margin: 0, fontSize: "0.72rem", color: "#9a7080" }}>{order.total_qty ?? "?"} units</p>
                   </div>
 
-                  {/* Expand toggle */}
                   <div style={{ color: "#9a7080" }}>
                     {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </div>
@@ -246,13 +278,57 @@ export function OrdersView({
                       </div>
                     )}
 
-                    {/* Tracking */}
-                    {order.tracking_number && (
-                      <div style={{ marginBottom: "1rem" }}>
-                        <p style={sectionLabel}>Tracking</p>
-                        <p style={{ margin: 0, fontSize: "0.82rem", fontFamily: "monospace", color: "#2a1a0e" }}>{order.tracking_number}</p>
+                    {/* Tracking number — editable */}
+                    <div style={{ marginBottom: "1rem" }}>
+                      <p style={sectionLabel}>Tracking Number</p>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <input
+                          value={trackingValue}
+                          onChange={(e) => setTrackingEdits((prev) => ({ ...prev, [order.id]: e.target.value }))}
+                          placeholder="Enter tracking number…"
+                          style={{
+                            flex: 1, padding: "6px 10px", border: "1px solid #e8ddd5",
+                            borderRadius: 7, fontSize: "0.82rem", fontFamily: "monospace",
+                            color: "#2a1a0e", background: "#fdf8f4", outline: "none",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        {trackingDirty && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleSaveTracking(order.id); }}
+                            disabled={trackingSaving[order.id]}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 4,
+                              padding: "6px 10px", borderRadius: 7,
+                              background: "#6b1d3b", color: "#fff",
+                              border: "none", fontSize: "0.78rem", fontWeight: 600,
+                              cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+                            }}
+                          >
+                            <Save size={12} />
+                            {trackingSaving[order.id] ? "Saving…" : "Save"}
+                          </button>
+                        )}
+                        {trackingValue && !trackingDirty && (
+                          <a
+                            href={getTrackingUrl(trackingValue)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 4,
+                              padding: "6px 10px", borderRadius: 7,
+                              background: "transparent", color: "#3949ab",
+                              border: "1px solid #c7d2fe", fontSize: "0.78rem", fontWeight: 500,
+                              cursor: "pointer", fontFamily: "inherit", textDecoration: "none", whiteSpace: "nowrap",
+                            }}
+                          >
+                            <ExternalLink size={12} />
+                            Track
+                          </a>
+                        )}
                       </div>
-                    )}
+                    </div>
 
                     {/* Actions */}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
@@ -271,7 +347,7 @@ export function OrdersView({
                           Mark Delivered
                         </button>
                       )}
-                      <div style={{ display: "flex", gap: 6 }}>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                         {STATUS_ORDER.filter((s) => s !== order.status).map((s) => (
                           <button
                             key={s}
@@ -287,6 +363,20 @@ export function OrdersView({
                           </button>
                         ))}
                       </div>
+                      <div style={{ flex: 1 }} />
+                      <button
+                        onClick={() => handleDelete(order.id)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 4,
+                          padding: "5px 10px", borderRadius: 6,
+                          background: "transparent", border: "1px solid #fecaca",
+                          color: "#dc2626", fontSize: "0.72rem", fontWeight: 500,
+                          cursor: "pointer", fontFamily: "inherit",
+                        }}
+                      >
+                        <Trash2 size={12} />
+                        Delete
+                      </button>
                     </div>
                   </div>
                 )}
