@@ -108,6 +108,16 @@ export function NewOrderModal({
         .select("*, products(name, sku, image_url)");
       if (iErr) throw iErr;
 
+      // Increment inventory.incoming for each ordered product (non-delivered orders)
+      if (status !== "delivered") {
+        for (const line of lines) {
+          await sb.rpc("increment_incoming", {
+            p_product_id: line.product_id,
+            p_qty: line.qty_ordered,
+          });
+        }
+      }
+
       toast.success("Order created");
       onAdded({ ...order, mfg_order_items: items ?? [] } as MfgOrder);
     } catch (err: unknown) {

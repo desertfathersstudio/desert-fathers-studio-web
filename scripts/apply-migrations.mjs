@@ -40,6 +40,8 @@ const MIGRATIONS = [
   "003_rpc_deliver_order.sql",
   "004_rpc_log_giveaway.sql",
   "005_misc_expenses.sql",
+  "006_fix_rpc_generated_status.sql",
+  "007_incoming_rpc_and_backfill.sql",
 ];
 
 await client.connect();
