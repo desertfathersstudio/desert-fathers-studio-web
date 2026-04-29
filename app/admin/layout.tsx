@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {children}
       <script
         dangerouslySetInnerHTML={{
-          __html: `if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');`,
+          __html: `if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.update())); navigator.serviceWorker.register('/sw.js'); }`,
         }}
       />
     </>
