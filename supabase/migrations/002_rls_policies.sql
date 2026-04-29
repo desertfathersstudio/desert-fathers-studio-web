@@ -13,8 +13,13 @@ declare
 begin
   foreach tbl in array tables loop
     execute format('alter table %I enable row level security', tbl);
+    -- Drop existing policy first so this is idempotent
+    begin
+      execute format('drop policy if exists "%s_admin_all" on %I', tbl, tbl);
+    exception when others then null;
+    end;
     execute format(
-      'create policy if not exists "%s_admin_all" on %I for all
+      'create policy "%s_admin_all" on %I for all
        using (auth.role() = ''authenticated'')
        with check (auth.role() = ''authenticated'')',
       tbl, tbl
