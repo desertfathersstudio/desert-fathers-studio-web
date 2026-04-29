@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Fingerprint } from "lucide-react";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -27,10 +29,11 @@ const labelStyle: React.CSSProperties = {
 };
 
 export function LoginForm() {
-  const [email, setEmail] = useState("desertfathersstudio@gmail.com");
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [email, setEmail]       = useState("desertfathersstudio@gmail.com");
+  const [sent, setSent]         = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [error, setError]       = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,6 +52,36 @@ export function LoginForm() {
     } else {
       setSent(true);
       setLoading(false);
+    }
+  }
+
+  async function handlePasskey() {
+    setPasskeyLoading(true);
+    setError("");
+    try {
+      const optRes = await fetch("/api/passkeys/auth-options");
+      if (!optRes.ok) throw new Error(await optRes.text());
+      const options = await optRes.json();
+
+      const credential = await startAuthentication({ optionsJSON: options });
+
+      const verRes = await fetch("/api/passkeys/auth-verify", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ credential }),
+      });
+      const result = await verRes.json();
+      if (!verRes.ok) throw new Error(result.error ?? "Authentication failed");
+
+      // Passkey verified — redirect to admin
+      window.location.href = "/admin/inventory";
+    } catch (err: unknown) {
+      const msg = (err as Error).message ?? "Passkey sign-in failed";
+      if (!msg.includes("cancel") && !msg.includes("Abort")) {
+        setError(msg);
+      }
+    } finally {
+      setPasskeyLoading(false);
     }
   }
 
@@ -153,6 +186,37 @@ export function LoginForm() {
         }}
       >
         {loading ? "Sending…" : "Send Magic Link"}
+      </button>
+
+      {/* Passkey sign-in */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", margin: "0.25rem 0" }}>
+        <div style={{ flex: 1, height: 1, background: "#2d1320" }} />
+        <span style={{ fontSize: "0.72rem", color: "#8a6070", fontFamily: "Inter, system-ui, sans-serif" }}>or</span>
+        <div style={{ flex: 1, height: 1, background: "#2d1320" }} />
+      </div>
+
+      <button
+        type="button"
+        onClick={handlePasskey}
+        disabled={passkeyLoading}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "0.5rem",
+          background: "transparent",
+          color: passkeyLoading ? "#8a6070" : "#f5f0ea",
+          border: "1px solid #2d1320",
+          borderRadius: 8,
+          padding: "0.7rem",
+          fontFamily: "Inter, system-ui, sans-serif",
+          fontWeight: 500,
+          fontSize: "0.88rem",
+          cursor: passkeyLoading ? "not-allowed" : "pointer",
+        }}
+      >
+        <Fingerprint size={16} />
+        {passkeyLoading ? "Authenticating…" : "Sign in with Face ID"}
       </button>
     </form>
   );

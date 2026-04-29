@@ -13,9 +13,10 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Toaster } from "sonner";
+import { PasskeySetup } from "./PasskeySetup";
 
 const NAV = [
   { href: "/admin/inventory",   label: "Inventory",    icon: Package },
@@ -51,6 +52,27 @@ export function AdminShell({
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showPasskeySetup, setShowPasskeySetup] = useState(false);
+
+  useEffect(() => {
+    // Prompt to set up passkey if user has none and hasn't dismissed
+    const dismissed = sessionStorage.getItem("dfs-passkey-dismissed");
+    if (dismissed) return;
+    if (typeof window === "undefined" || !window.PublicKeyCredential) return;
+
+    const sb = createSupabaseBrowser();
+    sb.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      sb.from("admin_passkeys")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .not("device_name", "eq", "__challenge__")
+        .not("device_name", "eq", "__auth_challenge__")
+        .then(({ count }) => {
+          if ((count ?? 0) === 0) setShowPasskeySetup(true);
+        });
+    });
+  }, []);
 
   async function handleLogout() {
     const sb = createSupabaseBrowser();
@@ -363,6 +385,16 @@ export function AdminShell({
             </div>
           </div>
         </>
+      )}
+
+      {/* ── Passkey setup prompt ─────────────────────────────────────── */}
+      {showPasskeySetup && (
+        <PasskeySetup
+          onDismiss={() => {
+            sessionStorage.setItem("dfs-passkey-dismissed", "1");
+            setShowPasskeySetup(false);
+          }}
+        />
       )}
 
       {/* ── Mobile bottom tab bar ────────────────────────────────────── */}
