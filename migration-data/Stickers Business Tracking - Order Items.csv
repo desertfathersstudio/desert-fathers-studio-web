@@ -1,0 +1,82 @@
+Order ID,Design Name,Qty Ordered,Item Type,Unit Cost,Line Base Cost,Shipping Allocation,Extra Cost Allocation,Total Line Cost,Received?,Notes
+ORD-001,Aba Mina,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Abouna Bishoy Kamel,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Anba Wannas,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Archangel Gabriel,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Archangel Michael,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Ava Antonios,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Ava Arsenious,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Ava Ignatius,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Chrsit Passion Week,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,David the Prophet,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Abouna Mina Aboud,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Joseph the Prophet,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Martyrs of Libya,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Mother of Jesus Christ,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Pantokrator (set w/ Mother...),1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Pntokrator (Realism Face),1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Pope Kirillos,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Pope Shenoud - Liturgy,65,Full Batch,$0.25,$16.09,$1.12,$16.09,$33.31,Yes,Will send 50 to Abouna
+ORD-001,Pope Shenouda - Laughing,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Resurrection,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Saint Karas,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Saint Samuel the Confessor,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Moses,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Paesa,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Rewis,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Demiana,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St George,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St John the Baptist,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Joseph the Carpenter,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Marina the Martyr and Nun,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Mark ,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Mary of Egypt,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Pachom and St Tadros,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,St Stephen,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,The Cruxifiction,1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-001,Ti Theotokos (Baby Jesus),1,Proof,$0.25,$0.25,$0.02,$0.25,$0.51,Yes,
+ORD-002,RP - Resurrection w/ Guards,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-002,RP - Empty Tomb,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-002,RP - Mary Magadalene ,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-002,RP - Myrrhnbearers,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-002,RP - Doubting Thomas,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-002,RP - Emuas Disciples,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-002,RP - Apperance in the Upper Room,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-002,RP - Breakfast at Sea,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-002,RP - Ascension,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-002,RP. - Pentecost ,10,Sample,$0.21,$2.06,$0.00,$0.00,$2.06,,send 5 packs to TX to try
+ORD-003,Aba Mina,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Abouna Bishoy Kamel,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Anba Wannas,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Archangel Gabriel,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Archangel Michael,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Ava Antonios,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Ava Arsenious,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Ava Ignatius,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Chrsit Passion Week,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,David the Prophet,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Abouna Mina Aboud,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Joseph the Prophet,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Martyrs of Libya,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Mother of Jesus Christ,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Pantokrator (set w/ Mother...),60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Pope Kirillos,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Pope Shenoud - Liturgy,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Pope Shenouda - Laughing,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Resurrection,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Saint Karas,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Saint Samuel the Confessor,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Moses,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Paesa,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Rewis,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Demiana,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St George,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St John the Baptist,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Joseph the Carpenter,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Marina the Martyr and Nun,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Mark ,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Mary of Egypt,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Pachom and St Tadros,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,St Stephen,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,The Cruxifiction,60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
+ORD-003,Ti Theotokos (Baby Jesus),60,Full Batch,$0.15,$9.14,$0.00,$0.00,$9.14,,take 10 from each
