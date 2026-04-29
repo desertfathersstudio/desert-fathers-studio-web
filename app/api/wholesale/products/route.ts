@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ products });
+    return NextResponse.json(products);
   } catch (err) {
     console.error("[wholesale/products]", err);
     return NextResponse.json({ error: "Failed to load products" }, { status: 500 });
