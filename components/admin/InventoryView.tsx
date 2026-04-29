@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ArrowUpDown } from "lucide-react";
 import type { AdminStats, ProductWithInventory } from "@/lib/admin/types";
 import { StatCard } from "./StatCard";
 import { InventoryCharts } from "./InventoryCharts";
@@ -11,6 +11,7 @@ import { EditProductModal } from "./EditProductModal";
 import { ProductDetailDrawer } from "./ProductDetailDrawer";
 
 type Filter = "all" | "low" | "sold_out" | "reorder" | "under_review";
+type SortBy = "name_asc" | "name_desc" | "sku" | "stock_high" | "stock_low" | "status";
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: "all",          label: "All" },
@@ -30,6 +31,7 @@ export function InventoryView({
   const [products, setProducts] = useState<ProductWithInventory[]>(initialProducts);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [sortBy, setSortBy] = useState<SortBy>("name_asc");
   const [addOpen, setAddOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<ProductWithInventory | null>(null);
   const [detailProduct, setDetailProduct] = useState<ProductWithInventory | null>(null);
@@ -55,8 +57,21 @@ export function InventoryView({
       );
     }
 
+    const STATUS_ORDER = { in_stock: 0, low: 1, sold_out: 2 };
+    list = [...list].sort((a, b) => {
+      switch (sortBy) {
+        case "name_asc":   return a.name.localeCompare(b.name);
+        case "name_desc":  return b.name.localeCompare(a.name);
+        case "sku":        return a.sku.localeCompare(b.sku);
+        case "stock_high": return (b.inventory?.on_hand ?? 0) - (a.inventory?.on_hand ?? 0);
+        case "stock_low":  return (a.inventory?.on_hand ?? 0) - (b.inventory?.on_hand ?? 0);
+        case "status":     return (STATUS_ORDER[a.inventory?.status ?? "sold_out"] ?? 2) - (STATUS_ORDER[b.inventory?.status ?? "sold_out"] ?? 2);
+        default:           return 0;
+      }
+    });
+
     return list;
-  }, [products, filter, search]);
+  }, [products, filter, search, sortBy]);
 
   function handleProductUpdated(updated: ProductWithInventory) {
     setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
@@ -170,6 +185,28 @@ export function InventoryView({
               {f.label}
             </button>
           ))}
+        </div>
+
+        {/* Sort */}
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <ArrowUpDown size={13} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: "#9a7080", pointerEvents: "none" }} />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            style={{
+              paddingLeft: 26, paddingRight: 10, paddingTop: 7, paddingBottom: 7,
+              border: "1px solid #e8ddd5", borderRadius: 8, background: "#fff",
+              fontSize: "0.82rem", fontFamily: "Inter, system-ui, sans-serif",
+              color: "#2a1a0e", outline: "none", cursor: "pointer", appearance: "none" as const,
+            }}
+          >
+            <option value="name_asc">Name A–Z</option>
+            <option value="name_desc">Name Z–A</option>
+            <option value="sku">SKU</option>
+            <option value="stock_high">Stock: High–Low</option>
+            <option value="stock_low">Stock: Low–High</option>
+            <option value="status">Status</option>
+          </select>
         </div>
 
         {/* Add button */}
