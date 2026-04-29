@@ -31,7 +31,7 @@ const NAV = [
   { href: "/admin/suggestions",   label: "Suggestions",  icon: MessageSquare },
 ];
 
-const BOTTOM_TABS = NAV.slice(0, 4); // Inventory, Orders, Giveaways, Ideas on bottom bar
+const BOTTOM_TABS = [NAV[0], NAV[1], NAV[4], NAV[6]]; // Inventory, Orders, Money, Wholesale
 
 // ── Color tokens ──────────────────────────────────────────────────────
 const C = {
