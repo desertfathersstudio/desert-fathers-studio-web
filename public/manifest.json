@@ -1,0 +1,24 @@
+{
+  "name": "DFS Admin",
+  "short_name": "DFS Admin",
+  "description": "Desert Fathers Studio admin dashboard",
+  "start_url": "/admin/inventory",
+  "display": "standalone",
+  "background_color": "#0d0609",
+  "theme_color": "#6b1d3b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

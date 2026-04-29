@@ -16,5 +16,14 @@ export const viewport: Viewport = {
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');`,
+        }}
+      />
+    </>
+  );
 }
