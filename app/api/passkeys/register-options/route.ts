@@ -1,13 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { generateRegistrationOptions } from "@simplewebauthn/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
 const RP_NAME = "Desert Fathers Studio Admin";
-const RP_ID  = process.env.NEXT_PUBLIC_SITE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SITE_URL).hostname
-  : "localhost";
 
-export async function GET() {
+function getRpId(req: NextRequest) {
+  const host = req.headers.get("host") ?? "localhost";
+  return host.split(":")[0]; // strip port
+}
+
+export async function GET(req: NextRequest) {
   const sb = await createSupabaseServer();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,9 +20,11 @@ export async function GET() {
     .select("credential_id")
     .eq("user_id", user.id);
 
+  const rpID = getRpId(req);
+
   const options = await generateRegistrationOptions({
     rpName:              RP_NAME,
-    rpID:                RP_ID,
+    rpID,
     userName:            user.email ?? user.id,
     userDisplayName:     user.email ?? "Admin",
     attestationType:     "none",

@@ -3,10 +3,11 @@ import { verifyRegistrationResponse } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
-const RP_ID     = process.env.NEXT_PUBLIC_SITE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SITE_URL).hostname
-  : "localhost";
-const ORIGIN    = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+function getOriginAndRpId(req: NextRequest) {
+  const host  = req.headers.get("host") ?? "localhost";
+  const proto = req.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return { origin: `${proto}://${host}`, rpID: host.split(":")[0] };
+}
 
 export async function POST(req: NextRequest) {
   const sb = await createSupabaseServer();
@@ -27,13 +28,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No challenge found. Start registration again." }, { status: 400 });
   }
 
+  const { origin, rpID } = getOriginAndRpId(req);
+
   let verification;
   try {
     verification = await verifyRegistrationResponse({
       response:           body.credential,
       expectedChallenge:  challengeRow.public_key,
-      expectedOrigin:     ORIGIN,
-      expectedRPID:       RP_ID,
+      expectedOrigin:     origin,
+      expectedRPID:       rpID,
     });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 400 });

@@ -3,10 +3,11 @@ import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
-const RP_ID  = process.env.NEXT_PUBLIC_SITE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SITE_URL).hostname
-  : "localhost";
-const ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+function getOriginAndRpId(req: NextRequest) {
+  const host  = req.headers.get("host") ?? "localhost";
+  const proto = req.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return { origin: `${proto}://${host}`, rpID: host.split(":")[0] };
+}
 
 export async function POST(req: NextRequest) {
   const sb = await createSupabaseServer();
@@ -41,12 +42,13 @@ export async function POST(req: NextRequest) {
 
   let verification;
   try {
+    const { origin, rpID } = getOriginAndRpId(req);
     // In v13, credential.id is a Base64URL string; publicKey is Uint8Array
     verification = await verifyAuthenticationResponse({
       response:          body.credential,
       expectedChallenge: challengeRow.public_key,
-      expectedOrigin:    ORIGIN,
-      expectedRPID:      RP_ID,
+      expectedOrigin:    origin,
+      expectedRPID:      rpID,
       credential: {
         id:        passkey.credential_id,
         publicKey: isoBase64URL.toBuffer(passkey.public_key),

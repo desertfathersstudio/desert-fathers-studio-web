@@ -1,12 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { generateAuthenticationOptions } from "@simplewebauthn/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
-const RP_ID = process.env.NEXT_PUBLIC_SITE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SITE_URL).hostname
-  : "localhost";
-
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const host = req.headers.get("host") ?? "localhost";
+  const rpID = host.split(":")[0];
   const sb = await createSupabaseServer();
 
   // Fetch all passkeys (discoverable — no user needed)
@@ -16,7 +14,7 @@ export async function GET() {
     .not("device_name", "eq", "__challenge__");
 
   const options = await generateAuthenticationOptions({
-    rpID:                RP_ID,
+    rpID,
     userVerification:    "preferred",
     allowCredentials:    (passkeys ?? []).map((p) => ({ id: p.credential_id })),
   });
