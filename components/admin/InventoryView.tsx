@@ -62,7 +62,7 @@ export function InventoryView({
       switch (sortBy) {
         case "name_asc":   return a.name.localeCompare(b.name);
         case "name_desc":  return b.name.localeCompare(a.name);
-        case "sku":        return a.sku.localeCompare(b.sku);
+        case "sku":        return a.sku.localeCompare(b.sku, undefined, { numeric: true });
         case "stock_high": return (b.inventory?.on_hand ?? 0) - (a.inventory?.on_hand ?? 0);
         case "stock_low":  return (a.inventory?.on_hand ?? 0) - (b.inventory?.on_hand ?? 0);
         case "status":     return (STATUS_ORDER[a.inventory?.status ?? "sold_out"] ?? 2) - (STATUS_ORDER[b.inventory?.status ?? "sold_out"] ?? 2);
