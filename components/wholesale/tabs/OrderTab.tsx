@@ -10,13 +10,13 @@ import {
   WS_PRICE_RP_PACK,
 } from "@/lib/wholesale/pricing";
 
-const QTY_OPTIONS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+const QTY_OPTIONS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
 interface Props {
   products: WholesaleProduct[];
   cart: WholesaleCartLine[];
   onCartChange: (lines: WholesaleCartLine[]) => void;
-  session: { accountId: string; displayName: string; notifyEmail?: string };
+  session: { accountId: string; displayName: string; notifyEmail: string };
   onOrderSubmitted: () => void;
 }
 
@@ -25,10 +25,10 @@ type AddMode = "single" | "bulk";
 export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitted }: Props) {
   const [mode, setMode] = useState<AddMode>("single");
   const [selectedSku, setSelectedSku] = useState("");
-  const [qty, setQty] = useState(50);
+  const [qty, setQty] = useState(25);
   const [asap, setAsap] = useState(false);
   const [bulkSearch, setBulkSearch] = useState("");
-  const [bulkQty, setBulkQty] = useState(50);
+  const [bulkQty, setBulkQty] = useState(25);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
@@ -139,10 +139,20 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     .filter((l) => l.productId === "HWP_PACK" || l.productId === "RP_PACK")
     .reduce((s, l) => s + l.qty, 0);
 
-  const notifyEmail = (session as { notifyEmail?: string }).notifyEmail ?? session.accountId + "@wholesale";
+  const defaultName = session.displayName;
+  const defaultEmail = session.notifyEmail;
+  const [nameChoice, setNameChoice] = useState<"default" | "other">("default");
+  const [customName, setCustomName] = useState("");
+  const [emailChoice, setEmailChoice] = useState<"default" | "other">("default");
+  const [customEmail, setCustomEmail] = useState("");
+
+  const customerName = nameChoice === "other" ? customName : defaultName;
+  const customerEmail = emailChoice === "other" ? customEmail : defaultEmail;
 
   async function handleSubmit() {
     if (!cart.length) { toast.error("Cart is empty"); return; }
+    if (!customerName.trim()) { toast.error("Please enter a customer name"); return; }
+    if (!customerEmail.trim()) { toast.error("Please enter an email"); return; }
     setSubmitting(true);
     try {
       const items = cart.map((l) => ({
@@ -160,8 +170,8 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           accountId: session.accountId,
-          customerName: session.displayName,
-          customerEmail: notifyEmail,
+          customerName: customerName.trim(),
+          customerEmail: customerEmail.trim(),
           items,
           grandTotal,
           asap,
@@ -198,7 +208,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
           </h2>
           <p style={{ color: "#047857", fontSize: "0.85rem", margin: "0 0 1rem" }}>Order ID: <strong>{submitted}</strong></p>
           <p style={{ color: "#065f46", fontSize: "0.82rem", margin: 0 }}>
-            A confirmation has been sent to {notifyEmail}.
+            A confirmation has been sent to {customerEmail}.
           </p>
         </div>
         <button
@@ -213,7 +223,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", padding: "1.5rem 1.25rem" }}>
-      {/* Account display */}
+      {/* Customer name + email */}
       <div
         style={{
           background: "var(--bg-card)",
@@ -221,12 +231,53 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
           borderRadius: "var(--radius-card)",
           padding: "1rem 1.25rem",
           marginBottom: "1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.75rem",
         }}
       >
-        <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text)" }}>
-          Ordering as <strong>{session.displayName}</strong>
-          <span style={{ color: "var(--text-muted)", marginLeft: "0.5rem" }}>({notifyEmail})</span>
-        </p>
+        {/* Name row */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", minWidth: 42 }}>Name</span>
+          <select
+            value={nameChoice}
+            onChange={(e) => setNameChoice(e.target.value as "default" | "other")}
+            style={inlineSelect}
+          >
+            <option value="default">{defaultName}</option>
+            <option value="other">Other…</option>
+          </select>
+          {nameChoice === "other" && (
+            <input
+              type="text"
+              placeholder="Enter name"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              style={inlineInput}
+            />
+          )}
+        </div>
+        {/* Email row */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", minWidth: 42 }}>Email</span>
+          <select
+            value={emailChoice}
+            onChange={(e) => setEmailChoice(e.target.value as "default" | "other")}
+            style={inlineSelect}
+          >
+            <option value="default">{defaultEmail}</option>
+            <option value="other">Other…</option>
+          </select>
+          {emailChoice === "other" && (
+            <input
+              type="email"
+              placeholder="Enter email"
+              value={customEmail}
+              onChange={(e) => setCustomEmail(e.target.value)}
+              style={inlineInput}
+            />
+          )}
+        </div>
       </div>
 
       {/* Add items */}
@@ -437,7 +488,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                 {/* Qty stepper */}
                 <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
                   <button
-                    onClick={() => updateQty(line.productId, line.qty - 50)}
+                    onClick={() => updateQty(line.productId, line.qty - 25)}
                     style={qtyBtn}
                     aria-label="Decrease quantity"
                   >
@@ -451,7 +502,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                     style={{ width: 56, textAlign: "center", padding: "0.25rem", border: "1px solid var(--border)", borderRadius: 5, fontSize: "0.82rem", fontFamily: "var(--font-inter)", color: "var(--text)" }}
                   />
                   <button
-                    onClick={() => updateQty(line.productId, line.qty + 50)}
+                    onClick={() => updateQty(line.productId, line.qty + 25)}
                     style={qtyBtn}
                     aria-label="Increase quantity"
                   >
@@ -619,4 +670,27 @@ const qtyBtn: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   color: "var(--text)",
+};
+
+const inlineSelect: React.CSSProperties = {
+  padding: "0.3rem 0.6rem",
+  border: "1px solid var(--border)",
+  borderRadius: "var(--radius-btn)",
+  fontSize: "0.82rem",
+  fontFamily: "var(--font-inter)",
+  color: "var(--text)",
+  background: "white",
+  outline: "none",
+};
+
+const inlineInput: React.CSSProperties = {
+  padding: "0.3rem 0.6rem",
+  border: "1px solid var(--border)",
+  borderRadius: "var(--radius-btn)",
+  fontSize: "0.82rem",
+  fontFamily: "var(--font-inter)",
+  color: "var(--text)",
+  background: "white",
+  outline: "none",
+  minWidth: 200,
 };

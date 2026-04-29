@@ -77,6 +77,7 @@ export interface WholesaleOrder {
 export interface WholesaleSession {
   accountId: string;
   displayName: string;
+  notifyEmail: string;
   hasPendingTab: boolean;
   canEditFulfillment: boolean;
 }

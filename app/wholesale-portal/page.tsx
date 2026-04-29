@@ -62,6 +62,7 @@ export default function WholesalePinPage() {
       const session: WholesaleSession = {
         accountId: account.accountId,
         displayName: account.displayName,
+        notifyEmail: account.notifyEmail,
         hasPendingTab: account.hasPendingTab,
         canEditFulfillment: account.canEditFulfillment,
       };

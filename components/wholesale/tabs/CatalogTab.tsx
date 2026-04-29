@@ -24,7 +24,7 @@ const SORT_OPTIONS = [
 
 type SortKey = typeof SORT_OPTIONS[number]["value"];
 
-const QTY_OPTIONS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+const QTY_OPTIONS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
 interface Props {
   products: WholesaleProduct[];
@@ -40,6 +40,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
   const [sort, setSort] = useState<SortKey>("newest");
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [unapproving, setUnapproving] = useState<string | null>(null);
+  const [confirmUnapproveId, setConfirmUnapproveId] = useState<string | null>(null);
 
   const approved = useMemo(
     () => products.filter((p) => p.reviewStatus === "approved" || !p.reviewStatus),
@@ -87,8 +88,8 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
   }, [lightboxIdx, sorted.length, closeLightbox]);
 
   async function handleUnapprove(p: WholesaleProduct) {
-    if (!confirm(`Move "${p.name}" back to Pending review?`)) return;
     setUnapproving(p.id);
+    setConfirmUnapproveId(null);
     try {
       const res = await fetch("/api/wholesale/approve", {
         method: "POST",
@@ -230,6 +231,9 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
               onOpen={() => openLightbox(idx)}
               onAddToCart={onAddToCart}
               hasPendingTab={hasPendingTab}
+              confirming={confirmUnapproveId === p.id}
+              onRequestConfirm={() => setConfirmUnapproveId(p.id)}
+              onCancelConfirm={() => setConfirmUnapproveId(null)}
               onUnapprove={() => handleUnapprove(p)}
               unapproving={unapproving === p.id}
             />
@@ -255,10 +259,13 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
 
 function CatalogCard({
   product: p,
-  idx,
+  idx: _idx,
   onOpen,
   onAddToCart,
   hasPendingTab,
+  confirming,
+  onRequestConfirm,
+  onCancelConfirm,
   onUnapprove,
   unapproving,
 }: {
@@ -267,6 +274,9 @@ function CatalogCard({
   onOpen: () => void;
   onAddToCart: (l: WholesaleCartLine) => void;
   hasPendingTab: boolean;
+  confirming: boolean;
+  onRequestConfirm: () => void;
+  onCancelConfirm: () => void;
   onUnapprove: () => void;
   unapproving: boolean;
 }) {
@@ -450,25 +460,47 @@ function CatalogCard({
         )}
 
         {hasPendingTab && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onUnapprove(); }}
-            disabled={unapproving}
-            style={{
-              marginTop: "0.4rem",
-              padding: "0.25rem 0.6rem",
-              fontSize: "0.66rem",
-              fontWeight: 600,
-              color: "#9a3412",
-              background: "#fff7ed",
-              border: "1px solid #fed7aa",
-              borderRadius: "999px",
-              cursor: unapproving ? "not-allowed" : "pointer",
-              fontFamily: "var(--font-inter)",
-              width: "fit-content",
-            }}
-          >
-            {unapproving ? "Moving…" : "Needs Review"}
-          </button>
+          confirming ? (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ marginTop: "0.4rem", display: "flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}
+            >
+              <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)" }}>Move to review?</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); onUnapprove(); }}
+                disabled={unapproving}
+                style={{ padding: "0.2rem 0.5rem", fontSize: "0.65rem", fontWeight: 700, color: "#fff", background: "#9a3412", border: "none", borderRadius: "999px", cursor: "pointer", fontFamily: "var(--font-inter)" }}
+              >
+                {unapproving ? "Moving…" : "Yes"}
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onCancelConfirm(); }}
+                style={{ padding: "0.2rem 0.5rem", fontSize: "0.65rem", fontWeight: 600, color: "var(--text-muted)", background: "white", border: "1px solid var(--border)", borderRadius: "999px", cursor: "pointer", fontFamily: "var(--font-inter)" }}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); onRequestConfirm(); }}
+              disabled={unapproving}
+              style={{
+                marginTop: "0.4rem",
+                padding: "0.25rem 0.6rem",
+                fontSize: "0.66rem",
+                fontWeight: 600,
+                color: "#9a3412",
+                background: "#fff7ed",
+                border: "1px solid #fed7aa",
+                borderRadius: "999px",
+                cursor: unapproving ? "not-allowed" : "pointer",
+                fontFamily: "var(--font-inter)",
+                width: "fit-content",
+              }}
+            >
+              Needs Review
+            </button>
+          )
         )}
       </div>
     </article>
@@ -491,7 +523,7 @@ function CatalogLightbox({
   onAddToCart: (l: WholesaleCartLine) => void;
 }) {
   const p = products[index];
-  const [qty, setQty] = useState(50);
+  const [qty, setQty] = useState(25);
   const [orderMode, setOrderMode] = useState<"single" | "pack">("single");
 
   const largeImageUrl = useMemo(() => {
