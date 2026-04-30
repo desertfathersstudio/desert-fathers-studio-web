@@ -45,11 +45,6 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     return [...packs, ...singles];
   }, [approved]);
 
-  const selectedProduct = useMemo(
-    () => approved.find((p) => p.sku === selectedSku),
-    [approved, selectedSku]
-  );
-
   // Unique categories for group chips — exclude pack groups handled separately
   const EXCLUDED_CATS = new Set(["Holy Week Pack", "Resurrection Pack", "HWP", "RP"]);
   const categories = useMemo(() => {
@@ -62,11 +57,16 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   const [bulkGroupFilter, setBulkGroupFilter] = useState<string>("All");
 
-  // Virtual pack items for bulk list
+  // Virtual pack items — not DB rows, handled separately
   const VIRTUAL_PACKS = [
-    { sku: "RP_PACK", name: "Resurrection Pack", category: "Resurrection Pack", size: '2"', packType: "RP" as const, unitPrice: WS_PRICE_RP_PACK, imageUrl: "" },
-    { sku: "HWP_PACK", name: "Holy Week Pack", category: "Holy Week Pack", size: '2"', packType: "HWP" as const, unitPrice: WS_PRICE_HWP_PACK, imageUrl: "" },
+    { sku: "RP_PACK", name: "Resurrection Pack", category: "Resurrection Pack", size: '2"', packType: "RP" as const, unitPrice: WS_PRICE_RP_PACK, imageUrl: "/stickers/Resurrection Pack BACK.png" },
+    { sku: "HWP_PACK", name: "Holy Week Pack", category: "Holy Week Pack", size: '2"', packType: "HWP" as const, unitPrice: WS_PRICE_HWP_PACK, imageUrl: "/stickers/Holy Week Pack BACK.png" },
   ];
+
+  const selectedProduct = useMemo(
+    () => approved.find((p) => p.sku === selectedSku) ?? VIRTUAL_PACKS.find((p) => p.sku === selectedSku),
+    [approved, selectedSku]
+  );
 
   const bulkList = useMemo(() => {
     const q = bulkSearch.toLowerCase();
@@ -121,12 +121,12 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
     // Virtual pack items — may not exist as DB rows
     if (selectedSku === "RP_PACK") {
-      addToCart({ productId: "RP_PACK", designName: "Resurrection Pack", category: "Resurrection Pack", size: '2"', imageUrl: approved.find((p) => p.isPackProduct && p.packType === "RP")?.imageUrl ?? "", qty, unitPrice: WS_PRICE_RP_PACK, asap });
+      addToCart({ productId: "RP_PACK", designName: "Resurrection Pack", category: "Resurrection Pack", size: '2"', imageUrl: "/stickers/Resurrection Pack BACK.png", qty, unitPrice: WS_PRICE_RP_PACK, asap });
       toast.success("Resurrection Pack added");
       return;
     }
     if (selectedSku === "HWP_PACK") {
-      addToCart({ productId: "HWP_PACK", designName: "Holy Week Pack", category: "Holy Week Pack", size: '2"', imageUrl: approved.find((p) => p.isPackProduct && p.packType === "HWP")?.imageUrl ?? "", qty, unitPrice: WS_PRICE_HWP_PACK, asap });
+      addToCart({ productId: "HWP_PACK", designName: "Holy Week Pack", category: "Holy Week Pack", size: '2"', imageUrl: "/stickers/Holy Week Pack BACK.png", qty, unitPrice: WS_PRICE_HWP_PACK, asap });
       toast.success("Holy Week Pack added");
       return;
     }
