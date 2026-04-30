@@ -8,10 +8,22 @@ export const metadata = { title: "Wholesale Orders" };
 
 export default async function WholesaleOrdersPage() {
   const sb = createSupabaseService();
-  const { data } = await sb
+  const { data, error } = await sb
     .from("wholesale_orders")
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[admin/wholesale] Supabase query failed:", error);
+    return (
+      <AdminShell title="Wholesale Orders">
+        <div style={{ padding: "2rem", background: "#fee2e2", borderRadius: 8, color: "#991b1b", fontFamily: "monospace", fontSize: 13 }}>
+          <strong>Error loading orders:</strong> {error.message}<br />
+          <small>Check Vercel function logs for details.</small>
+        </div>
+      </AdminShell>
+    );
+  }
 
   const orders: WholesaleOrder[] = (data ?? []).map((row) => ({
     id: String(row.id),

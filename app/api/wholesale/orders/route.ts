@@ -10,6 +10,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://desertfathersstudi
 type EmailAttachment = { filename: string; content: string; content_id?: string };
 
 const LOGO_URL = `${SITE_URL}/images/Logo.png`;
+console.log("[wholesale] LOGO_URL:", LOGO_URL, "| SITE_URL env:", process.env.NEXT_PUBLIC_SITE_URL);
 
 async function nextOrderNumber(sb: ReturnType<typeof createSupabaseService>): Promise<string> {
   const { count } = await sb
