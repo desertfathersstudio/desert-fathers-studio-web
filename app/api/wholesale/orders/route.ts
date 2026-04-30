@@ -155,7 +155,7 @@ async function sendOrderEmail(opts: {
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       from,
-      to: [customerEmail],
+      to: [customerEmail, ADMIN_EMAIL],
       reply_to: ADMIN_EMAIL,
       subject: `${asap ? "⚡ ASAP — " : ""}Wholesale Order ${orderId}`,
       html,
