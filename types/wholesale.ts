@@ -71,6 +71,8 @@ export interface WholesaleOrder {
   trackingNumber: string | null;
   paymentSent: boolean;
   paymentSentDate: string | null;
+  paymentReceived: boolean;
+  paymentReceivedDate: string | null;
   createdAt: string;
 }
 

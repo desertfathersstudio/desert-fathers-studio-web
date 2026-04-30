@@ -38,10 +38,10 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     [products]
   );
 
-  // Products for single-add dropdown (non-pack-only + pack products)
+  // Wholesale allows ordering any sticker individually — no pack lock
   const orderableProducts = useMemo(() => {
     const packs = approved.filter((p) => p.isPackProduct);
-    const singles = approved.filter((p) => !p.packOnly && !p.isPackProduct);
+    const singles = approved.filter((p) => !p.isPackProduct);
     return [...packs, ...singles];
   }, [approved]);
 
@@ -50,15 +50,28 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     [approved, selectedSku]
   );
 
+  // Unique categories for group chips
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    approved.filter((p) => !p.isPackProduct).forEach((p) => { if (p.category) cats.add(p.category); });
+    return Array.from(cats).sort();
+  }, [approved]);
+
+  const [bulkGroupFilter, setBulkGroupFilter] = useState<string>("All");
+
   const bulkList = useMemo(() => {
     const q = bulkSearch.toLowerCase();
-    return approved.filter(
-      (p) =>
-        !p.packOnly &&
-        !p.isPackProduct &&
-        (!q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
-    );
-  }, [approved, bulkSearch]);
+    return approved.filter((p) => {
+      if (p.isPackProduct) return false;
+      if (bulkGroupFilter === "RP") return p.packType === "RP";
+      if (bulkGroupFilter === "HWP") return p.packType === "HWP";
+      if (bulkGroupFilter !== "All") {
+        const matchCat = p.category === bulkGroupFilter;
+        return matchCat && (!q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
+      }
+      return !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
+    });
+  }, [approved, bulkSearch, bulkGroupFilter]);
 
   function addToCart(line: WholesaleCartLine) {
     onCartChange(
@@ -378,9 +391,35 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
           </>
         ) : (
           <>
-            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "0 0 0.75rem" }}>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "0 0 0.65rem" }}>
               Check designs, set a quantity, then click Add Selected.
             </p>
+
+            {/* Group quick-select chips */}
+            <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+              {(["All", "HWP", "RP", ...categories] as string[]).map((g) => (
+                <button
+                  key={g}
+                  onClick={() => { setBulkGroupFilter(g); setChecked(new Set()); }}
+                  style={{
+                    padding: "0.25rem 0.7rem",
+                    borderRadius: "999px",
+                    border: "1.5px solid",
+                    borderColor: bulkGroupFilter === g ? "var(--brand)" : "var(--border)",
+                    background: bulkGroupFilter === g ? "var(--brand)" : "white",
+                    color: bulkGroupFilter === g ? "#fff" : "var(--text-muted)",
+                    fontSize: "0.72rem",
+                    fontWeight: bulkGroupFilter === g ? 600 : 400,
+                    cursor: "pointer",
+                    fontFamily: "var(--font-inter)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {g === "HWP" ? "Holy Week Pack" : g === "RP" ? "Resurrection Pack" : g}
+                </button>
+              ))}
+            </div>
+
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.65rem", alignItems: "center", flexWrap: "wrap" }}>
               <input
                 type="search"

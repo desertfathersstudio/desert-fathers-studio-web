@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
-import { getAccountById, ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
+import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
 import type { WholesaleOrder, WholesaleOrderItem, OrderStage } from "@/types/wholesale";
 
-function randomId(len = 6) {
-  return Math.random().toString(36).slice(2, 2 + len).toUpperCase();
-}
+const ADMIN_EMAIL = "desertfathersstudio@gmail.com";
 
-function pad(n: number) {
-  return String(n).padStart(2, "0");
-}
-
-function dateStamp() {
-  const d = new Date();
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+async function nextOrderNumber(sb: ReturnType<typeof createSupabaseService>): Promise<string> {
+  const { count } = await sb
+    .from("wholesale_orders")
+    .select("*", { count: "exact", head: true });
+  const n = ((count ?? 0) + 1).toString().padStart(4, "0");
+  return `WS-${n}`;
 }
 
 export async function GET(req: NextRequest) {
@@ -45,6 +42,8 @@ export async function GET(req: NextRequest) {
       trackingNumber: row.tracking_number as string | null,
       paymentSent: Boolean(row.payment_sent),
       paymentSentDate: row.payment_sent_date as string | null,
+      paymentReceived: Boolean(row.payment_received),
+      paymentReceivedDate: row.payment_received_date as string | null,
       createdAt: String(row.created_at),
     }));
 
@@ -57,26 +56,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
+  try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const {
-    accountId,
-    customerName,
-    customerEmail,
-    items,
-    grandTotal,
-    asap,
-  } = body as {
-    accountId: string;
-    customerName: string;
-    customerEmail: string;
-    items: WholesaleOrderItem[];
-    grandTotal: number;
-    asap: boolean;
+  const { accountId, customerName, customerEmail, items, grandTotal, asap } = body as {
+    accountId: string; customerName: string; customerEmail: string;
+    items: WholesaleOrderItem[]; grandTotal: number; asap: boolean;
   };
 
   if (!accountId || !ALL_ACCOUNT_IDS.has(accountId)) {
@@ -86,10 +72,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
-  const orderId = `WS-${accountId}-${dateStamp()}-${randomId()}`;
-
   try {
     const sb = createSupabaseService();
+    const orderId = await nextOrderNumber(sb);
+
     const { error } = await sb.from("wholesale_orders").insert({
       order_id: orderId,
       account_id: accountId,
@@ -102,12 +88,8 @@ export async function POST(req: NextRequest) {
     });
     if (error) throw error;
 
-    // Send notification email via Resend if key is configured
-    try {
-      await sendOrderEmail({ orderId, customerName, customerEmail, items, grandTotal, asap });
-    } catch (emailErr) {
-      console.error("[wholesale/orders] email error:", emailErr);
-    }
+    sendOrderEmail({ orderId, customerName, customerEmail, items, grandTotal, asap })
+      .catch((e) => console.error("[wholesale/orders] email failed:", e));
 
     return NextResponse.json({ orderId });
   } catch (err) {
@@ -117,79 +99,74 @@ export async function POST(req: NextRequest) {
 }
 
 async function sendOrderEmail(opts: {
-  orderId: string;
-  customerName: string;
-  customerEmail: string;
-  items: WholesaleOrderItem[];
-  grandTotal: number;
-  asap: boolean;
+  orderId: string; customerName: string; customerEmail: string;
+  items: WholesaleOrderItem[]; grandTotal: number; asap: boolean;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  if (!apiKey || apiKey === "placeholder") {
     console.log("[wholesale/orders] no RESEND_API_KEY, skipping email");
     return;
   }
 
   const { orderId, customerName, customerEmail, items, grandTotal, asap } = opts;
 
-  const rows = items
-    .map(
-      (i) =>
-        `<tr>
-          <td style="padding:6px 8px">${i.designName}</td>
-          <td style="padding:6px 8px;text-align:center">${i.productId}</td>
-          <td style="padding:6px 8px;text-align:center">${i.qty}</td>
-          <td style="padding:6px 8px;text-align:center">$${i.unitPrice.toFixed(2)}</td>
-          <td style="padding:6px 8px;text-align:right;font-weight:700;color:#6b1d3b">$${i.lineTotal.toFixed(2)}</td>
-        </tr>`
-    )
-    .join("");
+  const rows = items.map((i) => `
+    <tr>
+      <td style="padding:6px 8px;border-bottom:1px solid #f0e8dc">${i.designName}</td>
+      <td style="padding:6px 8px;text-align:center;border-bottom:1px solid #f0e8dc;font-family:monospace;font-size:.8rem;color:#7a6a5a">${i.productId}</td>
+      <td style="padding:6px 8px;text-align:center;border-bottom:1px solid #f0e8dc">${i.qty}</td>
+      <td style="padding:6px 8px;text-align:center;border-bottom:1px solid #f0e8dc">$${i.unitPrice.toFixed(2)}</td>
+      <td style="padding:6px 8px;text-align:right;border-bottom:1px solid #f0e8dc;font-weight:700;color:#6B1F2A">$${i.lineTotal.toFixed(2)}</td>
+    </tr>`).join("");
 
   const html = `
-    <div style="font-family:sans-serif;max-width:620px;color:#2a1a0e">
-      <div style="background:#6b1d3b;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0">
-        <h2 style="margin:0;font-size:1.1rem">
-          ${asap ? "⚡ ASAP — " : ""}New Wholesale Order
-        </h2>
-        <p style="margin:4px 0 0;opacity:.8;font-size:.85rem">${orderId}</p>
-      </div>
-      <div style="border:1px solid #e5d9c8;border-top:none;padding:16px 20px;border-radius:0 0 8px 8px">
-        <p><strong>Account:</strong> ${customerName}<br>
-        <strong>Email:</strong> ${customerEmail}</p>
-        ${asap ? '<p style="background:#fff3cd;border:1px solid #ffc107;padding:10px;border-radius:6px;font-weight:700">⚡ ASAP — stock is critically low. Please prioritize.</p>' : ""}
-        <table style="width:100%;border-collapse:collapse;font-size:.9rem">
-          <thead>
-            <tr style="background:#f9f6f1">
-              <th style="padding:6px 8px;text-align:left">Design</th>
-              <th style="padding:6px 8px;text-align:center">SKU</th>
-              <th style="padding:6px 8px;text-align:center">Qty</th>
-              <th style="padding:6px 8px;text-align:center">Unit</th>
-              <th style="padding:6px 8px;text-align:right">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <p style="text-align:right;margin-top:12px;font-size:1rem">
-          <strong>Grand Total: $${grandTotal.toFixed(2)}</strong>
-        </p>
-      </div>
-    </div>
-  `.trim();
+<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#2a1a0e;background:#faf6f0;border-radius:8px;overflow:hidden">
+  <div style="background:#6B1F2A;color:#fff;padding:20px 24px">
+    <p style="margin:0 0 4px;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;opacity:.7">Desert Fathers Studio</p>
+    <h1 style="margin:0;font-size:1.2rem;font-weight:400">${asap ? "⚡ ASAP — " : ""}New Wholesale Order</h1>
+    <p style="margin:6px 0 0;opacity:.7;font-size:.82rem;font-family:monospace">${orderId}</p>
+  </div>
+  <div style="padding:20px 24px">
+    ${asap ? '<div style="background:#fff3cd;border:1px solid #ffc107;padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:.85rem;font-weight:600;color:#856404">⚡ ASAP — stock is critically low. Please prioritize.</div>' : ""}
+    <p style="margin:0 0 16px;font-size:.88rem"><strong>From:</strong> ${customerName}<br><strong>Email:</strong> ${customerEmail}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+      <thead>
+        <tr style="background:#f0e8dc">
+          <th style="padding:7px 8px;text-align:left;font-weight:600">Design</th>
+          <th style="padding:7px 8px;text-align:center;font-weight:600">SKU</th>
+          <th style="padding:7px 8px;text-align:center;font-weight:600">Qty</th>
+          <th style="padding:7px 8px;text-align:center;font-weight:600">Unit</th>
+          <th style="padding:7px 8px;text-align:right;font-weight:600">Total</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p style="text-align:right;margin:14px 0 0;font-size:1rem;font-weight:700">
+      Grand Total: <span style="color:#6B1F2A">$${grandTotal.toFixed(2)}</span>
+    </p>
+  </div>
+</div>`.trim();
 
   const from = process.env.RESEND_FROM_EMAIL ?? "orders@desertfathersstudio.com";
 
-  await fetch("https://api.resend.com/emails", {
+  // Send receipt to customer
+  const toAddresses = [customerEmail];
+  if (customerEmail !== ADMIN_EMAIL) toAddresses.push(ADMIN_EMAIL);
+
+  const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       from,
-      to: customerEmail,
-      reply_to: "desertfathersstudio@gmail.com",
+      to: toAddresses,
+      reply_to: ADMIN_EMAIL,
       subject: `${asap ? "⚡ ASAP — " : ""}Wholesale Order ${orderId}`,
       html,
     }),
   });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Resend ${res.status}: ${txt}`);
+  }
 }

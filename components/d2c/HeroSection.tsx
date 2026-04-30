@@ -17,6 +17,8 @@ export function HeroSection() {
         <img
           src="/images/hero-church.jpg"
           alt=""
+          fetchPriority="high"
+          decoding="sync"
           className="absolute inset-0 w-full h-full object-cover object-center"
           style={{ opacity: 0.22, filter: "saturate(0.35) sepia(0.15)" }}
         />
