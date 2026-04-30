@@ -1,4 +1,6 @@
 import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
 import type { WholesaleOrderItem } from "@/types/wholesale";
 
 interface PdfOpts {
@@ -15,92 +17,134 @@ export function generateOrderPdf(opts: PdfOpts): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const { orderId, customerName, customerEmail, items, grandTotal, asap, date } = opts;
 
-    const doc = new PDFDocument({ margin: 50, size: "A4" });
+    const doc = new PDFDocument({ margin: 0, size: "A4" });
     const chunks: Buffer[] = [];
     doc.on("data", (c: Buffer) => chunks.push(c));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    const brand = "#6B1F2A";
-    const muted = "#7a6a5a";
-    const pageW = doc.page.width - 100; // usable width
+    const M = 50;                        // left/right margin
+    const PW = doc.page.width;           // 595.28
+    const CW = PW - M * 2;              // content width
+    const BRAND = "#6B1F2A";
+    const GOLD  = "#c9a84c";
+    const TEXT  = "#1a0d08";
+    const MUTED = "#7a6a5a";
 
-    // Header bar
-    doc.rect(50, 50, doc.page.width - 100, 56).fill(brand);
-    doc.fillColor("#fff")
-      .fontSize(8)
-      .font("Helvetica")
-      .text("DESERT FATHERS STUDIO", 66, 62, { characterSpacing: 1.5 });
-    doc.fontSize(14)
-      .font("Helvetica")
-      .text(`${asap ? "⚡ ASAP — " : ""}Wholesale Order Receipt`, 66, 76);
+    // ── Header bar ──────────────────────────────────────────────
+    const HEADER_H = 82;
+    doc.rect(0, 0, PW, HEADER_H).fill(BRAND);
 
-    // Order meta
-    doc.fillColor(muted).fontSize(8).font("Helvetica")
-      .text(orderId, doc.page.width - 150, 62, { align: "right", width: 100 })
-      .text(date, doc.page.width - 150, 74, { align: "right", width: 100 });
+    // Gold bottom rule on header
+    doc.rect(0, HEADER_H, PW, 3).fill(GOLD);
 
-    let y = 130;
+    // Logo (left side)
+    const logoPath = path.join(process.cwd(), "public", "icon-192.png");
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, M, 11, { width: 60, height: 60 });
+    }
 
-    // Customer block
-    doc.fillColor("#2a1a0e").fontSize(9).font("Helvetica-Bold").text("Order placed by", 50, y);
-    y += 14;
-    doc.font("Helvetica").fillColor("#2a1a0e")
-      .text(customerName, 50, y)
-      .text(customerEmail, 50, y + 12);
-    y += 40;
+    // Order meta (right side)
+    const metaX = M + 74;
+    const metaW = CW - 74;
+    doc.fillColor("rgba(255,255,255,0.55)").fontSize(7).font("Helvetica")
+      .text("DESERT FATHERS STUDIO", metaX, 18, { width: metaW, align: "right", characterSpacing: 1.2 });
+    doc.fillColor("#fff").fontSize(13).font("Helvetica-Bold")
+      .text(orderId, metaX, 31, { width: metaW, align: "right" });
+    doc.fillColor("rgba(255,255,255,0.65)").fontSize(8.5).font("Helvetica")
+      .text(date, metaX, 50, { width: metaW, align: "right" });
+    doc.fillColor("rgba(255,255,255,0.45)").fontSize(7.5).font("Helvetica")
+      .text("Wholesale Order Receipt", metaX, 64, { width: metaW, align: "right" });
 
+    let y = HEADER_H + 30;
+
+    // ── Customer card ────────────────────────────────────────────
+    const CARD_H = 58;
+    doc.roundedRect(M, y, CW, CARD_H, 6).fill("#f5f0ea");
+    doc.fillColor(MUTED).fontSize(7).font("Helvetica-Bold")
+      .text("ORDER PLACED BY", M + 18, y + 13, { characterSpacing: 1.1 });
+    doc.fillColor(TEXT).fontSize(11).font("Helvetica-Bold")
+      .text(customerName, M + 18, y + 25);
+    doc.fillColor(MUTED).fontSize(8.5).font("Helvetica")
+      .text(customerEmail, M + 18, y + 40);
+    y += CARD_H + 22;
+
+    // ── ASAP banner ──────────────────────────────────────────────
     if (asap) {
-      doc.rect(50, y, pageW, 28).fill("#fff3cd");
+      doc.rect(M, y, CW, 28).fill("#fff3cd");
       doc.fillColor("#856404").fontSize(9).font("Helvetica-Bold")
-        .text("⚡ ASAP — stock is critically low. Please prioritize.", 58, y + 9);
+        .text("ASAP — stock is critically low. Please prioritize.", M + 14, y + 9);
       y += 40;
     }
 
-    // Table header
-    const colX = { img: 50, name: 50, sku: 270, qty: 340, unit: 390, total: 470 };
-    doc.rect(50, y, pageW, 22).fill("#f0e8dc");
-    doc.fillColor("#2a1a0e").fontSize(8).font("Helvetica-Bold");
-    doc.text("Design", colX.name, y + 7, { width: 200 });
-    doc.text("SKU", colX.sku, y + 7, { width: 60, align: "center" });
-    doc.text("Qty", colX.qty, y + 7, { width: 40, align: "center" });
-    doc.text("Unit", colX.unit, y + 7, { width: 60, align: "center" });
-    doc.text("Total", colX.total, y + 7, { width: 60, align: "right" });
-    y += 22;
+    // ── Table ────────────────────────────────────────────────────
+    const C = {
+      name:  M,
+      sku:   M + 200,
+      qty:   M + 300,
+      unit:  M + 355,
+      total: M + 420,
+    };
+    const CWS = {
+      name:  190,
+      sku:   92,
+      qty:   48,
+      unit:  58,
+      total: CW - 420 + M,
+    };
 
-    // Table rows
-    doc.font("Helvetica").fontSize(8);
-    for (const item of items) {
-      const rowH = 24;
-      if (y + rowH > doc.page.height - 80) {
-        doc.addPage();
-        y = 60;
-      }
-      doc.fillColor("#2a1a0e").text(item.designName, colX.name, y + 7, { width: 210, ellipsis: true });
-      doc.fillColor(muted).text(item.productId, colX.sku, y + 7, { width: 60, align: "center" });
-      doc.fillColor("#2a1a0e").text(String(item.qty), colX.qty, y + 7, { width: 40, align: "center" });
-      doc.text(`$${item.unitPrice.toFixed(2)}`, colX.unit, y + 7, { width: 60, align: "center" });
-      doc.fillColor(brand).font("Helvetica-Bold")
-        .text(`$${item.lineTotal.toFixed(2)}`, colX.total, y + 7, { width: 60, align: "right" });
-      doc.font("Helvetica").fillColor("#2a1a0e");
-      doc.moveTo(50, y + rowH).lineTo(50 + pageW, y + rowH).strokeColor("#f0e8dc").lineWidth(0.5).stroke();
-      y += rowH;
+    // Header row
+    const TH = 26;
+    doc.rect(M, y, CW, TH).fill(BRAND);
+    doc.fillColor("#fff").fontSize(8).font("Helvetica-Bold");
+    doc.text("Design",  C.name + 10, y + 9, { width: CWS.name });
+    doc.text("SKU",     C.sku,        y + 9, { width: CWS.sku,   align: "center" });
+    doc.text("Qty",     C.qty,        y + 9, { width: CWS.qty,   align: "center" });
+    doc.text("Unit",    C.unit,       y + 9, { width: CWS.unit,  align: "center" });
+    doc.text("Total",   C.total,      y + 9, { width: CWS.total, align: "right" });
+    y += TH;
+
+    // Data rows
+    doc.fontSize(8.5);
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const ROW_H = 26;
+      if (y + ROW_H > doc.page.height - 90) { doc.addPage(); y = 50; }
+
+      if (i % 2 === 1) doc.rect(M, y, CW, ROW_H).fill("#f8f4ee");
+
+      doc.fillColor(TEXT).font("Helvetica")
+        .text(item.designName, C.name + 10, y + 9, { width: CWS.name - 10, ellipsis: true });
+      doc.fillColor(MUTED).fontSize(8)
+        .text(item.productId,  C.sku,  y + 9, { width: CWS.sku,  align: "center" });
+      doc.fillColor(TEXT).fontSize(8.5)
+        .text(String(item.qty),            C.qty,  y + 9, { width: CWS.qty,  align: "center" })
+        .text(`$${item.unitPrice.toFixed(2)}`, C.unit, y + 9, { width: CWS.unit, align: "center" });
+      doc.fillColor(BRAND).font("Helvetica-Bold")
+        .text(`$${item.lineTotal.toFixed(2)}`, C.total, y + 9, { width: CWS.total, align: "right" });
+      y += ROW_H;
     }
 
-    // Grand total
+    // Gold separator before grand total
+    y += 6;
+    doc.moveTo(M, y).lineTo(M + CW, y).strokeColor(GOLD).lineWidth(1.5).stroke();
     y += 10;
-    doc.font("Helvetica-Bold").fontSize(10).fillColor("#2a1a0e")
-      .text("Grand Total", colX.unit - 30, y, { width: 110, align: "right" });
-    doc.fillColor(brand)
-      .text(`$${grandTotal.toFixed(2)}`, colX.total, y, { width: 60, align: "right" });
 
-    // Footer
-    const footerY = doc.page.height - 55;
-    doc.moveTo(50, footerY).lineTo(50 + pageW, footerY).strokeColor("#f0e8dc").lineWidth(0.5).stroke();
-    doc.font("Helvetica").fontSize(7.5).fillColor(muted)
-      .text("Desert Fathers Studio · desertfathersstudio.com · desertfathersstudio@gmail.com", 50, footerY + 8, {
-        align: "center", width: pageW,
-      });
+    // Grand total row
+    doc.fillColor(TEXT).fontSize(10).font("Helvetica-Bold")
+      .text("Grand Total", M, y, { width: CW - CWS.total - 6, align: "right" });
+    doc.fillColor(GOLD).fontSize(13).font("Helvetica-Bold")
+      .text(`$${grandTotal.toFixed(2)}`, C.total, y - 1, { width: CWS.total, align: "right" });
+
+    // ── Footer ───────────────────────────────────────────────────
+    const FY = doc.page.height - 48;
+    doc.moveTo(M, FY).lineTo(M + CW, FY).strokeColor("#e0d4c8").lineWidth(0.5).stroke();
+    doc.fillColor(MUTED).fontSize(7.5).font("Helvetica")
+      .text("Desert Fathers Studio  ·  desertfathersstudio.com  ·  desertfathersstudio@gmail.com",
+        M, FY + 9, { align: "center", width: CW });
+    doc.fillColor("#b0a090").fontSize(7).font("Helvetica-Oblique")
+      .text("Thank you for your order — God bless your ministry",
+        M, FY + 22, { align: "center", width: CW });
 
     doc.end();
   });
