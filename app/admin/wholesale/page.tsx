@@ -3,6 +3,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { WholesaleOrdersAdminView } from "@/components/admin/WholesaleOrdersAdminView";
 import type { WholesaleOrder, WholesaleOrderItem, OrderStage } from "@/types/wholesale";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Wholesale Orders" };
 
 export default async function WholesaleOrdersPage() {

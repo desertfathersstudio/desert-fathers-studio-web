@@ -7,6 +7,10 @@ import type { WholesaleOrder, WholesaleOrderItem, OrderStage } from "@/types/who
 const ADMIN_EMAIL = "desertfathersstudio@gmail.com";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://desertfathersstudio.com";
 
+type EmailAttachment = { filename: string; content: string; content_id?: string };
+
+const LOGO_URL = `${SITE_URL}/images/Logo.png`;
+
 async function nextOrderNumber(sb: ReturnType<typeof createSupabaseService>): Promise<string> {
   const { count } = await sb
     .from("wholesale_orders")
@@ -15,11 +19,6 @@ async function nextOrderNumber(sb: ReturnType<typeof createSupabaseService>): Pr
   return `WS-${n}`;
 }
 
-function absoluteUrl(url: string): string {
-  if (!url) return "";
-  if (url.startsWith("http")) return url;
-  return `${SITE_URL}${url}`;
-}
 
 export async function GET(req: NextRequest) {
   const accountId = req.nextUrl.searchParams.get("accountId");
@@ -96,9 +95,15 @@ export async function POST(req: NextRequest) {
     });
     if (error) throw error;
 
-    // Decrement inventory for each item (non-fatal if it fails)
-    sb.rpc("wholesale_adjust_inventory", { p_items: items, p_delta: -1 })
-      .then(({ error: rpcErr }) => { if (rpcErr) console.error("[wholesale] inventory adjust failed:", rpcErr); });
+    // Decrement inventory — if it succeeds, flag the order so cancel/delete can restore it
+    const { error: rpcErr } = await sb.rpc("wholesale_adjust_inventory", { p_items: items, p_delta: -1 });
+    if (rpcErr) {
+      console.error("[wholesale] inventory adjust failed:", rpcErr);
+    } else {
+      await sb.from("wholesale_orders")
+        .update({ inventory_adjusted: true })
+        .eq("order_id", orderId);
+    }
 
     // Fire-and-forget — customer gets the response immediately
     sendOrderEmails({ orderId, customerName, customerEmail, items, grandTotal, asap })
@@ -110,11 +115,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to submit order" }, { status: 500 });
   }
 }
-
-// ─── Shared helpers ────────────────────────────────────────────────────────
-
-// Use a hosted URL so email clients load it directly — no base64 bloat.
-const LOGO_URL = `${SITE_URL}/images/Logo.png`;
 
 // ─── Main email dispatcher ─────────────────────────────────────────────────
 
@@ -141,11 +141,10 @@ async function sendOrderEmails(opts: {
     console.error("[wholesale/orders] PDF generation failed:", e);
   }
 
-  const pdfAttachment = pdfBuffer
-    ? [{ filename: `Receipt-${orderId}.pdf`, content: pdfBuffer.toString("base64") }]
-    : [];
+  const pdfAttachment: EmailAttachment | null = pdfBuffer
+    ? { filename: `Receipt-${orderId}.pdf`, content: pdfBuffer.toString("base64") }
+    : null;
 
-  // Send both emails concurrently
   await Promise.all([
     sendCustomerEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl: LOGO_URL, pdfAttachment }),
     sendAdminEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl: LOGO_URL }),
@@ -158,7 +157,7 @@ async function sendCustomerEmail(opts: {
   apiKey: string; from: string; orderId: string; customerName: string;
   customerEmail: string; items: WholesaleOrderItem[]; grandTotal: number;
   asap: boolean; date: string; logoUrl: string;
-  pdfAttachment: { filename: string; content: string }[];
+  pdfAttachment: EmailAttachment | null;
 }) {
   const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl, pdfAttachment } = opts;
 
@@ -166,10 +165,12 @@ async function sendCustomerEmail(opts: {
   const ODD  = "#0d1829";
 
   const rows = items.map((item, idx) => {
-    const imgUrl = absoluteUrl(item.imageUrl);
     const bg = idx % 2 === 0 ? EVEN : ODD;
-    const imgCell = imgUrl
-      ? `<td style="padding:8px 10px;width:48px;background:${bg}"><img src="${imgUrl}" alt="" width="36" height="36" style="display:block;object-fit:contain;background:#1a2744;border-radius:5px" /></td>`
+    const imgSrc = item.imageUrl
+      ? (item.imageUrl.startsWith("http") ? item.imageUrl : `${SITE_URL}${item.imageUrl}`)
+      : null;
+    const imgCell = imgSrc
+      ? `<td style="padding:8px 10px;width:48px;background:${bg}"><img src="${imgSrc}" alt="" width="36" height="36" style="display:block;object-fit:contain;background:#1a2744;border-radius:5px" /></td>`
       : `<td style="padding:8px 10px;width:48px;background:${bg}"></td>`;
     return `<tr>
       ${imgCell}
@@ -255,7 +256,7 @@ async function sendCustomerEmail(opts: {
       </tfoot>
     </table>
 
-    ${pdfAttachment.length ? `<p style="margin:18px 0 0;font-size:11px;color:#3a5068;font-style:italic;text-align:center">A PDF receipt is attached to this email.</p>` : ""}
+    ${pdfAttachment ? `<p style="margin:18px 0 0;font-size:11px;color:#3a5068;font-style:italic;text-align:center">A PDF receipt is attached to this email.</p>` : ""}
 
     <!-- Footer divider -->
     <div style="height:1px;background:linear-gradient(90deg,transparent,#1a2744 30%,#1a2744 70%,transparent);margin:28px 0 22px"></div>
@@ -274,6 +275,8 @@ async function sendCustomerEmail(opts: {
 </body>
 </html>`;
 
+  const attachments: EmailAttachment[] = pdfAttachment ? [pdfAttachment] : [];
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
@@ -283,7 +286,7 @@ async function sendCustomerEmail(opts: {
       reply_to: ADMIN_EMAIL,
       subject: `${asap ? "⚡ ASAP — " : ""}Order Confirmation from DFS — ${orderId}`,
       html,
-      ...(pdfAttachment.length ? { attachments: pdfAttachment } : {}),
+      ...(attachments.length ? { attachments } : {}),
     }),
   });
   if (!res.ok) throw new Error(`Resend customer email ${res.status}: ${await res.text()}`);
@@ -299,10 +302,12 @@ async function sendAdminEmail(opts: {
   const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl } = opts;
 
   const packRows = items.map((item, idx) => {
-    const imgUrl = absoluteUrl(item.imageUrl);
     const bg = idx % 2 === 0 ? "#ffffff" : "#f4f7fb";
-    const imgCell = imgUrl
-      ? `<td style="padding:10px 12px;width:52px;background:${bg}"><img src="${imgUrl}" alt="" width="40" height="40" style="display:block;object-fit:contain;background:#eef2f8;border-radius:5px;border:1px solid #dde4ef" /></td>`
+    const imgSrc = item.imageUrl
+      ? (item.imageUrl.startsWith("http") ? item.imageUrl : `${SITE_URL}${item.imageUrl}`)
+      : null;
+    const imgCell = imgSrc
+      ? `<td style="padding:10px 12px;width:52px;background:${bg}"><img src="${imgSrc}" alt="" width="40" height="40" style="display:block;object-fit:contain;background:#eef2f8;border-radius:5px;border:1px solid #dde4ef" /></td>`
       : `<td style="padding:10px 12px;width:52px;background:${bg}"></td>`;
     return `<tr>
       ${imgCell}
@@ -332,7 +337,7 @@ async function sendAdminEmail(opts: {
 <div style="max-width:640px;margin:0 auto">
 
   <!-- Header -->
-  <div style="background:#1a2744;border-radius:10px 10px 0 0;padding:20px 28px;display:flex;align-items:center">
+  <div style="background:#1a2744;border-radius:10px 10px 0 0;padding:20px 28px">
     <table style="width:100%;border-collapse:collapse">
       <tr>
         <td style="width:52px;vertical-align:middle">${logoImg}</td>
@@ -365,7 +370,7 @@ async function sendAdminEmail(opts: {
 
     <!-- Items to pack -->
     <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#7a8ea8;letter-spacing:0.15em;text-transform:uppercase">Items to Pack</p>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;border-radius:8px;overflow:hidden;border:1px solid #dde4ef">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;border:1px solid #dde4ef">
       <thead>
         <tr style="background:#1a2744">
           <th style="padding:10px 12px;width:52px"></th>
@@ -385,7 +390,6 @@ async function sendAdminEmail(opts: {
       </tfoot>
     </table>
 
-    <!-- Total items count -->
     <p style="margin:16px 0 0;font-size:12px;color:#7a8ea8;text-align:right">
       ${items.reduce((s, i) => s + i.qty, 0)} total stickers &nbsp;·&nbsp; ${items.length} line item${items.length !== 1 ? "s" : ""}
     </p>

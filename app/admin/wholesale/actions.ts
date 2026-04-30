@@ -36,26 +36,26 @@ export async function adminConfirmPaymentReceived(orderId: string, received: boo
 export async function adminCancelWholesaleOrder(orderId: string) {
   const sb = createSupabaseService();
 
-  // Fetch items to restore inventory
   const { data, error: fetchErr } = await sb
     .from("wholesale_orders")
-    .select("items, order_stage")
+    .select("items, order_stage, inventory_adjusted")
     .eq("order_id", orderId)
     .single();
   if (fetchErr) throw new Error(fetchErr.message);
   if (data.order_stage === "Cancelled") throw new Error("Order is already cancelled");
 
-  // Restore inventory
-  const { error: rpcErr } = await sb.rpc("wholesale_adjust_inventory", {
-    p_items: data.items,
-    p_delta: 1,
-  });
-  if (rpcErr) console.error("[adminCancelWholesaleOrder] inventory restore failed:", rpcErr);
+  // Only restore inventory if we actually decremented it when the order was placed
+  if (data.inventory_adjusted) {
+    const { error: rpcErr } = await sb.rpc("wholesale_adjust_inventory", {
+      p_items: data.items,
+      p_delta: 1,
+    });
+    if (rpcErr) console.error("[adminCancelWholesaleOrder] inventory restore failed:", rpcErr);
+  }
 
-  // Mark as cancelled
   const { error } = await sb
     .from("wholesale_orders")
-    .update({ order_stage: "Cancelled" })
+    .update({ order_stage: "Cancelled", inventory_adjusted: false })
     .eq("order_id", orderId);
   if (error) throw new Error(error.message);
 }
@@ -63,15 +63,15 @@ export async function adminCancelWholesaleOrder(orderId: string) {
 export async function adminDeleteWholesaleOrder(orderId: string) {
   const sb = createSupabaseService();
 
-  // Fetch items to restore inventory (unless already cancelled — inventory already restored)
   const { data, error: fetchErr } = await sb
     .from("wholesale_orders")
-    .select("items, order_stage")
+    .select("items, order_stage, inventory_adjusted")
     .eq("order_id", orderId)
     .single();
   if (fetchErr) throw new Error(fetchErr.message);
 
-  if (data.order_stage !== "Cancelled") {
+  // Only restore inventory if we actually decremented it (and it wasn't already restored by cancel)
+  if (data.inventory_adjusted) {
     const { error: rpcErr } = await sb.rpc("wholesale_adjust_inventory", {
       p_items: data.items,
       p_delta: 1,
@@ -79,7 +79,6 @@ export async function adminDeleteWholesaleOrder(orderId: string) {
     if (rpcErr) console.error("[adminDeleteWholesaleOrder] inventory restore failed:", rpcErr);
   }
 
-  // Hard delete
   const { error } = await sb
     .from("wholesale_orders")
     .delete()

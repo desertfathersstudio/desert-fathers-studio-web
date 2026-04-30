@@ -1,9 +1,9 @@
 /**
  * Wholesale pricing rules — exact port of the Apps Script logic.
- * Prices updated to new wholesale tier: $0.55/sticker, $3.00/RP set, $7.00/HWP set.
+ * Prices updated to new wholesale tier: $0.50/sticker, $3.00/RP set, $7.00/HWP set.
  */
 
-export const WS_PRICE_SINGLE  = 0.55;
+export const WS_PRICE_SINGLE  = 0.50;
 export const WS_PRICE_RP_PACK = 3.00;
 export const WS_PRICE_HWP_PACK = 7.00;
 
