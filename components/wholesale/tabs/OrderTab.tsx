@@ -61,10 +61,22 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   const bulkList = useMemo(() => {
     const q = bulkSearch.toLowerCase();
+    function stkNum(sku: string) {
+      const m = sku.match(/^STK-(\d+)$/i);
+      return m ? parseInt(m[1], 10) : null;
+    }
     return approved.filter((p) => {
       if (p.isPackProduct) return false;
       if (bulkGroupFilter === "RP") return p.packType === "RP";
       if (bulkGroupFilter === "HWP") return p.packType === "HWP";
+      if (bulkGroupFilter === "Round 1") {
+        const n = stkNum(p.sku);
+        return n !== null && n >= 1 && n <= 35;
+      }
+      if (bulkGroupFilter === "Round 2") {
+        const n = stkNum(p.sku);
+        return n !== null && n >= 36 && n <= 67;
+      }
       if (bulkGroupFilter !== "All") {
         const matchCat = p.category === bulkGroupFilter;
         return matchCat && (!q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
@@ -397,7 +409,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
             {/* Group quick-select chips */}
             <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
-              {(["All", "HWP", "RP", ...categories] as string[]).map((g) => (
+              {(["All", "Round 1", "Round 2", "HWP", "RP", ...categories] as string[]).map((g) => (
                 <button
                   key={g}
                   onClick={() => { setBulkGroupFilter(g); setChecked(new Set()); }}
@@ -415,7 +427,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {g === "HWP" ? "Holy Week Pack" : g === "RP" ? "Resurrection Pack" : g}
+                  {g === "HWP" ? "Holy Week Pack" : g === "RP" ? "Resurrection Pack" : g === "Round 1" ? "Round 1 (STK 1–35)" : g === "Round 2" ? "Round 2 (STK 36–67)" : g}
                 </button>
               ))}
             </div>
