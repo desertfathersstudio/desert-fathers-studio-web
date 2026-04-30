@@ -121,8 +121,13 @@ async function sendOrderEmail(opts: {
   const { orderId, customerName, customerEmail, items, grandTotal, asap } = opts;
   const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
-  // Generate PDF receipt (async, does not block the order response)
-  const pdfBuffer = await generateOrderPdf({ orderId, customerName, customerEmail, items, grandTotal, asap, date });
+  // Generate PDF receipt — wrapped so a failure never blocks the email
+  let pdfBuffer: Buffer | null = null;
+  try {
+    pdfBuffer = await generateOrderPdf({ orderId, customerName, customerEmail, items, grandTotal, asap, date });
+  } catch (e) {
+    console.error("[wholesale/orders] PDF generation failed:", e);
+  }
 
   // Build HTML rows with sticker thumbnails
   const rows = items.map((i) => {
@@ -167,7 +172,7 @@ async function sendOrderEmail(opts: {
     <p style="text-align:right;margin:14px 0 0;font-size:1rem;font-weight:700">
       Grand Total: <span style="color:#6B1F2A">$${grandTotal.toFixed(2)}</span>
     </p>
-    <p style="margin:20px 0 0;font-size:.78rem;color:#7a6a5a">A PDF receipt is attached to this email.</p>
+    ${pdfBuffer ? '<p style="margin:20px 0 0;font-size:.78rem;color:#7a6a5a">A PDF receipt is attached to this email.</p>' : ""}
   </div>
 </div>`.trim();
 
@@ -182,12 +187,9 @@ async function sendOrderEmail(opts: {
       reply_to: ADMIN_EMAIL,
       subject: `${asap ? "⚡ ASAP — " : ""}Wholesale Order ${orderId}`,
       html,
-      attachments: [
-        {
-          filename: `Receipt-${orderId}.pdf`,
-          content: pdfBuffer.toString("base64"),
-        },
-      ],
+      ...(pdfBuffer ? {
+        attachments: [{ filename: `Receipt-${orderId}.pdf`, content: pdfBuffer.toString("base64") }],
+      } : {}),
     }),
   });
 
