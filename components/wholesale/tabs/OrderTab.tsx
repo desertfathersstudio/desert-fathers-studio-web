@@ -50,10 +50,13 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     [approved, selectedSku]
   );
 
-  // Unique categories for group chips
+  // Unique categories for group chips — exclude pack groups handled separately
+  const EXCLUDED_CATS = new Set(["Holy Week Pack", "Resurrection Pack", "HWP", "RP"]);
   const categories = useMemo(() => {
     const cats = new Set<string>();
-    approved.filter((p) => !p.isPackProduct).forEach((p) => { if (p.category) cats.add(p.category); });
+    approved.filter((p) => !p.isPackProduct).forEach((p) => {
+      if (p.category && !EXCLUDED_CATS.has(p.category)) cats.add(p.category);
+    });
     return Array.from(cats).sort();
   }, [approved]);
 
