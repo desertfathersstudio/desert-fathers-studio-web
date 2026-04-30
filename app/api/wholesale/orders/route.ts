@@ -147,18 +147,15 @@ async function sendOrderEmail(opts: {
   </div>
 </div>`.trim();
 
-  const from = process.env.RESEND_FROM_EMAIL ?? "orders@desertfathersstudio.com";
-
-  // Send receipt to customer
-  const toAddresses = [customerEmail];
-  if (customerEmail !== ADMIN_EMAIL) toAddresses.push(ADMIN_EMAIL);
+  // from must be a Resend-verified sender — set RESEND_FROM_EMAIL in Vercel env vars
+  const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       from,
-      to: toAddresses,
+      to: [customerEmail],
       reply_to: ADMIN_EMAIL,
       subject: `${asap ? "⚡ ASAP — " : ""}Wholesale Order ${orderId}`,
       html,

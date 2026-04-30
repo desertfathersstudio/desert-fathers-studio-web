@@ -10,7 +10,7 @@ export const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
   "1111": {
     accountId: "abbey",
     displayName: "St. Mary and St. Moses Abbey",
-    notifyEmail: "desertfathersstudio@gmail.com",
+    notifyEmail: "st.mosesbookstore@gmail.com",
     hasPendingTab: true,
     canEditFulfillment: true,
   },

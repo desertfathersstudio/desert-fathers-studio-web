@@ -62,13 +62,19 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   const [bulkGroupFilter, setBulkGroupFilter] = useState<string>("All");
 
+  // Virtual pack items for bulk list
+  const VIRTUAL_PACKS = [
+    { sku: "RP_PACK", name: "Resurrection Pack", category: "Resurrection Pack", size: '2"', packType: "RP" as const, unitPrice: WS_PRICE_RP_PACK, imageUrl: "" },
+    { sku: "HWP_PACK", name: "Holy Week Pack", category: "Holy Week Pack", size: '2"', packType: "HWP" as const, unitPrice: WS_PRICE_HWP_PACK, imageUrl: "" },
+  ];
+
   const bulkList = useMemo(() => {
     const q = bulkSearch.toLowerCase();
     function stkNum(sku: string) {
       const m = sku.match(/^STK-(\d+)$/i);
       return m ? parseInt(m[1], 10) : null;
     }
-    return approved.filter((p) => {
+    const stickers = approved.filter((p) => {
       if (p.isPackProduct) return false;
       if (bulkGroupFilter === "RP") return p.packType === "RP";
       if (bulkGroupFilter === "HWP") return p.packType === "HWP";
@@ -86,6 +92,14 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
       }
       return !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
     });
+    // Prepend relevant pack items
+    const packs = VIRTUAL_PACKS.filter((pk) => {
+      if (bulkGroupFilter === "RP") return pk.packType === "RP";
+      if (bulkGroupFilter === "HWP") return pk.packType === "HWP";
+      if (bulkGroupFilter === "All") return !q || pk.name.toLowerCase().includes(q);
+      return false;
+    });
+    return [...packs.map((pk) => ({ ...pk, isVirtualPack: true })), ...stickers.map((p) => ({ ...p, isVirtualPack: false }))];
   }, [approved, bulkSearch, bulkGroupFilter]);
 
   function addToCart(line: WholesaleCartLine) {
@@ -104,6 +118,19 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   function handleSingleAdd() {
     if (!selectedSku) { toast.error("Select a design first"); return; }
+
+    // Virtual pack items — may not exist as DB rows
+    if (selectedSku === "RP_PACK") {
+      addToCart({ productId: "RP_PACK", designName: "Resurrection Pack", category: "Resurrection Pack", size: '2"', imageUrl: approved.find((p) => p.isPackProduct && p.packType === "RP")?.imageUrl ?? "", qty, unitPrice: WS_PRICE_RP_PACK, asap });
+      toast.success("Resurrection Pack added");
+      return;
+    }
+    if (selectedSku === "HWP_PACK") {
+      addToCart({ productId: "HWP_PACK", designName: "Holy Week Pack", category: "Holy Week Pack", size: '2"', imageUrl: approved.find((p) => p.isPackProduct && p.packType === "HWP")?.imageUrl ?? "", qty, unitPrice: WS_PRICE_HWP_PACK, asap });
+      toast.success("Holy Week Pack added");
+      return;
+    }
+
     const p = approved.find((pr) => pr.sku === selectedSku);
     if (!p) return;
     addToCart({
@@ -123,6 +150,12 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     if (!checked.size) { toast.error("Select at least one design"); return; }
     const lines: WholesaleCartLine[] = [];
     for (const sku of checked) {
+      // Handle virtual pack items
+      const vp = VIRTUAL_PACKS.find((pk) => pk.sku === sku);
+      if (vp) {
+        lines.push({ productId: vp.sku, designName: vp.name, category: vp.category, size: vp.size, imageUrl: vp.imageUrl, qty: bulkQty, unitPrice: vp.unitPrice, asap: false });
+        continue;
+      }
       const p = approved.find((pr) => pr.sku === sku);
       if (!p) continue;
       lines.push({
@@ -500,7 +533,9 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                     )}
                     <span style={{ flex: 1 }}>
                       {p.name}
-                      <small style={{ color: "var(--text-muted)", marginLeft: "0.4rem" }}>({p.sku})</small>
+                      <small style={{ color: "var(--text-muted)", marginLeft: "0.4rem" }}>
+                        ({p.sku}){"unitPrice" in p && p.isVirtualPack ? ` — $${(p as { unitPrice: number }).unitPrice.toFixed(2)}/set` : ""}
+                      </small>
                     </span>
                   </label>
                 ))
