@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function MoneyTrackerPage() {
   const sb = await createSupabaseServer();
 
-  const [mfgRes, miscRes, salesRes] = await Promise.all([
+  const [mfgRes, miscRes, salesRes, wholesaleRes] = await Promise.all([
     sb.from("mfg_orders")
       .select("id, order_id, order_date, total_cost, status")
       .order("order_date", { ascending: false }),
@@ -17,6 +17,9 @@ export default async function MoneyTrackerPage() {
     sb.from("sales_orders")
       .select("id, created_at, total_amount, status")
       .order("created_at", { ascending: false }),
+    sb.from("wholesale_orders")
+      .select("id, order_id, created_at, grand_total, order_stage")
+      .order("created_at", { ascending: false }),
   ]);
 
   return (
@@ -25,6 +28,7 @@ export default async function MoneyTrackerPage() {
         mfgOrders={mfgRes.data ?? []}
         miscExpenses={miscRes.data ?? []}
         salesOrders={salesRes.data ?? []}
+        wholesaleOrders={wholesaleRes.data ?? []}
       />
     </AdminShell>
   );

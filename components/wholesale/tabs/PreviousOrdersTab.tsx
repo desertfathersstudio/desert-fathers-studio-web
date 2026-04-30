@@ -19,6 +19,7 @@ const STAGE_COLOR: Record<OrderStage, { bg: string; text: string }> = {
   Packed:     { bg: "#f5f3ff", text: "#6d28d9" },
   Shipped:    { bg: "#fff7ed", text: "#9a3412" },
   Delivered:  { bg: "#14532d", text: "#bbf7d0" },
+  Cancelled:  { bg: "#fee2e2", text: "#991b1b" },
 };
 
 export function PreviousOrdersTab({ accountId, refreshKey }: Props) {

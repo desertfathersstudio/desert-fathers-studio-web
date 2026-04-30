@@ -36,8 +36,10 @@ export type OrderStage =
   | "Printed"
   | "Packed"
   | "Shipped"
-  | "Delivered";
+  | "Delivered"
+  | "Cancelled";
 
+// Linear fulfillment stages — does NOT include Cancelled (terminal dead-end state)
 export const ORDER_STAGES: OrderStage[] = [
   "Pending",
   "Processing",
@@ -46,6 +48,8 @@ export const ORDER_STAGES: OrderStage[] = [
   "Shipped",
   "Delivered",
 ];
+
+export const ORDER_STAGES_WITH_CANCEL: OrderStage[] = [...ORDER_STAGES, "Cancelled"];
 
 export interface WholesaleOrderItem {
   productId: string;

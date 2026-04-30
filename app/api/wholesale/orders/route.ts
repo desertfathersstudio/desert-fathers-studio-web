@@ -98,6 +98,10 @@ export async function POST(req: NextRequest) {
     });
     if (error) throw error;
 
+    // Decrement inventory for each item (non-fatal if it fails)
+    sb.rpc("wholesale_adjust_inventory", { p_items: items, p_delta: -1 })
+      .then(({ error: rpcErr }) => { if (rpcErr) console.error("[wholesale] inventory adjust failed:", rpcErr); });
+
     // Fire-and-forget — customer gets the response immediately
     sendOrderEmails({ orderId, customerName, customerEmail, items, grandTotal, asap })
       .catch((e) => console.error("[wholesale/orders] email failed:", e));
