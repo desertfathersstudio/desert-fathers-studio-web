@@ -48,7 +48,7 @@ export function generateOrderPdf(opts: PdfOpts): Promise<Buffer> {
     doc.rect(0, HEADER_H, PW, 3).fill(GOLD);   // gold rule
 
     // Logo (left of header)
-    const logoPath = path.join(process.cwd(), "public", "icon-192.png");
+    const logoPath = path.join(process.cwd(), "public", "images", "Logo.png");
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, M, 11, { width: 60, height: 60 });
     }

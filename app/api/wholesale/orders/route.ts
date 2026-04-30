@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
@@ -115,15 +113,8 @@ export async function POST(req: NextRequest) {
 
 // ─── Shared helpers ────────────────────────────────────────────────────────
 
-function loadLogoBase64(): string {
-  try {
-    const logoPath = path.join(process.cwd(), "public", "icon-192.png");
-    if (fs.existsSync(logoPath)) {
-      return `data:image/png;base64,${fs.readFileSync(logoPath).toString("base64")}`;
-    }
-  } catch { /* optional */ }
-  return "";
-}
+// Use a hosted URL so email clients load it directly — no base64 bloat.
+const LOGO_URL = `${SITE_URL}/images/Logo.png`;
 
 // ─── Main email dispatcher ─────────────────────────────────────────────────
 
@@ -139,9 +130,8 @@ async function sendOrderEmails(opts: {
 
   const { orderId, customerName, customerEmail, items, grandTotal, asap } = opts;
   const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-  const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
-
-  const logoDataUri = loadLogoBase64();
+  const fromEmail = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const from = `Desert Fathers Studio <${fromEmail}>`;
 
   // Generate PDF (non-blocking — failure doesn't prevent emails)
   let pdfBuffer: Buffer | null = null;
@@ -157,8 +147,8 @@ async function sendOrderEmails(opts: {
 
   // Send both emails concurrently
   await Promise.all([
-    sendCustomerEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoDataUri, pdfAttachment }),
-    sendAdminEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoDataUri }),
+    sendCustomerEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl: LOGO_URL, pdfAttachment }),
+    sendAdminEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl: LOGO_URL }),
   ]);
 }
 
@@ -167,10 +157,10 @@ async function sendOrderEmails(opts: {
 async function sendCustomerEmail(opts: {
   apiKey: string; from: string; orderId: string; customerName: string;
   customerEmail: string; items: WholesaleOrderItem[]; grandTotal: number;
-  asap: boolean; date: string; logoDataUri: string;
+  asap: boolean; date: string; logoUrl: string;
   pdfAttachment: { filename: string; content: string }[];
 }) {
-  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoDataUri, pdfAttachment } = opts;
+  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl, pdfAttachment } = opts;
 
   const EVEN = "#111d2e";
   const ODD  = "#0d1829";
@@ -191,10 +181,8 @@ async function sendCustomerEmail(opts: {
     </tr>`;
   }).join("");
 
-  const logoImg = logoDataUri
-    ? `<div style="width:80px;height:80px;border-radius:50%;background:#fff;margin:0 auto 16px;overflow:hidden">
-        <img src="${logoDataUri}" alt="Desert Fathers Studio" width="80" height="80" style="display:block">
-       </div>`
+  const logoImg = logoUrl
+    ? `<img src="${logoUrl}" alt="Desert Fathers Studio" width="90" height="90" style="display:block;margin:0 auto 14px;border-radius:12px">`
     : "";
 
   const html = `<!DOCTYPE html>
@@ -306,9 +294,9 @@ async function sendCustomerEmail(opts: {
 async function sendAdminEmail(opts: {
   apiKey: string; from: string; orderId: string; customerName: string;
   customerEmail: string; items: WholesaleOrderItem[]; grandTotal: number;
-  asap: boolean; date: string; logoDataUri: string;
+  asap: boolean; date: string; logoUrl: string;
 }) {
-  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoDataUri } = opts;
+  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl } = opts;
 
   const packRows = items.map((item, idx) => {
     const imgUrl = absoluteUrl(item.imageUrl);
@@ -328,8 +316,8 @@ async function sendAdminEmail(opts: {
     </tr>`;
   }).join("");
 
-  const logoImg = logoDataUri
-    ? `<img src="${logoDataUri}" alt="" width="44" height="44" style="display:block;border-radius:50%;border:2px solid #c9a84c">`
+  const logoImg = logoUrl
+    ? `<img src="${logoUrl}" alt="Desert Fathers Studio" width="44" height="44" style="display:block;border-radius:6px">`
     : "";
 
   const html = `<!DOCTYPE html>
