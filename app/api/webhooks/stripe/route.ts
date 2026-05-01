@@ -6,7 +6,6 @@ import { logSalesTaxThresholdWarnings } from "@/lib/sales";
 import { Resend } from "resend";
 import type Stripe from "stripe";
 
-// Raw body required for Stripe signature verification — do not use bodyParser
 export const dynamic = "force-dynamic";
 
 function getResend() {
@@ -16,7 +15,7 @@ const ADMIN_EMAIL = "jerome.maurice3@gmail.com";
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = req.headers.get("stripe-signature");
+  const sig  = req.headers.get("stripe-signature");
 
   if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json({ error: "Missing signature" }, { status: 400 });
@@ -30,9 +29,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  if (event.type === "payment_intent.succeeded") {
-    const pi = event.data.object as Stripe.PaymentIntent;
-    after(() => handlePaymentSucceeded(pi));
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    after(() => handleSessionCompleted(session));
   }
 
   if (event.type === "payment_intent.payment_failed") {
@@ -43,61 +42,79 @@ export async function POST(req: Request) {
   return NextResponse.json({ received: true });
 }
 
-async function handlePaymentSucceeded(pi: Stripe.PaymentIntent) {
-  console.log("[stripe-webhook] ▶ payment_intent.succeeded", pi.id);
-  console.log("[stripe-webhook] metadata:", JSON.stringify(pi.metadata ?? {}));
+// ── Main handler ───────────────────────────────────────────────────────
+async function handleSessionCompleted(session: Stripe.Checkout.Session) {
+  console.log("[stripe-webhook] ▶ checkout.session.completed", session.id);
 
-  const supabase = createSupabaseService();
-
-  // Check for duplicate webhook delivery
-  const { data: existing } = await supabase
-    .from("retail_orders")
-    .select("id")
-    .eq("stripe_pi_id", pi.id)
-    .maybeSingle();
-
-  if (existing) {
-    console.log("[stripe-webhook] Duplicate delivery — already processed", pi.id);
+  if (session.payment_status !== "paid") {
+    console.log("[stripe-webhook] Session not paid yet, skipping:", session.payment_status);
     return;
   }
 
-  const orderNumber = `DFS-${pi.id.replace("pi_", "").slice(0, 8).toUpperCase()}`;
-  const subtotalCents = parseInt(pi.metadata?.subtotal_cents ?? "0", 10);
-  const shippingCents = parseInt(pi.metadata?.shipping_cents ?? "0", 10);
-  const taxCents = 0; // TAX DISABLED: re-enable once NC $1K nexus threshold is crossed
-  const customerPhone = pi.metadata?.customer_phone ?? "";
+  const supabase = createSupabaseService();
 
-  let parsedItems: Array<{
-    id: string;
-    name: string;
-    qty: number;
-    unit: number;
-  }> = [];
-  try {
-    parsedItems = JSON.parse(pi.metadata?.items ?? "[]");
-  } catch {
+  // Deduplicate
+  const { data: existing } = await supabase
+    .from("retail_orders")
+    .select("id")
+    .eq("stripe_session_id", session.id)
+    .maybeSingle();
+
+  if (existing) {
+    console.log("[stripe-webhook] Duplicate delivery — already processed", session.id);
+    return;
+  }
+
+  // Retrieve full session with line_items expanded
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+    expand: ["line_items"],
+  }) as any;
+
+  const meta          = fullSession.metadata ?? {};
+  const orderNumber   = `DFS-${session.id.replace(/^cs_(test_|live_)?/, "").slice(0, 8).toUpperCase()}`;
+  const subtotalCents = parseInt(meta.subtotal_cents ?? "0", 10);
+  const shippingCents = parseInt(meta.shipping_cents ?? "0", 10);
+  const totalCents    = fullSession.amount_total ?? subtotalCents + shippingCents;
+
+  // Names: Stripe's collected name takes priority, fall back to our metadata
+  const metaName      = `${meta.first_name ?? ""} ${meta.last_name ?? ""}`.trim();
+  const customerName  = fullSession.shipping_details?.name ?? (metaName || "Customer");
+  const customerEmail = fullSession.customer_details?.email ?? meta.email ?? "";
+  const customerPhone = fullSession.customer_details?.phone ?? meta.phone ?? "";
+
+  // Shipping address: prefer what Stripe collected, fall back to our metadata
+  let shippingAddr: Record<string, unknown> = {};
+  if (fullSession.shipping_details?.address) {
+    shippingAddr = fullSession.shipping_details.address;
+  } else {
+    try { shippingAddr = JSON.parse(meta.shipping_address ?? "{}"); } catch { /* ignore */ }
+  }
+
+  // Parse items from metadata
+  let parsedItems: Array<{ id: string; name: string; qty: number; unit: number }> = [];
+  try { parsedItems = JSON.parse(meta.items ?? "[]"); } catch {
     console.warn("[stripe-webhook] Could not parse items metadata");
   }
 
-  const shippingAddr = pi.shipping?.address ?? {};
-  const customerName = pi.shipping?.name ?? pi.metadata?.customer_name ?? "Customer";
-  const customerEmail = pi.receipt_email ?? pi.metadata?.customer_email ?? "";
-
-  // Insert retail_order
+  // ── Insert retail_order ───────────────────────────────────────────
   const { data: order, error: orderErr } = await supabase
     .from("retail_orders")
     .insert({
-      stripe_pi_id: pi.id,
-      order_number: orderNumber,
-      customer_name: customerName,
-      customer_email: customerEmail,
-      shipping_address: shippingAddr,
-      subtotal_cents: subtotalCents,
-      shipping_cents: shippingCents,
-      tax_cents: 0,
-      total_cents: pi.amount,
-      status: "paid",
-      stripe_metadata: pi.metadata ?? {},
+      stripe_session_id: session.id,
+      stripe_pi_id:      typeof fullSession.payment_intent === "string"
+        ? fullSession.payment_intent
+        : fullSession.payment_intent?.id ?? null,
+      order_number:      orderNumber,
+      customer_name:     customerName,
+      customer_email:    customerEmail,
+      shipping_address:  shippingAddr,
+      subtotal_cents:    subtotalCents,
+      shipping_cents:    shippingCents,
+      tax_cents:         0,
+      total_cents:       totalCents,
+      status:            "paid",
+      stripe_metadata:   meta,
     })
     .select("id")
     .single();
@@ -107,161 +124,157 @@ async function handlePaymentSucceeded(pi: Stripe.PaymentIntent) {
     return;
   }
 
-  // Insert line items
+  // ── Insert line items ─────────────────────────────────────────────
   if (parsedItems.length > 0) {
     const lineItems = parsedItems.map((item) => ({
-      order_id: order.id,
-      product_id: item.id,
-      product_name: item.name,
-      quantity: item.qty,
+      order_id:         order.id,
+      product_id:       item.id,
+      product_name:     item.name,
+      quantity:         item.qty,
       unit_price_cents: item.unit,
       line_total_cents: item.unit * item.qty,
     }));
-
     const { error: itemsErr } = await supabase.from("retail_order_items").insert(lineItems);
-    if (itemsErr) {
-      console.error("[stripe-webhook] Failed to insert retail_order_items:", itemsErr);
-    }
+    if (itemsErr) console.error("[stripe-webhook] Failed to insert retail_order_items:", itemsErr);
   }
 
-  // Upsert client record for return requests and email campaigns
+  // ── Upsert customer ───────────────────────────────────────────────
   if (customerEmail) {
-    await upsertClient(supabase, {
-      email: customerEmail,
-      name: customerName,
-      phone: customerPhone,
+    await upsertCustomer(supabase, {
+      email:           customerEmail,
+      firstName:       meta.first_name ?? customerName.split(" ")[0] ?? "",
+      lastName:        meta.last_name  ?? customerName.split(" ").slice(1).join(" ") ?? "",
+      phone:           customerPhone,
       shippingAddress: shippingAddr,
-      orderTotalCents: pi.amount,
+      orderTotalCents: totalCents,
+      marketingOptIn:  meta.marketing_opt_in === "true",
     });
   }
 
-  // Check NC sales tax nexus thresholds ($900 warning, $1K required)
-  await logSalesTaxThresholdWarnings(pi.amount);
+  // ── Sales tax threshold check ─────────────────────────────────────
+  await logSalesTaxThresholdWarnings(totalCents);
 
   console.log("[stripe-webhook] ✓ Order inserted:", order.id, orderNumber);
 
-  // Send emails (fire-and-forget inside after())
+  // ── Send emails ───────────────────────────────────────────────────
   await sendEmails({
     orderNumber,
     customerName,
     customerEmail,
-    items: parsedItems,
+    items:           parsedItems,
     shippingAddress: shippingAddr,
     subtotalCents,
     shippingCents,
-    totalCents: pi.amount,
+    totalCents,
   });
 }
 
-// ── Client upsert ─────────────────────────────────────────────────────
-async function upsertClient(
+// ── Customer upsert ────────────────────────────────────────────────────
+async function upsertCustomer(
   supabase: ReturnType<typeof createSupabaseService>,
   payload: {
-    email: string;
-    name: string;
-    phone: string;
-    shippingAddress: Partial<Stripe.Address>;
+    email:           string;
+    firstName:       string;
+    lastName:        string;
+    phone:           string;
+    shippingAddress: Record<string, unknown>;
     orderTotalCents: number;
+    marketingOptIn:  boolean;
   }
 ) {
-  const { email, name, phone, shippingAddress, orderTotalCents } = payload;
-  const firstName = name.split(" ")[0] || name;
+  const { email, firstName, lastName, phone, shippingAddress, orderTotalCents, marketingOptIn } = payload;
   const now = new Date().toISOString();
 
   const { data: existing } = await supabase
-    .from("clients")
-    .select("order_count, total_spent_cents, first_order_at, phone")
+    .from("customers")
+    .select("order_count, total_spent_cents, first_purchase_at, phone, marketing_opt_in, marketing_opt_in_at")
     .eq("email", email)
     .maybeSingle();
 
   if (existing) {
+    // Only flip marketing_opt_in to true; never silently flip opted-in customers to false
+    const newOptIn    = existing.marketing_opt_in || marketingOptIn;
+    const newOptInAt  = !existing.marketing_opt_in && marketingOptIn
+      ? now
+      : existing.marketing_opt_in_at ?? null;
+
     await supabase
-      .from("clients")
+      .from("customers")
       .update({
-        name,
-        first_name: firstName,
-        phone: phone || existing.phone || null,
-        shipping_address: shippingAddress,
-        order_count: existing.order_count + 1,
-        total_spent_cents: existing.total_spent_cents + orderTotalCents,
-        last_order_at: now,
-        updated_at: now,
+        first_name:          firstName || undefined,
+        last_name:           lastName  || undefined,
+        phone:               phone     || existing.phone || null,
+        shipping_address:    shippingAddress,
+        order_count:         existing.order_count + 1,
+        total_spent_cents:   existing.total_spent_cents + orderTotalCents,
+        last_purchase_at:    now,
+        marketing_opt_in:    newOptIn,
+        marketing_opt_in_at: newOptInAt,
+        updated_at:          now,
       })
       .eq("email", email);
   } else {
-    await supabase.from("clients").insert({
+    await supabase.from("customers").insert({
       email,
-      name,
-      first_name: firstName,
-      phone: phone || null,
-      shipping_address: shippingAddress,
-      order_count: 1,
-      total_spent_cents: orderTotalCents,
-      first_order_at: now,
-      last_order_at: now,
+      first_name:          firstName,
+      last_name:           lastName,
+      phone:               phone || null,
+      shipping_address:    shippingAddress,
+      order_count:         1,
+      total_spent_cents:   orderTotalCents,
+      first_purchase_at:   now,
+      last_purchase_at:    now,
+      marketing_opt_in:    marketingOptIn,
+      marketing_opt_in_at: marketingOptIn ? now : null,
+      source:              "retail",
     });
   }
 }
 
-interface EmailPayload {
-  orderNumber: string;
-  customerName: string;
-  customerEmail: string;
-  items: Array<{ id: string; name: string; qty: number; unit: number }>;
-  shippingAddress: Partial<Stripe.Address>;
-  subtotalCents: number;
-  shippingCents: number;
-  totalCents: number;
-}
-
+// ── Email helpers ──────────────────────────────────────────────────────
 function formatCents(cents: number) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-function buildAddressLine(addr: Partial<Stripe.Address>) {
+function buildAddressLine(addr: Record<string, unknown>) {
   return [addr.line1, addr.line2, addr.city, addr.state, addr.postal_code]
     .filter(Boolean)
     .join(", ");
 }
 
-async function sendEmails(payload: EmailPayload) {
-  const {
-    orderNumber,
-    customerName,
-    customerEmail,
-    items,
-    shippingAddress,
-    subtotalCents,
-    shippingCents,
-    totalCents,
-  } = payload;
+interface EmailPayload {
+  orderNumber:     string;
+  customerName:    string;
+  customerEmail:   string;
+  items:           Array<{ id: string; name: string; qty: number; unit: number }>;
+  shippingAddress: Record<string, unknown>;
+  subtotalCents:   number;
+  shippingCents:   number;
+  totalCents:      number;
+}
 
-  // Guard: bail early with a clear log if the API key is missing
+async function sendEmails(payload: EmailPayload) {
+  const { orderNumber, customerName, customerEmail, items, shippingAddress, subtotalCents, shippingCents, totalCents } = payload;
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.error(
-      "[stripe-webhook] ✗ RESEND_API_KEY is not set — skipping emails for order",
-      orderNumber,
-      "\n  → Add your Resend API key to .env.local (RESEND_API_KEY=re_...)",
-      "\n  → For testing without a verified domain, use 'onboarding@resend.dev' as RESEND_FROM_EMAIL"
+      "[stripe-webhook] ✗ RESEND_API_KEY is not set — skipping emails for order", orderNumber,
+      "\n  → Add your Resend API key to .env.local (RESEND_API_KEY=re_...)"
     );
     return;
   }
 
-  // For Resend's free sandbox, emails can only be sent to the account owner's
-  // email OR from a verified domain. If RESEND_FROM_EMAIL is unverified, Resend
-  // will return a 403. Set it to 'onboarding@resend.dev' during testing.
-  const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const from     = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
   const addrLine = buildAddressLine(shippingAddress);
 
   const itemsHtml = items
-    .map(
-      (i) =>
-        `<tr>
-          <td style="padding:6px 0;">${i.name}</td>
-          <td style="padding:6px 0;text-align:center;">×${i.qty}</td>
-          <td style="padding:6px 0;text-align:right;">${formatCents(i.unit * i.qty)}</td>
-        </tr>`
+    .map((i) =>
+      `<tr>
+        <td style="padding:6px 0;">${i.name}</td>
+        <td style="padding:6px 0;text-align:center;">×${i.qty}</td>
+        <td style="padding:6px 0;text-align:right;">${formatCents(i.unit * i.qty)}</td>
+      </tr>`
     )
     .join("");
 
@@ -277,12 +290,8 @@ async function sendEmails(payload: EmailPayload) {
     <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;color:#2a1a0e;">
       <h1 style="font-size:24px;color:#6B1F2A;margin-bottom:4px;">Thank you, ${customerName}!</h1>
       <p style="color:#7a6a5a;margin-top:0;">Order ${orderNumber} is confirmed. Your stickers are on their way.</p>
-      <table style="width:100%;border-collapse:collapse;margin:24px 0;">
-        ${itemsHtml}
-      </table>
-      <table style="width:100%;border-collapse:collapse;font-size:14px;">
-        ${summaryRows}
-      </table>
+      <table style="width:100%;border-collapse:collapse;margin:24px 0;">${itemsHtml}</table>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">${summaryRows}</table>
       <p style="margin-top:24px;font-size:14px;color:#7a6a5a;">
         <strong>Shipping to:</strong> ${addrLine}<br/>
         <strong>Estimated delivery:</strong> 3–7 business days
@@ -305,19 +314,9 @@ async function sendEmails(payload: EmailPayload) {
 
   const [customerResult, adminResult] = await Promise.allSettled([
     customerEmail
-      ? resend.emails.send({
-          from,
-          to: customerEmail,
-          subject: `Order confirmed — ${orderNumber}`,
-          html: confirmationHtml,
-        })
+      ? resend.emails.send({ from, to: customerEmail, subject: `Order confirmed — ${orderNumber}`, html: confirmationHtml })
       : Promise.resolve({ data: null, error: null }),
-    resend.emails.send({
-      from,
-      to: ADMIN_EMAIL,
-      subject: `New order ${orderNumber} — ${formatCents(totalCents)}`,
-      html: adminHtml,
-    }),
+    resend.emails.send({ from, to: ADMIN_EMAIL, subject: `New order ${orderNumber} — ${formatCents(totalCents)}`, html: adminHtml }),
   ]);
 
   if (customerResult.status === "rejected") {

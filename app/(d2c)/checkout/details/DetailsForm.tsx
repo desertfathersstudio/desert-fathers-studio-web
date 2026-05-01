@@ -1,36 +1,13 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import {
-  useStripe,
-  useElements,
-  PaymentElement,
-} from "@stripe/react-stripe-js";
-import type { StripePaymentElementChangeEvent } from "@stripe/stripe-js";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
-  Loader2,
-  Lock,
-  MapPin,
-  RotateCcw,
-  Package,
-  Truck,
-  ChevronDown,
+  Loader2, Lock, MapPin, RotateCcw, ArrowRight, ChevronDown, Truck,
 } from "lucide-react";
 import { FREE_SHIPPING_THRESHOLD_DOLLARS } from "@/lib/shipping";
 import { useCart } from "@/lib/cart";
-
-// ── Types ──────────────────────────────────────────────────────────────
-interface AddressRequest {
-  line1: string;
-  line2?: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-}
 
 // ── US states ──────────────────────────────────────────────────────────
 const US_STATES: [string, string][] = [
@@ -49,7 +26,7 @@ const US_STATES: [string, string][] = [
   ["WI","Wisconsin"],["WY","Wyoming"],["DC","Washington DC"],
 ];
 
-// ── Shared input styles ────────────────────────────────────────────────
+// ── Shared styles ──────────────────────────────────────────────────────
 const inputBase: React.CSSProperties = {
   border: "1px solid var(--border)",
   background: "var(--bg)",
@@ -57,11 +34,7 @@ const inputBase: React.CSSProperties = {
   borderRadius: "var(--radius-btn)",
   minHeight: 44,
 };
-
-const inputError: React.CSSProperties = {
-  ...inputBase,
-  border: "1px solid #c0392b",
-};
+const inputError: React.CSSProperties = { ...inputBase, border: "1px solid #c0392b" };
 
 function labelEl(text: string, required?: boolean) {
   return (
@@ -69,45 +42,26 @@ function labelEl(text: string, required?: boolean) {
       className="block text-[11px] font-medium uppercase tracking-wide mb-1"
       style={{ color: "var(--text-muted)" }}
     >
-      {text}
-      {required && " *"}
+      {text}{required && " *"}
     </span>
   );
 }
 
-// ── Text field ─────────────────────────────────────────────────────────
 function Field({
-  id,
-  label,
-  type = "text",
-  value,
-  onChange,
-  onBlur,
-  placeholder,
-  required,
-  hint,
-  error,
-  autoComplete,
+  id, label, type = "text", value, onChange, onBlur,
+  placeholder, required, hint, error, autoComplete,
 }: {
-  id: string;
-  label: string;
-  type?: string;
-  value: string;
-  onChange: (v: string) => void;
-  onBlur?: () => void;
-  placeholder?: string;
-  required?: boolean;
-  hint?: string;
-  error?: string;
-  autoComplete?: string;
+  id: string; label: string; type?: string; value: string;
+  onChange: (v: string) => void; onBlur?: () => void;
+  placeholder?: string; required?: boolean; hint?: string;
+  error?: string; autoComplete?: string;
 }) {
   const hasError = Boolean(error);
   return (
     <div>
       {labelEl(label, required)}
       <input
-        id={id}
-        type={type}
+        id={id} type={type}
         autoComplete={autoComplete ?? id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -128,17 +82,8 @@ function Field({
   );
 }
 
-// ── State select ───────────────────────────────────────────────────────
-function StateSelect({
-  value,
-  onChange,
-  onBlur,
-  error,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  onBlur?: () => void;
-  error?: string;
+function StateSelect({ value, onChange, onBlur, error }: {
+  value: string; onChange: (v: string) => void; onBlur?: () => void; error?: string;
 }) {
   const hasError = Boolean(error);
   return (
@@ -168,26 +113,6 @@ function StateSelect({
   );
 }
 
-// ── Shipping display ───────────────────────────────────────────────────
-function ShippingValue({
-  shippingCents,
-  isFreeShipping,
-  isUpdating,
-}: {
-  shippingCents: number | null;
-  isFreeShipping: boolean;
-  isUpdating: boolean;
-}) {
-  if (isUpdating)
-    return <Loader2 size={12} className="animate-spin" style={{ color: "var(--text-muted)" }} />;
-  if (shippingCents === null)
-    return <span className="text-xs italic" style={{ color: "var(--text-muted)" }}>$4–$6</span>;
-  if (isFreeShipping)
-    return <span className="text-xs font-semibold" style={{ color: "var(--gold)" }}>FREE</span>;
-  return <span className="tabular-nums" style={{ color: "var(--text)" }}>${(shippingCents / 100).toFixed(2)}</span>;
-}
-
-// ── Free-shipping progress bar (compact) ──────────────────────────────
 function FreeShippingBar({ subtotalDollars }: { subtotalDollars: number }) {
   const pct = Math.min((subtotalDollars / FREE_SHIPPING_THRESHOLD_DOLLARS) * 100, 100);
   const amountToFree = Math.max(FREE_SHIPPING_THRESHOLD_DOLLARS - subtotalDollars, 0);
@@ -195,7 +120,9 @@ function FreeShippingBar({ subtotalDollars }: { subtotalDollars: number }) {
   return (
     <div className="space-y-1 mb-5">
       {met ? (
-        <p className="text-[11px] font-medium" style={{ color: "var(--gold)" }}>🎉 Free shipping unlocked!</p>
+        <p className="text-[11px] font-medium" style={{ color: "var(--gold)" }}>
+          🎉 Free shipping unlocked!
+        </p>
       ) : (
         <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
           Add <strong style={{ color: "var(--text)" }}>${amountToFree.toFixed(2)}</strong> more for free shipping
@@ -212,88 +139,60 @@ function FreeShippingBar({ subtotalDollars }: { subtotalDollars: number }) {
 }
 
 // ── Session persistence ────────────────────────────────────────────────
-const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const zipRe = /^\d{5}$/;
 const FIELDS_KEY = "dfs-checkout-fields";
+const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const zipRe   = /^\d{5}$/;
 
 interface SavedFields {
   firstName: string; lastName: string; email: string; phone: string; notes: string;
   addrLine1: string; addrLine2: string; addrCity: string; addrState: string; addrZip: string;
 }
 
-const EMPTY_FIELDS: SavedFields = {
-  firstName: "", lastName: "", email: "", phone: "", notes: "",
-  addrLine1: "", addrLine2: "", addrCity: "", addrState: "", addrZip: "",
-};
-
-function loadSavedFields(): SavedFields {
-  if (typeof window === "undefined") return EMPTY_FIELDS;
-  try {
-    const raw = sessionStorage.getItem(FIELDS_KEY);
-    return raw ? { ...EMPTY_FIELDS, ...(JSON.parse(raw) as Partial<SavedFields>) } : EMPTY_FIELDS;
-  } catch {
-    return EMPTY_FIELDS;
-  }
-}
-
 // ── Main form ──────────────────────────────────────────────────────────
-export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
+export function DetailsForm() {
   const { items } = useCart();
-  const router = useRouter();
-  const stripe = useStripe();
-  const elements = useElements();
 
-  const saved = useRef(loadSavedFields());
+  const [firstName, setFirstName] = useState("");
+  const [lastName,  setLastName]  = useState("");
+  const [email,     setEmail]     = useState("");
+  const [phone,     setPhone]     = useState("");
 
-  // Contact
-  const [firstName, setFirstName] = useState(saved.current.firstName);
-  const [lastName, setLastName]   = useState(saved.current.lastName);
-  const [email, setEmail]         = useState(saved.current.email);
-  const [phone, setPhone]         = useState(saved.current.phone);
+  const [addrLine1, setAddrLine1] = useState("");
+  const [addrLine2, setAddrLine2] = useState("");
+  const [addrCity,  setAddrCity]  = useState("");
+  const [addrState, setAddrState] = useState("");
+  const [addrZip,   setAddrZip]   = useState("");
 
-  // Address
-  const [addrLine1, setAddrLine1] = useState(saved.current.addrLine1);
-  const [addrLine2, setAddrLine2] = useState(saved.current.addrLine2);
-  const [addrCity,  setAddrCity]  = useState(saved.current.addrCity);
-  const [addrState, setAddrState] = useState(saved.current.addrState);
-  const [addrZip,   setAddrZip]   = useState(saved.current.addrZip);
+  const [notes,         setNotes]         = useState("");
+  const [showNotes,     setShowNotes]     = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
-  // Extras
-  const [notes, setNotes]                         = useState(saved.current.notes);
-  const [showNotes, setShowNotes] = useState(Boolean(saved.current.notes));
+  const [touched,     setTouched]     = useState<Set<string>>(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError,  setSubmitError]  = useState<string | null>(null);
 
-  // Touched
-  const [touched, setTouched] = useState<Set<string>>(new Set());
-  const touch = (field: string) => setTouched((prev) => new Set(prev).add(field));
+  const touch = (f: string) => setTouched((p) => new Set(p).add(f));
 
-  // Payment
-  const [paymentReady, setPaymentReady] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
+  // Restore saved fields from sessionStorage
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(FIELDS_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw) as Partial<SavedFields>;
+      if (s.firstName) setFirstName(s.firstName);
+      if (s.lastName)  setLastName(s.lastName);
+      if (s.email)     setEmail(s.email);
+      if (s.phone)     setPhone(s.phone);
+      if (s.notes)   { setNotes(s.notes); setShowNotes(true); }
+      if (s.addrLine1) setAddrLine1(s.addrLine1);
+      if (s.addrLine2) setAddrLine2(s.addrLine2);
+      if (s.addrCity)  setAddrCity(s.addrCity);
+      if (s.addrState) setAddrState(s.addrState);
+      if (s.addrZip)   setAddrZip(s.addrZip);
+    } catch { /* ignore */ }
+  }, []);
 
-  // Shipping amounts
-  const [shippingCents, setShippingCents]   = useState<number | null>(null);
-  const [totalCents, setTotalCents]         = useState<number | null>(null);
-  const [isFreeShipping, setIsFreeShipping] = useState(false);
-  const [isUpdating, setIsUpdating]         = useState(false);
-  const [isSubmitting, setIsSubmitting]     = useState(false);
-  const [shippingError, setShippingError]   = useState<string | null>(null);
-
-  // Refs — always fresh, safe in closures / timeouts
-  const firstNameRef       = useRef(firstName);
-  const lastNameRef        = useRef(lastName);
-  const emailRef           = useRef(email);
-  const phoneRef           = useRef(phone);
-  const notesRef           = useRef(notes);
-  const lastAddressRef     = useRef<AddressRequest | null>(null);
-  const addressDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  firstNameRef.current = firstName;
-  lastNameRef.current  = lastName;
-  emailRef.current     = email;
-  phoneRef.current     = phone;
-  notesRef.current     = notes;
-
-  // Persist all fields to sessionStorage
+  // Persist to sessionStorage
   useEffect(() => {
     try {
       sessionStorage.setItem(FIELDS_KEY, JSON.stringify({
@@ -303,22 +202,20 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
     } catch { /* ignore */ }
   }, [firstName, lastName, email, phone, notes, addrLine1, addrLine2, addrCity, addrState, addrZip]);
 
-  // ── Derived ──────────────────────────────────────────────────────────
-  const subtotalCents  = items.reduce((s, i) => s + Math.round(i.sticker.price * i.qty * 100), 0);
+  // ── Derived ────────────────────────────────────────────────────────
+  const subtotalCents   = items.reduce((s, i) => s + Math.round(i.sticker.price * i.qty * 100), 0);
   const subtotalDollars = subtotalCents / 100;
-  const displayTotal   = totalCents ?? subtotalCents;
-  const emailValid     = email.trim().length > 0 && emailRe.test(email.trim());
+  const emailValid      = email.trim().length > 0 && emailRe.test(email.trim());
   const addressComplete =
     addrLine1.trim().length > 0 &&
-    addrCity.trim().length > 0 &&
-    addrState.length === 2 &&
+    addrCity.trim().length  > 0 &&
+    addrState.length === 2  &&
     zipRe.test(addrZip.trim());
-
   const formReady =
-    firstName.trim().length > 0 && lastName.trim().length > 0 && emailValid &&
-    addressComplete && paymentReady && !isUpdating && !isSubmitting;
+    firstName.trim().length > 0 && lastName.trim().length > 0 &&
+    emailValid && addressComplete && !isSubmitting;
 
-  // ── Validation errors (only after touch) ─────────────────────────────
+  // ── Validation errors (after touch) ───────────────────────────────
   const firstNameError = touched.has("firstName") && !firstName.trim() ? "Required" : undefined;
   const lastNameError  = touched.has("lastName")  && !lastName.trim()  ? "Required" : undefined;
   const emailError     = touched.has("email") && !emailValid ? "Enter a valid email" : undefined;
@@ -328,136 +225,58 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
   const zipError       = touched.has("addrZip") && !zipRe.test(addrZip.trim())
     ? "Enter a 5-digit ZIP" : undefined;
 
-  // ── PI update (server-side — no publishable-key shipping mutation) ───
-  const callUpdatePI = useCallback(async (address: AddressRequest, name: string) => {
-    setIsUpdating(true);
-    try {
-      const res = await fetch("/api/create-payment-intent", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          paymentIntentId,
-          items: items.map((i) => ({ product_id: i.sticker.id, quantity: i.qty })),
-          address,
-          customerName:  name,
-          customerEmail: emailRef.current,
-          customerPhone: phoneRef.current,
-          notes: notesRef.current.slice(0, 500),
-        }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        setShippingError(data.error);
-      } else {
-        setShippingError(null);
-        setShippingCents(data.shippingCents);
-        setTotalCents(data.totalCents);
-        setIsFreeShipping(data.isFreeShipping);
-      }
-    } catch {
-      setShippingError("Could not calculate shipping. Please try again.");
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [paymentIntentId, items]);
-
-  // Debounce PI update whenever address fields reach a valid state
-  useEffect(() => {
-    const zipOk = zipRe.test(addrZip.trim());
-    const complete =
-      addrLine1.trim().length > 0 && addrCity.trim().length > 0 &&
-      addrState.length === 2 && zipOk;
-    if (!complete) return;
-
-    const addr: AddressRequest = {
-      line1:       addrLine1.trim(),
-      line2:       addrLine2.trim() || undefined,
-      city:        addrCity.trim(),
-      state:       addrState,
-      postal_code: addrZip.trim(),
-      country:     "US",
-    };
-    lastAddressRef.current = addr;
-
-    if (addressDebounceRef.current) clearTimeout(addressDebounceRef.current);
-    addressDebounceRef.current = setTimeout(() => {
-      const fullName = `${firstNameRef.current} ${lastNameRef.current}`.trim() || "Customer";
-      callUpdatePI(addr, fullName);
-    }, 600);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addrLine1, addrLine2, addrCity, addrState, addrZip, callUpdatePI]);
-
-  // ── Payment element ───────────────────────────────────────────────────
-  const handlePaymentChange = useCallback((event: StripePaymentElementChangeEvent) => {
-    setPaymentReady(event.complete);
-  }, []);
-
-  // ── Submit ────────────────────────────────────────────────────────────
+  // ── Submit ─────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!stripe || !elements || !formReady) return;
-
     setTouched(new Set(["firstName", "lastName", "email", "addrLine1", "addrCity", "addrState", "addrZip"]));
-    if (!firstName.trim() || !lastName.trim() || !emailValid || !addressComplete) return;
+    if (!formReady) return;
 
-    setPaymentError(null);
+    setSubmitError(null);
     setIsSubmitting(true);
 
-    // Final PI sync so notes land in metadata before charge
-    if (lastAddressRef.current) {
-      try {
-        await fetch("/api/create-payment-intent", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            paymentIntentId,
-            items: items.map((i) => ({ product_id: i.sticker.id, quantity: i.qty })),
-            address:      lastAddressRef.current,
-            customerName: `${firstNameRef.current} ${lastNameRef.current}`.trim(),
-            customerEmail: emailRef.current,
-            customerPhone: phoneRef.current,
-            notes: notesRef.current.trim(),
-          }),
-        });
-      } catch { /* non-fatal */ }
-    }
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout/success`,
-        payment_method_data: {
-          billing_details: {
-            name:  `${firstNameRef.current} ${lastNameRef.current}`.trim(),
-            email: emailRef.current,
-            phone: null,
-            address: lastAddressRef.current
-              ? {
-                  line1:       lastAddressRef.current.line1,
-                  line2:       lastAddressRef.current.line2 || undefined,
-                  city:        lastAddressRef.current.city,
-                  state:       lastAddressRef.current.state,
-                  postal_code: lastAddressRef.current.postal_code,
-                  country:     "US" as const,
-                }
-              : undefined,
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((i) => ({ product_id: i.sticker.id, quantity: i.qty })),
+          customerInfo: {
+            firstName: firstName.trim(),
+            lastName:  lastName.trim(),
+            email:     email.trim(),
+            phone:     phone.trim() || undefined,
+            notes:     notes.trim() || undefined,
+            marketingOptIn,
+            address: {
+              line1:       addrLine1.trim(),
+              line2:       addrLine2.trim() || undefined,
+              city:        addrCity.trim(),
+              state:       addrState,
+              postal_code: addrZip.trim(),
+              country:     "US",
+            },
           },
-        },
-      },
-    });
+        }),
+      });
 
-    if (error) {
-      setPaymentError(error.message ?? "Payment failed. Please check your details and try again.");
+      const data = await res.json();
+      if (data.error) {
+        setSubmitError(data.error);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Clear PI cache before handing off to Stripe
+      try { sessionStorage.removeItem("dfs-pi-cache-v3"); } catch { /* ignore */ }
+
+      window.location.href = data.url;
+    } catch {
+      setSubmitError("Something went wrong. Please try again.");
       setIsSubmitting(false);
     }
   };
 
-  if (items.length === 0) {
-    if (typeof window !== "undefined") router.replace("/checkout");
-    return null;
-  }
-
-  // ── Render ────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────
   return (
     <form onSubmit={handleSubmit}>
       <div className="lg:grid lg:grid-cols-[340px_1fr]" style={{ minHeight: "calc(100svh - 57px)" }}>
@@ -488,11 +307,19 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
                   className="relative shrink-0 rounded-lg overflow-hidden"
                   style={{ width: 56, height: 56, border: "1px solid var(--border)", background: "#fff" }}
                 >
-                  <Image src={`/stickers/${item.sticker.filename}`} alt={item.sticker.name} fill className="object-contain p-1" sizes="56px" />
+                  <Image
+                    src={`/stickers/${item.sticker.filename}`}
+                    alt={item.sticker.name}
+                    fill className="object-contain p-1" sizes="56px"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium leading-snug truncate" style={{ color: "var(--text)" }}>{item.sticker.name}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>Qty: {item.qty}</p>
+                  <p className="text-xs font-medium leading-snug truncate" style={{ color: "var(--text)" }}>
+                    {item.sticker.name}
+                  </p>
+                  <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                    Qty: {item.qty}
+                  </p>
                 </div>
                 <p className="text-xs font-medium tabular-nums shrink-0" style={{ color: "var(--text)" }}>
                   ${(item.sticker.price * item.qty).toFixed(2)}
@@ -501,7 +328,10 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
             ))}
           </ul>
 
-          <div className="flex items-center gap-2 text-[11px] pb-5 mb-5" style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)" }}>
+          <div
+            className="flex items-center gap-2 text-[11px] pb-5 mb-5"
+            style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)" }}
+          >
             <Truck size={11} className="shrink-0" style={{ color: "var(--gold)" }} />
             <span>Ships 2–3 days · Arrives 5–7 days via USPS</span>
           </div>
@@ -511,16 +341,14 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
           <div className="space-y-2 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
             <div className="flex justify-between text-xs">
               <span style={{ color: "var(--text-muted)" }}>Subtotal</span>
-              <span className="tabular-nums" style={{ color: "var(--text)" }}>${subtotalDollars.toFixed(2)}</span>
+              <span className="tabular-nums" style={{ color: "var(--text)" }}>
+                ${subtotalDollars.toFixed(2)}
+              </span>
             </div>
-            <div className="flex justify-between items-center text-xs">
+            <div className="flex justify-between text-xs">
               <span style={{ color: "var(--text-muted)" }}>Shipping</span>
-              <ShippingValue shippingCents={shippingCents} isFreeShipping={isFreeShipping} isUpdating={isUpdating} />
-            </div>
-            <div className="flex justify-between items-baseline pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-              <span className="text-xs font-semibold" style={{ color: "var(--text)" }}>Total</span>
-              <span className="text-xl font-bold tabular-nums font-serif" style={{ color: "var(--text)" }}>
-                ${(displayTotal / 100).toFixed(2)}
+              <span className="italic text-[11px]" style={{ color: "var(--text-muted)" }}>
+                Calculated at checkout
               </span>
             </div>
           </div>
@@ -546,7 +374,7 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
               placeholder="+1 (555) 000-0000" hint="Optional · for delivery updates only" />
           </section>
 
-          {/* ── Shipping Address (plain HTML — no Stripe AddressElement) ── */}
+          {/* ── Shipping Address ── */}
           <section className="space-y-3">
             <h2 className="font-serif text-xl font-semibold" style={{ color: "var(--text)" }}>Shipping Address</h2>
 
@@ -567,7 +395,6 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
                 placeholder="27601" error={zipError} />
             </div>
 
-            {/* Country — locked to US */}
             <div>
               {labelEl("Country")}
               <div
@@ -577,36 +404,6 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
                 United States
               </div>
             </div>
-
-            {shippingError && (
-              <p className="text-xs" style={{ color: "#c0392b" }}>{shippingError}</p>
-            )}
-          </section>
-
-          {/* ── Payment ── */}
-          <section className="space-y-3">
-            <h2 className="font-serif text-xl font-semibold" style={{ color: "var(--text)" }}>Payment</h2>
-            <PaymentElement
-              options={{
-                layout: "tabs",
-                wallets: { applePay: "auto", googlePay: "auto" },
-                fields: {
-                  billingDetails: {
-                    address: "never",
-                    name:    "never",
-                    email:   "never",
-                    phone:   "never",
-                  },
-                },
-                terms: {
-                  card:      "never",
-                  applePay:  "never",
-                  googlePay: "never",
-                  cashapp:   "never",
-                },
-              }}
-              onChange={handlePaymentChange}
-            />
           </section>
 
           {/* ── Notes ── */}
@@ -634,12 +431,28 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
             )}
           </section>
 
-          {/* ── Payment error ── */}
-          {paymentError && (
+          {/* ── Marketing opt-in ── */}
+          <section>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                className="mt-0.5 w-4 h-4 shrink-0"
+                style={{ accentColor: "var(--brand)" }}
+              />
+              <span className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                Send me occasional updates about new icons, stickers, and sales. You can unsubscribe anytime.
+              </span>
+            </label>
+          </section>
+
+          {/* ── Submit error ── */}
+          {submitError && (
             <div className="px-4 py-3 rounded-lg text-sm" style={{
               background: "rgba(192,57,43,0.07)", border: "1px solid rgba(192,57,43,0.25)", color: "#c0392b",
             }}>
-              {paymentError}
+              {submitError}
             </div>
           )}
 
@@ -649,18 +462,18 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
               type="submit" disabled={!formReady}
               className="w-full py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-all"
               style={{
-                background: formReady ? "var(--brand)" : "var(--border-dark)",
-                color: formReady ? "#fff" : "var(--text-muted)",
-                borderRadius: "var(--radius-btn)",
-                cursor: formReady ? "pointer" : "not-allowed",
-                opacity: formReady ? 1 : 0.7,
-                minHeight: 52,
+                background:    formReady ? "var(--brand)" : "var(--border-dark)",
+                color:         formReady ? "#fff" : "var(--text-muted)",
+                borderRadius:  "var(--radius-btn)",
+                cursor:        formReady ? "pointer" : "not-allowed",
+                opacity:       formReady ? 1 : 0.7,
+                minHeight:     52,
               }}
             >
               {isSubmitting ? (
-                <><Loader2 size={16} className="animate-spin" /> Processing…</>
+                <><Loader2 size={16} className="animate-spin" /> Redirecting to payment…</>
               ) : (
-                <><Package size={16} /> Place Order — ${(displayTotal / 100).toFixed(2)}</>
+                <>Continue to Payment <ArrowRight size={16} /></>
               )}
             </button>
 
@@ -672,10 +485,6 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
                   ? "Enter a valid email to continue"
                   : !addressComplete
                   ? "Complete your shipping address to continue"
-                  : !paymentReady
-                  ? "Complete your payment details to continue"
-                  : isUpdating
-                  ? "Calculating shipping…"
                   : "Complete all fields to continue"}
               </p>
             )}
@@ -686,6 +495,7 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
               <span className="flex items-center gap-1.5 text-[11px]"><RotateCcw size={10} /> 30-day returns</span>
             </div>
           </div>
+
         </div>
       </div>
     </form>
