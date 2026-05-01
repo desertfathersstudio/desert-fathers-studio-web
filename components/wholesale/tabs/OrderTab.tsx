@@ -38,6 +38,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
   const [bulkSearch, setBulkSearch] = useState("");
   const [bulkQty, setBulkQty] = useState(25);
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [cartSelected, setCartSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
 
@@ -199,6 +200,25 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   function removeFromCart(productId: string) {
     onCartChange(cart.filter((l) => l.productId !== productId));
+    setCartSelected((prev) => { const s = new Set(prev); s.delete(productId); return s; });
+  }
+
+  function removeSelected() {
+    onCartChange(cart.filter((l) => !cartSelected.has(l.productId)));
+    setCartSelected(new Set());
+  }
+
+  function clearCart() {
+    onCartChange([]);
+    setCartSelected(new Set());
+  }
+
+  function toggleCartSelect(productId: string) {
+    setCartSelected((prev) => {
+      const s = new Set(prev);
+      s.has(productId) ? s.delete(productId) : s.add(productId);
+      return s;
+    });
   }
 
   const grandTotal = cart.reduce((s, l) => s + l.unitPrice * l.qty, 0);
@@ -568,8 +588,16 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                   gap: "0.75rem",
                   padding: "0.65rem 0",
                   borderBottom: "1px solid var(--border)",
+                  background: cartSelected.has(line.productId) ? "rgba(107,31,42,0.04)" : "transparent",
+                  borderRadius: 6,
                 }}
               >
+                <input
+                  type="checkbox"
+                  checked={cartSelected.has(line.productId)}
+                  onChange={() => toggleCartSelect(line.productId)}
+                  style={{ width: 15, height: 15, accentColor: "var(--brand)", cursor: "pointer", flexShrink: 0 }}
+                />
                 {line.imageUrl && (
                   <img src={line.imageUrl} alt="" aria-hidden style={{ width: 44, height: 44, objectFit: "contain", background: "#f5f0e8", borderRadius: 7, border: "1px solid var(--border)", flexShrink: 0 }} />
                 )}
@@ -617,14 +645,32 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
             ))}
 
             {/* Footer */}
-            <div style={{ paddingTop: "0.75rem", textAlign: "right" }}>
-              <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", margin: "0 0 0.2rem" }}>
-                {cartCount} sticker{cartCount !== 1 ? "s" : ""}
-                {hasPackInCart ? ` · ${packSetCount} pack set${packSetCount !== 1 ? "s" : ""}` : ""}
-              </p>
-              <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>
-                Grand Total: <span style={{ color: "var(--brand)" }}>${grandTotal.toFixed(2)}</span>
-              </p>
+            <div style={{ paddingTop: "0.75rem", display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
+              <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                {cartSelected.size > 0 && (
+                  <button
+                    onClick={removeSelected}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.3rem 0.7rem", background: "white", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 6, fontSize: "0.74rem", fontWeight: 600, cursor: "pointer" }}
+                  >
+                    <Trash2 size={12} /> Remove {cartSelected.size} selected
+                  </button>
+                )}
+                <button
+                  onClick={clearCart}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.3rem 0.7rem", background: "white", color: "var(--text-muted)", border: "1px solid var(--border)", borderRadius: 6, fontSize: "0.74rem", cursor: "pointer" }}
+                >
+                  <Trash2 size={12} /> Clear Cart
+                </button>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", margin: "0 0 0.2rem" }}>
+                  {cartCount} sticker{cartCount !== 1 ? "s" : ""}
+                  {hasPackInCart ? ` · ${packSetCount} pack set${packSetCount !== 1 ? "s" : ""}` : ""}
+                </p>
+                <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>
+                  Grand Total: <span style={{ color: "var(--brand)" }}>${grandTotal.toFixed(2)}</span>
+                </p>
+              </div>
             </div>
           </>
         )}
