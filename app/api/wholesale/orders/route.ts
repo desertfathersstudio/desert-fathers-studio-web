@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import fs from "fs";
 import path from "path";
 import { createSupabaseService } from "@/lib/supabase/service";
@@ -119,9 +119,14 @@ export async function POST(req: NextRequest) {
       if (flagErr) console.error("[wholesale] inventory_adjusted flag update failed:", flagErr);
     }
 
-    // Fire-and-forget — customer gets the response immediately
-    sendOrderEmails({ orderId, customerName, customerEmail, items, grandTotal, asap })
-      .catch((e) => console.error("[wholesale/orders] email failed:", e));
+    // after() runs after the response is sent — guaranteed by the platform, not fire-and-forget
+    after(async () => {
+      try {
+        await sendOrderEmails({ orderId, customerName, customerEmail, items, grandTotal, asap });
+      } catch (e) {
+        console.error("[wholesale/orders] email failed:", e);
+      }
+    });
 
     return NextResponse.json({ orderId });
   } catch (err) {
