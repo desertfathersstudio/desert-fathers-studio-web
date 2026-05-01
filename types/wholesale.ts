@@ -71,6 +71,7 @@ export interface WholesaleOrder {
   items: WholesaleOrderItem[];
   grandTotal: number;
   asap: boolean;
+  notes: string | null;
   orderStage: OrderStage;
   trackingNumber: string | null;
   paymentSent: boolean;

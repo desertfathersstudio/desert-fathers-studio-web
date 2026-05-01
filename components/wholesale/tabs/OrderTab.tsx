@@ -234,6 +234,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
   const [customName, setCustomName] = useState("");
   const [emailChoice, setEmailChoice] = useState<"default" | "other">("default");
   const [customEmail, setCustomEmail] = useState("");
+  const [notes, setNotes] = useState("");
 
   const customerName = nameChoice === "other" ? customName : nameChoice;
   const customerEmail = emailChoice === "other" ? customEmail : defaultEmail;
@@ -264,6 +265,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
           items,
           grandTotal,
           asap,
+          notes: notes.trim() || null,
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
@@ -272,6 +274,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
       onCartChange([]);
       setAsap(false);
       setSelectedSku("");
+      setNotes("");
       onOrderSubmitted();
     } catch (err) {
       toast.error("Error: " + String(err));
@@ -366,6 +369,24 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
               style={{ ...inputStyle, width: "100%", marginTop: "0.4rem" }}
             />
           )}
+        </div>
+
+        {/* Notes — full width below name/email */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label style={fieldLabel}>Notes <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "var(--text-muted)", fontSize: "0.7rem" }}>(optional — appears in both emails)</span></label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Any special instructions, delivery notes, or requests…"
+            rows={2}
+            style={{
+              ...inputStyle,
+              width: "100%",
+              resize: "vertical",
+              lineHeight: 1.5,
+              boxSizing: "border-box",
+            }}
+          />
         </div>
       </div>
 

@@ -64,6 +64,7 @@ export async function GET(req: NextRequest) {
       paymentSentDate: row.payment_sent_date as string | null,
       paymentReceived: Boolean(row.payment_received),
       paymentReceivedDate: row.payment_received_date as string | null,
+      notes: (row.notes as string | null) ?? null,
       createdAt: String(row.created_at),
     }));
 
@@ -80,9 +81,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { accountId, customerName, customerEmail, items, grandTotal, asap } = body as {
+  const { accountId, customerName, customerEmail, items, grandTotal, asap, notes } = body as {
     accountId: string; customerName: string; customerEmail: string;
-    items: WholesaleOrderItem[]; grandTotal: number; asap: boolean;
+    items: WholesaleOrderItem[]; grandTotal: number; asap: boolean; notes?: string | null;
   };
 
   if (!accountId || !ALL_ACCOUNT_IDS.has(accountId)) {
@@ -104,6 +105,7 @@ export async function POST(req: NextRequest) {
       items,
       grand_total: grandTotal,
       asap: Boolean(asap),
+      notes: notes ?? null,
       order_stage: "Pending",
     });
     if (error) throw error;
@@ -122,7 +124,7 @@ export async function POST(req: NextRequest) {
     // after() runs after the response is sent — guaranteed by the platform, not fire-and-forget
     after(async () => {
       try {
-        await sendOrderEmails({ orderId, customerName, customerEmail, items, grandTotal, asap });
+        await sendOrderEmails({ orderId, customerName, customerEmail, items, grandTotal, asap, notes: notes ?? null });
       } catch (e) {
         console.error("[wholesale/orders] email failed:", e);
       }
@@ -139,7 +141,7 @@ export async function POST(req: NextRequest) {
 
 async function sendOrderEmails(opts: {
   orderId: string; customerName: string; customerEmail: string;
-  items: WholesaleOrderItem[]; grandTotal: number; asap: boolean;
+  items: WholesaleOrderItem[]; grandTotal: number; asap: boolean; notes: string | null;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey || apiKey === "placeholder") {
@@ -147,7 +149,7 @@ async function sendOrderEmails(opts: {
     return;
   }
 
-  const { orderId, customerName, customerEmail, items, grandTotal, asap } = opts;
+  const { orderId, customerName, customerEmail, items, grandTotal, asap, notes } = opts;
   const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const fromEmail = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
   const from = `Desert Fathers Studio <${fromEmail}>`;
@@ -171,8 +173,8 @@ async function sendOrderEmails(opts: {
     : null;
 
   await Promise.all([
-    sendCustomerEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoSrc, logoAttachment, pdfAttachment }),
-    sendAdminEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoSrc, logoAttachment }),
+    sendCustomerEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, notes, date, logoSrc, logoAttachment, pdfAttachment }),
+    sendAdminEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, notes, date, logoSrc, logoAttachment }),
   ]);
 }
 
@@ -181,10 +183,10 @@ async function sendOrderEmails(opts: {
 async function sendCustomerEmail(opts: {
   apiKey: string; from: string; orderId: string; customerName: string;
   customerEmail: string; items: WholesaleOrderItem[]; grandTotal: number;
-  asap: boolean; date: string; logoSrc: string; logoAttachment: EmailAttachment | null;
-  pdfAttachment: EmailAttachment | null;
+  asap: boolean; notes: string | null; date: string; logoSrc: string;
+  logoAttachment: EmailAttachment | null; pdfAttachment: EmailAttachment | null;
 }) {
-  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoSrc, logoAttachment, pdfAttachment } = opts;
+  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, notes, date, logoSrc, logoAttachment, pdfAttachment } = opts;
 
   const EVEN = "#111d2e";
   const ODD  = "#0d1829";
@@ -255,6 +257,12 @@ async function sendCustomerEmail(opts: {
       <span style="color:#8aadcc;font-weight:600">Email:</span>&nbsp; ${customerEmail}
     </p>
 
+    ${notes ? `<!-- Notes block -->
+    <div style="background:#111d2e;border:1px solid #1e3a5a;border-left:3px solid #c9a84c;border-radius:8px;padding:16px 20px;margin-bottom:24px">
+      <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#c9a84c;letter-spacing:0.2em;text-transform:uppercase">Notes</p>
+      <p style="margin:0;font-size:13.5px;color:#d8e4f0;line-height:1.65;white-space:pre-wrap">${notes.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+    </div>` : ""}
+
     <!-- Decorative divider -->
     <div style="text-align:center;margin:0 0 24px;color:#1a2744;letter-spacing:0.35em;font-size:14px;opacity:0.7">✦ &nbsp; ✦ &nbsp; ✦</div>
 
@@ -323,9 +331,10 @@ async function sendCustomerEmail(opts: {
 async function sendAdminEmail(opts: {
   apiKey: string; from: string; orderId: string; customerName: string;
   customerEmail: string; items: WholesaleOrderItem[]; grandTotal: number;
-  asap: boolean; date: string; logoSrc: string; logoAttachment: EmailAttachment | null;
+  asap: boolean; notes: string | null; date: string; logoSrc: string;
+  logoAttachment: EmailAttachment | null;
 }) {
-  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoSrc, logoAttachment } = opts;
+  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, notes, date, logoSrc, logoAttachment } = opts;
 
   const packRows = items.map((item, idx) => {
     const bg = idx % 2 === 0 ? "#ffffff" : "#f4f7fb";
@@ -391,6 +400,12 @@ async function sendAdminEmail(opts: {
       <p style="margin:0;font-size:15px;font-weight:700;color:#1a2744">${customerName}</p>
       <p style="margin:2px 0 0;font-size:13px;color:#4a6a88">${customerEmail}</p>
     </div>
+
+    ${notes ? `<!-- Notes -->
+    <div style="background:#fff8e8;border:1px solid #e8c96c;border-left:4px solid #c9a84c;border-radius:4px;padding:12px 16px;margin-bottom:24px">
+      <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#92400e;letter-spacing:0.15em;text-transform:uppercase">Notes from order</p>
+      <p style="margin:0;font-size:13.5px;color:#1a2744;line-height:1.65;white-space:pre-wrap">${notes.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+    </div>` : ""}
 
     <!-- Items to pack -->
     <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#7a8ea8;letter-spacing:0.15em;text-transform:uppercase">Items to Pack</p>

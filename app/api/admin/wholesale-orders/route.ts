@@ -31,6 +31,7 @@ export async function GET() {
     paymentSentDate: row.payment_sent_date as string | null,
     paymentReceived: Boolean(row.payment_received),
     paymentReceivedDate: row.payment_received_date as string | null,
+    notes: (row.notes as string | null) ?? null,
     createdAt: String(row.created_at),
   }));
 
