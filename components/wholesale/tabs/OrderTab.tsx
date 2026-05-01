@@ -456,7 +456,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
               {(["All", "Round 1", "Round 2", "HWP", "RP", ...categories] as string[]).map((g) => (
                 <button
                   key={g}
-                  onClick={() => { setBulkGroupFilter(g); setChecked(new Set()); }}
+                  onClick={() => setBulkGroupFilter(g)}
                   style={{
                     padding: "0.25rem 0.7rem",
                     borderRadius: "999px",
