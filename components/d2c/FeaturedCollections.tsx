@@ -9,7 +9,7 @@ const COLLECTIONS = [
   {
     id: "holy-week",
     title: "Holy Week Pack",
-    badge: "Set of 23 · $10.00",
+    badge: "Set of 23 · $18.00",
     description:
       "The complete story of Holy Week, from the Raising of Lazarus to the Resurrection.",
     href: "/shop/holy-week-pack",
@@ -19,7 +19,7 @@ const COLLECTIONS = [
   {
     id: "resurrection",
     title: "Resurrection Pack",
-    badge: "Set of 10 · $5.00",
+    badge: "Set of 10 · $10.00",
     description:
       "Ten Resurrection appearances — from the Empty Tomb to Pentecost.",
     href: "/shop/resurrection-pack",
@@ -29,7 +29,7 @@ const COLLECTIONS = [
   {
     id: "individual",
     title: "Individual Stickers",
-    badge: "$1.50 each",
+    badge: "$2.00 each",
     description:
       "Saints, angels, prophets, Christ, Our Lady, and more — browse 80+ designs.",
     href: "/shop",

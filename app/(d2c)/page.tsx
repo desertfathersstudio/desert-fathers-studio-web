@@ -4,7 +4,6 @@ import { FeaturedCollections } from "@/components/d2c/FeaturedCollections";
 import { HomepageGrid } from "@/components/d2c/HomepageGrid";
 import { ProductFeatures } from "@/components/d2c/ProductFeatures";
 import { TrustSection } from "@/components/d2c/TrustSection";
-import { BrandStory } from "@/components/d2c/BrandStory";
 import { Footer } from "@/components/d2c/Footer";
 import { BookOpen, NotebookPen, Laptop, Droplets, Gift } from "lucide-react";
 
@@ -19,7 +18,6 @@ export default function HomePage() {
         <ProductFeatures />
         <UseCasesSection />
         <TrustSection />
-        <BrandStory />
       </main>
       <Footer />
     </>

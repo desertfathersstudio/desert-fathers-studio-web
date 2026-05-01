@@ -275,7 +275,7 @@ export function PackDetail({ slug }: { slug: string }) {
               Want just a few?
             </p>
             <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
-              {soloCount} sticker{soloCount !== 1 ? "s" : ""} from this pack can be purchased individually for $1.50 each. Browse them in the main catalog.
+              {soloCount} sticker{soloCount !== 1 ? "s" : ""} from this pack can be purchased individually for $2.00 each. Browse them in the main catalog.
             </p>
             <Link
               href="/shop"

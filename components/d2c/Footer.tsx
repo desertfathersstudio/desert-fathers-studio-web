@@ -90,9 +90,6 @@ export function Footer() {
             <ul className="space-y-3">
               {[
                 { label: "All Stickers", href: "/shop" },
-                { label: "Saints", href: "/shop?category=saints" },
-                { label: "Holy Week Pack", href: "/shop/holy-week-pack" },
-                { label: "Resurrection Pack", href: "/shop/resurrection-pack" },
                 { label: "Packs", href: "/shop?category=packs" },
               ].map(({ label, href }) => (
                 <li key={label}>
