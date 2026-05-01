@@ -224,24 +224,18 @@ export function CartDrawer() {
                     ${total.toFixed(2)}
                   </span>
                 </div>
-                <button
-                  className="w-full py-3 text-sm font-medium opacity-50 cursor-not-allowed"
+                <Link
+                  href="/checkout"
+                  onClick={closeCart}
+                  className="block w-full py-3 text-sm font-medium text-center transition-opacity hover:opacity-90 active:opacity-75"
                   style={{
                     background: "var(--brand)",
                     color: "#fff",
                     borderRadius: "var(--radius-btn)",
                   }}
-                  disabled
-                  aria-disabled="true"
                 >
                   Proceed to Checkout
-                </button>
-                <p
-                  className="mt-2 text-center text-xs"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Checkout coming soon
-                </p>
+                </Link>
               </div>
             )}
           </motion.aside>
