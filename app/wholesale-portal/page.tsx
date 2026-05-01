@@ -203,7 +203,7 @@ export default function WholesalePinPage() {
                 borderRadius: "2px",
                 background: i < pin.length ? "var(--gold)" : "transparent",
                 border: `2px solid ${i < pin.length ? "var(--gold)" : "rgba(239,231,214,0.3)"}`,
-                transition: "background 0.15s, border-color 0.15s",
+                transition: "background-color 150ms ease-out, border-color 150ms ease-out",
               }}
             />
           ))}
@@ -302,7 +302,19 @@ export default function WholesalePinPage() {
             letterSpacing: "0.08em",
             textTransform: "uppercase",
             cursor: pinReady ? "pointer" : "not-allowed",
-            transition: "background 0.2s, color 0.2s",
+            transition: "background-color 150ms ease-out, transform 100ms ease-out",
+          }}
+          onMouseEnter={(e) => {
+            if (pinReady) (e.currentTarget as HTMLElement).style.background = "var(--gold-light)";
+          }}
+          onMouseLeave={(e) => {
+            if (pinReady) (e.currentTarget as HTMLElement).style.background = "var(--gold)";
+          }}
+          onMouseDown={(e) => {
+            if (pinReady) (e.currentTarget as HTMLElement).style.transform = "translateY(1px)";
+          }}
+          onMouseUp={(e) => {
+            (e.currentTarget as HTMLElement).style.transform = "";
           }}
         >
           Access Portal

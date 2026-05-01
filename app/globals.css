@@ -77,4 +77,59 @@ body {
     opacity: 1;
     animation: none;
   }
+
+  .ws-portal button {
+    transition: background-color 150ms ease-out, color 150ms ease-out,
+                border-color 150ms ease-out, opacity 150ms ease-out;
+  }
+
+  .ws-portal button:not(:disabled):active {
+    transform: none;
+  }
+
+  .ws-portal [data-ws-card]:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* ── Easing curves (Emil Kowalski grade) ───────────────────────────── */
+:root {
+  --ease-out-strong:  cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-ui:   cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* ── Wholesale portal interactive polish ───────────────────────────── */
+.ws-portal input:focus-visible,
+.ws-portal select:focus-visible,
+.ws-portal textarea:focus-visible {
+  outline: none;
+  border-color: var(--border-dark) !important;
+  box-shadow: 0 0 0 3px rgba(184, 137, 62, 0.15);
+}
+
+.ws-portal button {
+  transition: background-color 150ms ease-out, color 150ms ease-out,
+              border-color 150ms ease-out, opacity 150ms ease-out,
+              transform 100ms ease-out;
+}
+
+.ws-portal button:not(:disabled):active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Card hover — only on fine-pointer devices (excludes touch) */
+@media (hover: hover) and (pointer: fine) {
+  .ws-portal [data-ws-card] {
+    transition: transform 180ms var(--ease-out-strong),
+                box-shadow 180ms var(--ease-out-strong);
+  }
+  .ws-portal [data-ws-card]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(107, 31, 42, 0.10);
+  }
+}
+
+.ws-portal [data-tab]:not([data-active]):hover {
+  color: var(--text);
 }

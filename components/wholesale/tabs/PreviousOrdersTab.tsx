@@ -131,7 +131,7 @@ export function PreviousOrdersTab({ accountId, refreshKey }: Props) {
                   cursor: "pointer",
                   fontFamily: "var(--font-inter)",
                   whiteSpace: "nowrap",
-                  transition: "color 0.15s",
+                  transition: "color 150ms ease-out",
                 }}
               >
                 {s}
@@ -224,7 +224,7 @@ function OrderCard({
   return (
     <div
       style={{
-        background: "white",
+        background: "var(--bg-card)",
         borderRadius: "var(--radius-card)",
         border: "1px solid var(--border)",
         overflow: "hidden",
@@ -390,13 +390,13 @@ function OrderCard({
                     </td>
                     <td style={{ padding: "7px 8px", textAlign: "center", fontFamily: "monospace", fontSize: "0.74rem", color: "var(--text-muted)" }}>{item.productId}</td>
                     <td style={{ padding: "7px 8px", textAlign: "center", fontFamily: "var(--font-inter)" }}>{item.qty}</td>
-                    <td style={{ padding: "7px 8px", textAlign: "right", fontWeight: 700, color: "var(--gold)", fontFamily: "var(--font-inter)" }}>${item.lineTotal.toFixed(2)}</td>
+                    <td style={{ padding: "7px 8px", textAlign: "right", fontWeight: 700, color: "var(--gold)", fontFamily: "var(--font-inter)", fontVariantNumeric: "tabular-nums" }}>${item.lineTotal.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <p style={{ textAlign: "right", margin: "0.6rem 0 0", fontWeight: 700, fontFamily: "var(--font-inter)", color: "var(--text)" }}>
-              Grand Total: <span style={{ color: "var(--gold)" }}>${order.grandTotal.toFixed(2)}</span>
+              Grand Total: <span style={{ color: "var(--gold)", fontVariantNumeric: "tabular-nums" }}>${order.grandTotal.toFixed(2)}</span>
             </p>
           </div>
 

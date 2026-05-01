@@ -1,113 +1,207 @@
-# Design System
+# Design System: Desert Fathers Studio — Wholesale Portal
 
-## Color
+---
 
-### Palette
-- `--brand: #6b1d3b` — Primary maroon. Used for CTAs, headings emphasis, and key UI elements.
-- `--brand-light: #8b2d4f` — Lighter maroon for hover states.
-- `--brand-dark: #4a1228` — Deeper maroon for dark surfaces.
-- `--gold: #b5853a` — Accent gold. Used for labels, eyebrow text, section markers.
-- `--gold-light: #d4a853` — Lighter gold for pills and highlights.
-- `--ochre: #c8843a` — Deep desert ochre. Used for warmth accents, secondary CTAs, and earthy contrast moments.
-- `--ivory: #f0e8d6` — Muted ivory. Softer than bg-card; for inset panels and subtle layering.
-- `--bg: #faf7f2` — Warm off-white. Main background.
-- `--bg-card: #f5f0e8` — Slightly warmer, for cards and secondary surfaces.
-- `--bg-dark: #1a0e05` — Near-black warm dark, for footer and admin surfaces.
-- `--text: #2a1a0e` — Warm charcoal body text.
-- `--text-muted: #7a6a5a` — Warm gray for secondary text.
-- `--border: #e4d8c8` — Warm light border.
-- `--border-dark: #c8b89a` — Slightly stronger border for interactive states.
+## 1. Visual Theme & Atmosphere
 
-### Color strategy
-Committed. The maroon (`--brand`) carries 30–50% of key surfaces. Gold is the signal color — used sparingly for eyebrow labels and metallic moments. Ochre appears as an earthen warmth layer in section backgrounds and accent moments. Never cold; always warm. **Banned: blue, purple, any gradient that uses either.**
+**Scene:** A Sunday school teacher opening the wooden doors of a monastery archive — warm light through amber glass, the scent of old books, a ledger open on a stone desk. Every interaction should feel as deliberate and unhurried as turning a page.
 
-## Typography
+**Atmosphere descriptors:** Scriptorium-warm. Liturgically confident. Gallery-ordered. Never corporate, never rustic, never "startup."
 
-### Fonts
-- **Display / Headings**: Cormorant Garamond (`--font-serif`) — weights 300, 400, 500. Elegant, slightly liturgical, editorial.
-- **Body / UI**: Cabinet Grotesk (`--font-sans`) — weights 400, 500, 600. Warm, humanist geometry. Noticeably less sterile than Inter; pairs well with a liturgical serif.
-- **Fallback sans**: `system-ui, sans-serif`
+**Density:** 5 out of 10 — "Daily App Balanced." Content-first, readable, generous internal breathing room without feeling sparse. Products get space to live.
+
+**Variance:** 5 out of 10 — Structured asymmetry. Ledger-tab navigation (not pill tabs), ruled separators, grids with intentional visual weight differences. Never a perfectly centered SaaS layout.
+
+**Motion:** 3 out of 10 — "Restrained, reverent." Hover lifts with warm shadows. Tab transitions at 150ms ease-out. No bounce, no elastic, no choreography. Sacred context — motion should feel like a breath, not a performance.
+
+**Register:** Product (app UI — design serves function)
+
+---
+
+## 2. Color Palette & Roles
+
+- **Monastery Maroon** (`#6B1F2A`) — Primary brand. Header backgrounds, CTAs, active text on tabs, section markers. Carries 30–50% of key surfaces.
+- **Deep Maroon** (`#4a1228`) — Dark surfaces only: login card background, deep-hover states.
+- **Maroon Lift** (`#8b2d4f`) — Hover state for maroon buttons.
+- **Sanctuary Gold** (`#B8893E`) — Accent. Active tab underline, price labels, "New" badges, filled PIN dots. Signal, not decoration.
+- **Gold Warm** (`#d4a853`) — Hover gold, warm badge fills.
+- **Parchment** (`#F8F4EC`) — Primary background. All tab content surfaces, main page bg.
+- **Vellum** (`#f5f0e8`) — Elevated surfaces: card backgrounds, section panels, inset fields.
+- **Ivory Deep** (`#f0e8d6`) — Inset panels, subtle layering under forms.
+- **Ink** (`#2a1a0e`) — Primary text. Warm charcoal, never pure black.
+- **Ink Muted** (`#7a6a5a`) — Secondary text, metadata, SKU labels, muted tab labels.
+- **Warm Border** (`#e4d8c8`) — Structural borders, ruled separators, input lines.
+- **Border Firm** (`#c8b89a`) — Interactive state borders, focused inputs.
+- **Cream Text** (`rgba(239,231,214,1)`) — Text on dark maroon surfaces.
+- **Cream Muted** (`rgba(239,231,214,0.55)`) — Subtext on dark maroon surfaces.
+
+**Color strategy:** Committed. Maroon carries 30–50% of key surfaces. Gold is the signal color — used sparingly for active states and pricing. Never cold; always warm.
+
+**Banned colors:** Blue, purple, any cool-toned gray. No neon. No gradient backgrounds. No pure `#000000` or `#ffffff`.
+
+---
+
+## 3. Typography Rules
+
+**Display / Headings:** Cormorant Garamond (`var(--font-cormorant)`) — weights 400, 500, 600. Elegant, slightly liturgical, editorial. Used for section headings, tab labels, page titles, lightbox product names. Never used for UI labels or body copy.
+
+**Body / UI:** Cabinet Grotesk (`var(--font-sans)`) — weights 400, 500, 600. Warm humanist geometry — noticeably less sterile than Inter. Used for all functional text: labels, form fields, metadata, SKUs, button copy, filter chips.
+
+**Mono:** System monospace — for order IDs, SKU codes, tracking numbers, PIN input characters.
+
+**Banned:** Inter in any display or heading context. Generic serifs (Times New Roman, Georgia, Palatino). Note: Cormorant Garamond is a distinctive modern display typeface — it is not "Georgia" or "Garamond" in the generic serif sense and is explicitly approved for this brand.
 
 ### Scale
-- Hero: `clamp(3rem, 7vw, 5.5rem)`, weight 300, Cormorant
-- Section headings: `clamp(2rem, 4vw, 3rem)`, weight 400, Cormorant
-- Eyebrow labels: `11px`, uppercase, `letter-spacing: 0.2em`, Cabinet Grotesk 500, `--gold`
-- Body: `1rem` / `1.125rem`, Cabinet Grotesk 400, `line-height: 1.65`, max `65ch`
-- Card saint/product names: `~1.05rem`, Cormorant, `--text`, no surrounding box or pill
-- Prices: `0.875rem`, Cabinet Grotesk 500, `--brand`, `font-variant-numeric: tabular-nums`
 
-### Body text constraint
-All running body text is capped at `65ch`. Never let prose run full-width.
+| Role | Size | Font | Weight | Notes |
+|---|---|---|---|---|
+| Page heading | `1.75rem` | Cormorant | 500 | letter-spacing: 0.01em |
+| Section heading | `1.3rem` | Cormorant | 500 | Used in Section component |
+| Tab label | `1rem` | Cormorant | 400/600 | Active = 600 |
+| Card product name | `0.95rem` | Cormorant | 600 | line-height: 1.3 |
+| Eyebrow / label | `0.68rem` | Cabinet Grotesk | 600 | Uppercase, 0.06em tracking |
+| Body | `0.85rem` | Cabinet Grotesk | 400 | line-height: 1.55 |
+| Price | `0.72rem` | Cabinet Grotesk | 700 | Gold color, tabular-nums |
+| Metadata / SKU | `0.68rem` | Cabinet Grotesk | 400 | Muted ink |
+| Badge | `0.62rem` | Cabinet Grotesk | 600 | Uppercase, tracked |
 
-## Spacing
-Generous and varied. Cards have `gap-5 md:gap-8`. Sections use `py-24 md:py-32`. Avoid identical padding on every surface — rhythm comes from variation.
+---
 
-## Border radius
-- Cards: `12px` (`--radius-card`)
-- Buttons: `6px` (`--radius-btn`)
+## 4. Component Stylings
 
-## Motion
+### Login / PIN Entry
+- Page: Parchment background. Centered column. Gold cross ☩ at `2.75rem` above card. Cormorant brand name `1.75rem` weight 400. Small-caps "Wholesale Portal" Cabinet Grotesk label.
+- Card: Deep Maroon background (`#4a1228`), `12px` radius. No card border — dark bg is the container.
+- PIN dots: `11×11px` squares (not circles), `2px` border-radius. Sanctuary Gold fill + border when active; `rgba(239,231,214,0.3)` border when empty. 150ms transition.
+- Input: Transparent bg, border-bottom only (`2px solid rgba(239,231,214,0.25)`). Cream caret. Characters hidden (color: transparent). Monospace.
+- Error: Coral `rgba(248,113,113,0.9)` — warm, not harsh red.
+- CTA: Sanctuary Gold when PIN ready. Uppercase, tracked. Dims when not ready. No outer glow.
+- Shake: `−8px / +8px` translateX, 400ms ease, wrong PIN only.
 
-### Principles
-All animations start from `scale(0.95) translateY(8px)` and fade in from `opacity: 0`. Never start from `scale(0)` — elements should feel like they're surfacing, not appearing from nothing.
+### Header
+- Top bar: Full Monastery Maroon. Logo `variant="light"` (gold ☩ + cream text). Vertical cream divider. Cormorant italic session name in cream. Small cream-outline "Switch account" button.
+- Tab strip: Full-width Parchment. `1px solid` Warm Border bottom.
+- Tab items: Cormorant `1rem`. Active: Maroon + `2px solid` Sanctuary Gold bottom. Inactive: Muted Ink. No filled pills, no background tints.
+- Cart badge: Sanctuary Gold circle on Order tab label.
+- Entire header sticky at `top: 0, z-index: 50`.
 
-Spring physics, not linear easing. Preferred curve: `cubic-bezier(0.34, 1.2, 0.64, 1)` — slight overshoot, settles naturally. Reserve this for entrance animations only.
+### Catalog Grid
+- Search: Flat input, border-bottom only, transparent bg, no border-radius, no pill.
+- Category filters: Ledger-tab — no pill bg. Active: Maroon text + `2px solid` Gold bottom. Zero border-radius.
+- Cards: White bg, `1px solid` Warm Border, `12px` radius. No box-shadow at rest.
+- Card hover: `translateY(-3px)`, `box-shadow: 0 6px 20px rgba(107,31,42,0.1)`. 180ms ease-out.
+- Image: `aspect-ratio: 1`, Vellum bg, `object-contain`, `1rem` padding.
+- "New" badge: Sanctuary Gold bg, white text, uppercase, `3px` radius, top-left.
+- Price: Sanctuary Gold color, weight 700.
 
-Hover states use `ease-out` at 200–300ms. Never bouncy on hover.
+### Lightbox
+- Overlay: `rgba(0,0,0,0.82)`.
+- Modal: White bg, `12px` radius. Max-width `820px`. Image left (Vellum bg), detail panel right (`270px`, `1px` border-left Warm Border). Top bar: Vellum bg, Cormorant name.
+- Detail panel: Meta, note blocks (Vellum bg + Warm Border), qty select, Add to Order button (full Maroon).
+- Touch swipe ≥ 50px navigates.
 
-### Scroll reveals
-Fade-up scroll-reveal, 0.7s spring, staggered delays (`.reveal-1` through `.reveal-4`, 80ms apart). Triggered once on first viewport entry.
+### Pending Review Lightbox
+- Header: Full Monastery Maroon. Cormorant name in Cream. Cream nav/close.
+- Comment bubbles: Vellum bg + Warm Border. Never blue.
+- Approve: Forest green `#1f6326` — semantically correct for approval.
 
-### Hover
-- Sticker images: `scale(1.04)`, 300ms `ease-out`. Never `scale(1.1)` or above.
-- Links: opacity 70ms `ease-out`.
-- Buttons: slight background lightening, no scale.
+### Order Tab
+- Mode toggle: Ledger-tab — no pills. Active: Maroon + Gold underline on a border-bottom rule.
+- Group filter chips: Same ledger-tab style.
+- Section component: Vellum bg card. Cormorant heading `1.3rem` weight 500. Ruled heading separator.
+- Cart rows: checkbox + thumbnail + name + qty stepper + price + remove. Ruled `borderBottom`.
+- Selected rows: `rgba(107,31,42,0.04)` tint.
+- Submit: Full-width Maroon, `1rem` padding, uppercase tracking.
 
-### Banned motion
-- Bounce or elastic easing on any element
-- `scale(0)` as animation start
-- Layout property animation (width, height, top, left)
+### Suggestions Tab
+- No card wrapper — form floats on Parchment.
+- Ruled `<hr>` separators (`1px solid` Warm Border) between form groups.
+- Quick-fill: outlined buttons, hover to Maroon border + text.
+- Success: warm green `#f0f9f4` / `#b8dbc5` / `#2c5f3a`.
 
-## Layout
-
-### Editorial asymmetry
-No 3-column SaaS card grids. Sticker browsing uses editorial asymmetry: varied column widths, intentional whitespace, a mix of portrait and square crops where the grid itself communicates curation. Think gallery wall, not product shelf.
-
-### Hero sections
-Force asymmetry. Never centered hero text stacked over a centered image. Text left-anchored or offset; image bleeds off-edge or is cropped unconventionally.
-
-## Iconography
-
-### Christ stickers
-Golden halo, circular, with segmented cross-like divisions and radiant texture. The exact line arrangement (four quadrant segments with inner radiance marks) must be preserved consistently across every rendering. Not a plain ring — structured and patterned.
-
-### Saint stickers
-Clean digital Byzantine-inspired icon style. Bold outlines, flat vibrant colors, white sticker border. Saint name appears below the image: bottom-centered, Cormorant serif, no surrounding box, pill, or label container of any kind.
-
-## Components
-
-### Nav
-Fixed, frosted glass (`backdrop-filter: blur(12px)`), `rgba(250,247,242,0.88)` background.
-
-### Sticker Card
-- Aspect-square image container, `--bg-card` background, `--radius-card`
-- Image has `object-contain` with generous padding (`p-6`)
-- Hover: `scale(1.04)` on image, 300ms `ease-out`
-- Below image: category label (uppercase, muted, 11px, Cabinet Grotesk), saint/product name (Cormorant, no box), price (Cabinet Grotesk, `--brand`, `tabular-nums`)
-- No nested cards. No border-left accent stripe.
+### Previous Orders
+- Cards: White bg, `1px` Warm Border. No `border-left` side stripe (banned).
+- ASAP: Header row `rgba(230,81,0,0.03)` tint + amber outline badge.
+- Stage tracker: Completed = Sanctuary Gold circle + Gold connector. Current = Maroon. Future = Warm Border.
+- Tracking: Text "Tracking:" + maroon underline anchor. No emoji prefix.
 
 ### Buttons
-- Primary: `--brand` background, white text, `--radius-btn`
-- Outline: border `--gold`, gold text, transparent background
+- Primary: Maroon fill, white text, `6px` radius. Active: `translateY(-1px)`. No glow.
+- Ghost: `1px` Warm Border, Muted Ink. Hover: Maroon border + Maroon text.
+- Destructive: warm red text, `#fecaca` border, white bg.
+- Disabled: `var(--border)` fill, muted text, `not-allowed` cursor.
 
-## Banned patterns
-- Inter font on any premium or brand surface
-- Purple or blue in any form, including gradients
-- Emoji in headings or labels
-- 3-column icon grids
-- Centered hero layout
-- Cards nested inside cards
-- Gray text on colored backgrounds
-- Bounce or elastic easing on any animated element
-- `border-left` accent stripes on cards or callouts
+---
+
+## 5. Layout Principles
+
+- Max-widths: Catalog `1200px`, Order form `860px`, Suggestions `640px`, Previous Orders `800px`. All centered `margin: 0 auto`.
+- Page padding: `1.25rem–1.5rem` horizontal, `1.5rem–2rem` vertical.
+- Grid: `auto-fill, minmax(180px, 1fr)` catalog. `auto-fill, minmax(200px, 1fr)` pending.
+- Sticky toolbar: Catalog search + filters at `top: 99px`.
+- No horizontal scroll — all grids wrap, internal scroll only.
+- Spacing rhythm: Varied, not identical. Cards `0.65–0.75rem`, sections `1.25–1.5rem`.
+- Responsive: Below `768px` — grid collapses, tab strip horizontal-scrolls (no scrollbar visible).
+
+---
+
+## 6. Motion & Interaction
+
+- Card hover: `translateY(-3px)` + `box-shadow: 0 6px 20px rgba(107,31,42,0.1)`. 180ms ease-out.
+- Tab underline: color `150ms ease`.
+- PIN dots: bg + border-color `150ms ease`.
+- PIN shake: `translateX` cascade, 400ms ease, wrong PIN only.
+- Button active: `translateY(-1px)`, 100ms — tactile press.
+- Modal/lightbox: No entrance animation — instant. Sacred context.
+- Spring spec: `cubic-bezier(0.34, 1.1, 0.64, 1)` — slight overshoot. Scroll-reveal only.
+
+**Banned motion:** Bounce, elastic, `scale(0)` start, layout property animation, shimmer loaders, perpetual animations in portal UI.
+
+---
+
+## 7. Anti-Patterns (Banned)
+
+**Typography**
+- Inter in any heading or brand surface
+- Generic serifs: Times New Roman, Georgia, Palatino
 - Gradient text (`background-clip: text`)
+- Emoji in headings, tab labels, section titles, form labels
+- All-caps Cormorant headings
+
+**Color**
+- Blue or purple anywhere — including link colors, focus rings, comment bubbles
+- Neon or oversaturated accents
+- Pure `#000000` or `#ffffff`
+- Cool-toned grays (Slate, Zinc)
+- Gradient backgrounds
+
+**Components**
+- Filled pill tabs for navigation
+- `border-left > 1px` colored accent stripe on cards, callouts, or list items
+- Cards nested inside cards
+- Glassmorphism decoratively
+- Identical 3-column equal card grids
+- Centered hero layout
+- Heavy box-shadows (`rgba(0,0,0,0.2)` or above on cards)
+- Blue comment bubbles in any review thread
+
+**Motion**
+- Bounce or elastic easing
+- Shimmer loaders
+- Perpetual animations in portal UI
+- Animating layout properties (width, height, top, left, margin, padding)
+
+**Copy**
+- "Seamless", "Elevate", "Unleash", "Next-Gen", "Revolutionary"
+- Generic placeholder names, fake round numbers
+- Emoji anywhere in the portal
+
+---
+
+## 8. Wholesale Portal Specifics
+
+- **No friction theater** — no splash screens, no onboarding tours. Users are administrators who know what they're doing.
+- **Clarity over cleverness** — button labels are literal. "Add to Order" not "Add to Bag." "Submit Order" not "Place Order."
+- **Order form = supply desk** — structured, ledger-like, trustworthy. Not an e-commerce checkout.
+- **Pending review = quiet conversation** — not a ticketing system.
+- **Inventory states = gentle supplier reminder** — never urgency theater.

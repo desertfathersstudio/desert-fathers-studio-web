@@ -388,7 +388,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                 fontWeight: mode === m ? 600 : 400,
                 cursor: "pointer",
                 fontFamily: "var(--font-inter)",
-                transition: "color 0.15s",
+                transition: "color 150ms ease-out",
               }}
             >
               {m === "single" ? "Single add" : "Add multiple"}
@@ -461,7 +461,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                 style={{ width: 15, height: 15, accentColor: "var(--brand)", marginTop: 2, cursor: "pointer" }}
               />
               <span>
-                <strong>⚡ Mark as ASAP</strong>
+                <strong>Mark as ASAP</strong>
                 <small style={{ display: "block", color: "var(--text-muted)" }}>Check this if stock is completely out</small>
               </span>
             </label>
@@ -492,7 +492,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                       cursor: "pointer",
                       fontFamily: "var(--font-inter)",
                       whiteSpace: "nowrap",
-                      transition: "color 0.15s",
+                      transition: "color 150ms ease-out",
                     }}
                   >
                     {g === "HWP" ? "Holy Week Pack" : g === "RP" ? "Resurrection Pack" : g === "Round 1" ? "Round 1 (STK 1–35)" : g === "Round 2" ? "Round 2 (STK 36–67)" : g}
@@ -640,7 +640,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                   </button>
                 </div>
 
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--brand)", minWidth: 64, textAlign: "right" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--brand)", minWidth: 64, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
                   ${(line.unitPrice * line.qty).toFixed(2)}
                 </span>
                 <button onClick={() => removeFromCart(line.productId)} aria-label="Remove" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4 }}>
@@ -673,7 +673,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                   {hasPackInCart ? ` · ${packSetCount} pack set${packSetCount !== 1 ? "s" : ""}` : ""}
                 </p>
                 <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>
-                  Grand Total: <span style={{ color: "var(--brand)" }}>${grandTotal.toFixed(2)}</span>
+                  Grand Total: <span style={{ color: "var(--brand)", fontVariantNumeric: "tabular-nums" }}>${grandTotal.toFixed(2)}</span>
                 </p>
               </div>
             </div>
@@ -686,11 +686,11 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
         <Section title="Order Summary">
           <p style={{ fontSize: "0.85rem", color: "var(--text)", margin: "0 0 0.6rem" }}>
             <strong>{session.displayName}</strong>
-            {asap && <span style={{ marginLeft: "0.5rem", color: "#e65100", fontWeight: 700 }}>⚡ ASAP</span>}
+            {asap && <span style={{ marginLeft: "0.5rem", color: "#e65100", fontWeight: 700, letterSpacing: "0.04em", fontSize: "0.78rem", textTransform: "uppercase" }}>ASAP</span>}
           </p>
           {asap && (
-            <div style={{ background: "#fff3cd", border: "1px solid #ffc107", borderRadius: 6, padding: "0.5rem 0.75rem", marginBottom: "0.75rem", fontSize: "0.8rem", fontWeight: 600, color: "#e65100" }}>
-              ⚡ ASAP order — stock is critically low.
+            <div style={{ background: "#fff9f0", border: "1px solid #f5c5a0", borderRadius: 6, padding: "0.5rem 0.75rem", marginBottom: "0.75rem", fontSize: "0.8rem", fontWeight: 600, color: "#c45000" }}>
+              ASAP order. Stock is critically low.
             </div>
           )}
           <div style={{ overflowX: "auto", marginBottom: "0.75rem" }}>
@@ -710,8 +710,8 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                     <td style={{ padding: "6px 8px" }}>{l.designName}</td>
                     <td style={{ padding: "6px 8px", textAlign: "center", fontFamily: "monospace", fontSize: "0.76rem" }}>{l.productId}</td>
                     <td style={{ padding: "6px 8px", textAlign: "center" }}>{l.qty}</td>
-                    <td style={{ padding: "6px 8px", textAlign: "center" }}>${l.unitPrice.toFixed(2)}</td>
-                    <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "var(--brand)" }}>${(l.unitPrice * l.qty).toFixed(2)}</td>
+                    <td style={{ padding: "6px 8px", textAlign: "center", fontVariantNumeric: "tabular-nums" }}>${l.unitPrice.toFixed(2)}</td>
+                    <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "var(--brand)", fontVariantNumeric: "tabular-nums" }}>${(l.unitPrice * l.qty).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

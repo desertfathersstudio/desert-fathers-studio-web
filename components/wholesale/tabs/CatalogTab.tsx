@@ -162,7 +162,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
                   fontWeight: active ? 600 : 400,
                   cursor: "pointer",
                   fontFamily: "var(--font-inter)",
-                  transition: "color 0.15s",
+                  transition: "color 150ms ease-out",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -290,6 +290,7 @@ function CatalogCard({
 
   return (
     <article
+      data-ws-card
       onClick={onOpen}
       style={{
         background: "white",
@@ -299,15 +300,6 @@ function CatalogCard({
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        transition: "transform 0.18s, box-shadow 0.18s",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(107,31,42,0.1)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = "";
-        (e.currentTarget as HTMLElement).style.boxShadow = "";
       }}
     >
       {/* Image */}
@@ -410,7 +402,8 @@ function CatalogCard({
             color: "var(--text)",
             margin: 0,
             lineHeight: 1.3,
-          }}
+            textWrap: "balance",
+          } as React.CSSProperties}
         >
           {p.name}
         </h3>
@@ -424,6 +417,7 @@ function CatalogCard({
             color: "var(--gold)",
             marginTop: "0.15rem",
             fontFamily: "var(--font-inter)",
+            fontVariantNumeric: "tabular-nums",
           }}
         >
           {priceLabel}

@@ -153,7 +153,7 @@ export default function WholesaleDashboard() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+    <div className="ws-portal" style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <WholesaleHeader
         session={session}
         activeTab={activeTab}

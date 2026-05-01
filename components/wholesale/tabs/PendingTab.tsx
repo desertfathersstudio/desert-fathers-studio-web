@@ -203,24 +203,16 @@ function PendingCard({
 
   return (
     <article
+      data-ws-card
       onClick={onOpen}
       style={{
-        background: "white",
+        background: "var(--bg-card)",
         borderRadius: "var(--radius-card)",
         border: "1px solid var(--border)",
         cursor: "pointer",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        transition: "transform 0.18s, box-shadow 0.18s",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(107,31,42,0.1)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = "";
-        (e.currentTarget as HTMLElement).style.boxShadow = "";
       }}
     >
       <div style={{ aspectRatio: "1", background: "var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0.75rem", overflow: "hidden" }}>
@@ -231,7 +223,7 @@ function PendingCard({
         )}
       </div>
       <div style={{ padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-        <h3 style={{ fontFamily: "var(--font-cormorant)", fontSize: "0.95rem", fontWeight: 600, color: "var(--text)", margin: 0 }}>{p.name}</h3>
+        <h3 style={{ fontFamily: "var(--font-cormorant)", fontSize: "0.95rem", fontWeight: 600, color: "var(--text)", margin: 0, textWrap: "balance" } as React.CSSProperties}>{p.name}</h3>
         <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", margin: 0, fontFamily: "var(--font-inter)" }}>{p.sku} | {p.category} | {p.size}</p>
         <span
           style={{
@@ -608,7 +600,7 @@ const filterTab = (active: boolean): React.CSSProperties => ({
   fontWeight: active ? 600 : 400,
   cursor: "pointer",
   fontFamily: "var(--font-inter)",
-  transition: "color 0.15s",
+  transition: "color 150ms ease-out",
   whiteSpace: "nowrap",
 });
 

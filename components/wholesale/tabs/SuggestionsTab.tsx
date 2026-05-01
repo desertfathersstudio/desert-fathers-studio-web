@@ -83,7 +83,7 @@ export function SuggestionsTab({ products, accountId }: Props) {
           Suggestions &amp; Feedback
         </h2>
         <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: 0, fontFamily: "var(--font-inter)" }}>
-          Help improve the catalog — every submission is reviewed.
+          Help improve the catalog. Every submission is reviewed.
         </p>
       </div>
 
@@ -157,7 +157,7 @@ export function SuggestionsTab({ products, accountId }: Props) {
                   color: "var(--text-muted)",
                   cursor: "pointer",
                   fontFamily: "var(--font-inter)",
-                  transition: "border-color 0.15s, color 0.15s",
+                  transition: "border-color 150ms ease-out, color 150ms ease-out",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = "var(--brand)";
@@ -210,7 +210,7 @@ export function SuggestionsTab({ products, accountId }: Props) {
             letterSpacing: "0.03em",
             cursor: submitting ? "not-allowed" : "pointer",
             fontFamily: "var(--font-inter)",
-            transition: "background 0.15s",
+            transition: "background-color 150ms ease-out",
           }}
         >
           {submitting ? "Sending…" : "Submit Suggestion"}

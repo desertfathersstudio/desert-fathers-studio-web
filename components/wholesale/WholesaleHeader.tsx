@@ -129,7 +129,7 @@ export function WholesaleHeader({ session, activeTab, onTabChange, cartCount, la
                 fontFamily: "var(--font-inter)",
                 letterSpacing: "0.03em",
                 whiteSpace: "nowrap",
-                transition: "border-color 0.15s, color 0.15s",
+                transition: "border-color 150ms ease-out, color 150ms ease-out",
               }}
             >
               Switch account
@@ -162,6 +162,8 @@ export function WholesaleHeader({ session, activeTab, onTabChange, cartCount, la
                 key={key}
                 onClick={() => onTabChange(key)}
                 aria-current={active ? "page" : undefined}
+                data-tab={key}
+                data-active={active ? "true" : undefined}
                 style={{
                   padding: "0.7rem 1.1rem",
                   fontFamily: "var(--font-cormorant)",
@@ -175,7 +177,7 @@ export function WholesaleHeader({ session, activeTab, onTabChange, cartCount, la
                   letterSpacing: "0.01em",
                   whiteSpace: "nowrap",
                   position: "relative",
-                  transition: "color 0.15s",
+                  transition: "color 150ms ease-out",
                 }}
               >
                 {label}
