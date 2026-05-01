@@ -3,6 +3,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { InventoryView } from "@/components/admin/InventoryView";
 import type { AdminStats, ProductWithInventory } from "@/lib/admin/types";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Inventory" };
 
 export default async function InventoryPage() {

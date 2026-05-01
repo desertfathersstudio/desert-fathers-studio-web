@@ -113,9 +113,10 @@ export async function POST(req: NextRequest) {
     if (rpcErr) {
       console.error("[wholesale] inventory adjust failed:", rpcErr);
     } else {
-      await sb.from("wholesale_orders")
+      const { error: flagErr } = await sb.from("wholesale_orders")
         .update({ inventory_adjusted: true })
         .eq("order_id", orderId);
+      if (flagErr) console.error("[wholesale] inventory_adjusted flag update failed:", flagErr);
     }
 
     // Fire-and-forget — customer gets the response immediately
