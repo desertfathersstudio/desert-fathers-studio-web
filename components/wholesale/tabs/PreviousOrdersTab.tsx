@@ -12,14 +12,14 @@ interface Props {
   refreshKey: number;
 }
 
-const STAGE_COLOR: Record<OrderStage, { bg: string; text: string }> = {
-  Pending:    { bg: "#f5f0e8", text: "#7a6a5a" },
-  Processing: { bg: "#fef9c3", text: "#854d0e" },
-  Printed:    { bg: "#f0f9f4", text: "#2c5f3a" },
-  Packed:     { bg: "#f5f2ff", text: "#5b21b6" },
-  Shipped:    { bg: "#fff7ed", text: "#9a3412" },
-  Delivered:  { bg: "#1f4d2a", text: "#bbf7d0" },
-  Cancelled:  { bg: "#fee2e2", text: "#991b1b" },
+const STAGE_COLOR: Record<OrderStage, { bg: string; text: string; dot: string }> = {
+  Pending:    { bg: "#f1f5f9", text: "#475569", dot: "#94a3b8" },
+  Processing: { bg: "#dbeafe", text: "#1e40af", dot: "#3b82f6" },
+  Printed:    { bg: "#d1fae5", text: "#065f46", dot: "#10b981" },
+  Packed:     { bg: "#fef3c7", text: "#92400e", dot: "#f59e0b" },
+  Shipped:    { bg: "#ede9fe", text: "#5b21b6", dot: "#8b5cf6" },
+  Delivered:  { bg: "#dcfce7", text: "#15803d", dot: "#22c55e" },
+  Cancelled:  { bg: "#fee2e2", text: "#991b1b", dot: "#ef4444" },
 };
 
 export function PreviousOrdersTab({ accountId, refreshKey }: Props) {
@@ -287,8 +287,8 @@ function OrderCard({
             {ORDER_STAGES.map((s, i) => {
               const done = i < stageIdx;
               const active = i === stageIdx;
-              const doneColor = "var(--gold)";
-              const activeColor = "var(--brand)";
+              const dotColor = done ? "#22c55e" : active ? STAGE_COLOR[s as OrderStage].dot : "#d1d5db";
+              const textColor = done ? "#22c55e" : active ? STAGE_COLOR[s as OrderStage].dot : "#9ca3af";
               return (
                 <div
                   key={s}
@@ -299,15 +299,15 @@ function OrderCard({
                     alignItems: "center",
                     position: "relative",
                     fontSize: "0.58rem",
-                    color: done ? doneColor : active ? activeColor : "#ccc",
+                    color: textColor,
                     textAlign: "center",
                     gap: "0.3rem",
-                    fontWeight: active ? 700 : 400,
+                    fontWeight: active ? 700 : done ? 500 : 400,
                     fontFamily: "var(--font-inter)",
                   }}
                 >
                   {i < ORDER_STAGES.length - 1 && (
-                    <div style={{ position: "absolute", top: 10, left: "50%", width: "100%", height: 2, background: done ? "var(--gold)" : "var(--border)", zIndex: 0 }} />
+                    <div style={{ position: "absolute", top: 10, left: "50%", width: "100%", height: 2, background: done ? "#22c55e" : "#e5e7eb", zIndex: 0 }} />
                   )}
                   <div
                     style={{
@@ -315,9 +315,9 @@ function OrderCard({
                       height: 22,
                       borderRadius: "50%",
                       border: "2px solid",
-                      borderColor: done ? "var(--gold)" : active ? "var(--brand)" : "var(--border)",
-                      background: done ? "var(--gold)" : active ? "var(--brand)" : "white",
-                      color: (done || active) ? "white" : "#ccc",
+                      borderColor: dotColor,
+                      background: (done || active) ? dotColor : "white",
+                      color: (done || active) ? "white" : "#9ca3af",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",

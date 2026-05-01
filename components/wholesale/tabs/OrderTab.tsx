@@ -373,7 +373,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
         {/* Notes — full width below name/email */}
         <div style={{ gridColumn: "1 / -1" }}>
-          <label style={fieldLabel}>Notes <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "var(--text-muted)", fontSize: "0.7rem" }}>(optional — appears in both emails)</span></label>
+          <label style={fieldLabel}>Notes <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "var(--text-muted)", fontSize: "0.7rem" }}>(optional)</span></label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

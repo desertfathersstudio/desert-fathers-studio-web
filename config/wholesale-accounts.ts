@@ -7,7 +7,7 @@ export interface WholesaleAccountConfig {
 }
 
 export const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
-  "1111": {
+  "4438": {
     accountId: "abbey",
     displayName: "St. Mary and St. Moses Abbey",
     notifyEmail: "st.mosesbookstore@gmail.com",

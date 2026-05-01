@@ -13,14 +13,14 @@ import {
   adminDeleteWholesaleOrder,
 } from "@/app/admin/wholesale/actions";
 
-const STAGE_COLOR: Record<OrderStage, { bg: string; text: string }> = {
-  Pending:    { bg: "#e3f2fd", text: "#1565c0" },
-  Processing: { bg: "#fff3cd", text: "#856404" },
-  Printed:    { bg: "#e8f5e9", text: "#2e7d32" },
-  Packed:     { bg: "#f3e5f5", text: "#7b1fa2" },
-  Shipped:    { bg: "#fff8e1", text: "#e65100" },
-  Delivered:  { bg: "#155724", text: "#fff" },
-  Cancelled:  { bg: "#fee2e2", text: "#991b1b" },
+const STAGE_COLOR: Record<OrderStage, { bg: string; text: string; dot: string }> = {
+  Pending:    { bg: "#f1f5f9", text: "#475569", dot: "#94a3b8" },
+  Processing: { bg: "#dbeafe", text: "#1e40af", dot: "#3b82f6" },
+  Printed:    { bg: "#d1fae5", text: "#065f46", dot: "#10b981" },
+  Packed:     { bg: "#fef3c7", text: "#92400e", dot: "#f59e0b" },
+  Shipped:    { bg: "#ede9fe", text: "#5b21b6", dot: "#8b5cf6" },
+  Delivered:  { bg: "#dcfce7", text: "#15803d", dot: "#22c55e" },
+  Cancelled:  { bg: "#fee2e2", text: "#991b1b", dot: "#ef4444" },
 };
 
 export function WholesaleOrdersAdminView() {
@@ -62,7 +62,7 @@ export function WholesaleOrdersAdminView() {
   if (fetchError) return <div style={{ padding: "1.5rem", background: "#fee2e2", borderRadius: 8, color: "#991b1b", fontFamily: "monospace", fontSize: 13 }}>Error: {fetchError}</div>;
 
   return (
-    <div>
+    <div style={{ padding: "1.25rem 1.5rem" }}>
       {/* Stats row */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
         {[
@@ -241,12 +241,14 @@ function AdminOrderCard({
               {ORDER_STAGES.map((s, i) => {
                 const done = i < stageIdx;
                 const active = i === stageIdx;
+                const dotColor = done ? "#22c55e" : active ? STAGE_COLOR[s as OrderStage].dot : "#d1d5db";
+                const textColor = done ? "#22c55e" : active ? STAGE_COLOR[s as OrderStage].dot : "#9ca3af";
                 return (
-                  <div key={s} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", fontSize: "0.58rem", color: done ? "#2e7d32" : active ? "var(--brand, #6B1F2A)" : "#aaa", textAlign: "center", gap: "0.3rem", fontWeight: active ? 700 : 400 }}>
+                  <div key={s} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", fontSize: "0.58rem", color: textColor, textAlign: "center", gap: "0.3rem", fontWeight: active ? 700 : done ? 500 : 400 }}>
                     {i < ORDER_STAGES.length - 1 && (
-                      <div style={{ position: "absolute", top: 10, left: "50%", width: "100%", height: 2, background: done ? "#2e7d32" : "#e0e0e0", zIndex: 0 }} />
+                      <div style={{ position: "absolute", top: 10, left: "50%", width: "100%", height: 2, background: done ? "#22c55e" : "#e5e7eb", zIndex: 0 }} />
                     )}
-                    <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid", borderColor: done ? "#2e7d32" : active ? "var(--brand, #6B1F2A)" : "#ddd", background: done ? "#2e7d32" : active ? "var(--brand, #6B1F2A)" : "white", color: (done || active) ? "white" : "#aaa", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 700, zIndex: 1, position: "relative" }}>
+                    <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid", borderColor: dotColor, background: (done || active) ? dotColor : "white", color: (done || active) ? "white" : "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 700, zIndex: 1, position: "relative" }}>
                       {done ? "✓" : i + 1}
                     </div>
                     <span style={{ lineHeight: 1.2 }}>{s}</span>
