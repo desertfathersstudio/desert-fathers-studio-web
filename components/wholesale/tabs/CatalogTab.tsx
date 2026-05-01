@@ -65,7 +65,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
-    if (sort === "newest") return arr; // already newest first from API
+    if (sort === "newest") return arr;
     if (sort === "oldest") return arr.reverse();
     if (sort === "az")     return arr.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "za")     return arr.sort((a, b) => b.name.localeCompare(a.name));
@@ -112,16 +112,16 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
       <div
         style={{
           position: "sticky",
-          top: 99, // below header (~97px)
+          top: 99,
           zIndex: 20,
           background: "var(--bg)",
           paddingBottom: "0.75rem",
-          paddingTop: "0.5rem",
+          paddingTop: "0.75rem",
           borderBottom: "1px solid var(--border)",
-          marginBottom: "1rem",
+          marginBottom: "1.25rem",
         }}
       >
-        {/* Search */}
+        {/* Search — flat, ruled */}
         <input
           type="search"
           placeholder="Search name, SKU, or category…"
@@ -129,39 +129,40 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
           onChange={(e) => setSearch(e.target.value)}
           style={{
             width: "100%",
-            padding: "0.6rem 1rem",
-            border: "1.5px solid var(--border)",
-            borderRadius: "999px",
-            background: "white",
+            padding: "0.5rem 0.25rem",
+            border: "none",
+            borderBottom: "1.5px solid var(--border)",
+            borderRadius: 0,
+            background: "transparent",
             fontSize: "0.85rem",
             outline: "none",
             fontFamily: "var(--font-inter)",
             color: "var(--text)",
-            marginBottom: "0.6rem",
+            marginBottom: "0.875rem",
           }}
         />
 
-        {/* Category chips + sort */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+        {/* Category ledger-tabs + sort */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0", flexWrap: "wrap" }}>
           {["All", "__new__", ...categories].map((cat) => {
-            const label = cat === "All" ? "All" : cat === "__new__" ? "🆕 New" : cat;
+            const label = cat === "All" ? "All" : cat === "__new__" ? "New" : cat;
             const active = activeCategory === cat;
             return (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 style={{
-                  padding: "0.25rem 0.75rem",
-                  borderRadius: "999px",
-                  border: "1.5px solid",
-                  borderColor: active ? "var(--brand)" : "var(--border)",
-                  background: active ? "var(--brand)" : "white",
-                  color: active ? "#fff" : "var(--text)",
-                  fontSize: "0.74rem",
+                  padding: "0.35rem 0.65rem",
+                  borderRadius: 0,
+                  border: "none",
+                  borderBottom: active ? "2px solid var(--gold)" : "2px solid transparent",
+                  background: "none",
+                  color: active ? "var(--brand)" : "var(--text-muted)",
+                  fontSize: "0.78rem",
                   fontWeight: active ? 600 : 400,
                   cursor: "pointer",
                   fontFamily: "var(--font-inter)",
-                  transition: "all 0.15s",
+                  transition: "color 0.15s",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -171,7 +172,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
           })}
 
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <span style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>Sort:</span>
+            <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)" }}>Sort:</span>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
@@ -196,7 +197,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
       </div>
 
       {/* Count */}
-      <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginBottom: "0.75rem" }}>
+      <p style={{ fontSize: "0.76rem", color: "var(--text-muted)", marginBottom: "0.875rem", fontFamily: "var(--font-inter)" }}>
         {sorted.length} design{sorted.length !== 1 ? "s" : ""}
       </p>
 
@@ -208,9 +209,10 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
             padding: "3rem 1.5rem",
             background: "var(--bg-card)",
             borderRadius: "var(--radius-card)",
-            border: "1.5px dashed var(--border)",
+            border: "1px solid var(--border)",
             color: "var(--text-muted)",
             fontSize: "0.88rem",
+            fontFamily: "var(--font-inter)",
           }}
         >
           No designs match those filters.
@@ -292,8 +294,7 @@ function CatalogCard({
       style={{
         background: "white",
         borderRadius: "var(--radius-card)",
-        border: "1px solid rgba(0,0,0,0.06)",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+        border: "1px solid var(--border)",
         cursor: "pointer",
         overflow: "hidden",
         display: "flex",
@@ -302,11 +303,11 @@ function CatalogCard({
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 16px rgba(0,0,0,0.1)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(107,31,42,0.1)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLElement).style.transform = "";
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.05)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "";
       }}
     >
       {/* Image */}
@@ -314,7 +315,7 @@ function CatalogCard({
         style={{
           position: "relative",
           aspectRatio: "1",
-          background: "#fff",
+          background: "var(--bg-card)",
           overflow: "hidden",
         }}
       >
@@ -335,6 +336,7 @@ function CatalogCard({
               justifyContent: "center",
               fontSize: "0.75rem",
               color: "var(--text-muted)",
+              fontFamily: "var(--font-inter)",
             }}
           >
             No image
@@ -348,12 +350,13 @@ function CatalogCard({
               left: 6,
               background: "var(--gold)",
               color: "#fff",
-              fontSize: "0.62rem",
+              fontSize: "0.6rem",
               fontWeight: 700,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               padding: "2px 6px",
               borderRadius: 3,
+              fontFamily: "var(--font-inter)",
             }}
           >
             New
@@ -365,13 +368,13 @@ function CatalogCard({
               position: "absolute",
               top: 6,
               right: 6,
-              background: "var(--text-muted)",
+              background: "rgba(42,26,14,0.55)",
               color: "#fff",
-              fontSize: "0.6rem",
+              fontSize: "0.58rem",
               fontWeight: 600,
               padding: "2px 5px",
               borderRadius: 3,
-              opacity: 0.82,
+              fontFamily: "var(--font-inter)",
             }}
           >
             Pack only
@@ -385,7 +388,7 @@ function CatalogCard({
         <span
           style={{
             display: "inline-block",
-            fontSize: "0.62rem",
+            fontSize: "0.6rem",
             fontWeight: 600,
             padding: "1px 7px",
             borderRadius: "999px",
@@ -393,6 +396,7 @@ function CatalogCard({
             color: p.categoryText,
             width: "fit-content",
             marginBottom: "0.1rem",
+            fontFamily: "var(--font-inter)",
           }}
         >
           {p.category}
@@ -410,15 +414,16 @@ function CatalogCard({
         >
           {p.name}
         </h3>
-        <span style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>{p.sku}</span>
-        {p.size && <span style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>{p.size}</span>}
+        <span style={{ fontSize: "0.67rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)" }}>{p.sku}</span>
+        {p.size && <span style={{ fontSize: "0.67rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)" }}>{p.size}</span>}
 
         <span
           style={{
             fontSize: "0.72rem",
             fontWeight: 700,
-            color: "var(--brand)",
+            color: "var(--gold)",
             marginTop: "0.15rem",
+            fontFamily: "var(--font-inter)",
           }}
         >
           {priceLabel}
@@ -427,15 +432,12 @@ function CatalogCard({
         {p.packOnly && (
           <span
             style={{
-              fontSize: "0.66rem",
+              fontSize: "0.64rem",
               fontWeight: 600,
-              color: "#856404",
-              background: "#fff3cd",
-              border: "1px solid #ffe08a",
-              borderRadius: "999px",
-              padding: "1px 7px",
-              width: "fit-content",
-              marginTop: "0.15rem",
+              color: "var(--text-muted)",
+              fontStyle: "italic",
+              marginTop: "0.1rem",
+              fontFamily: "var(--font-inter)",
             }}
           >
             Pack-only sticker
@@ -444,18 +446,14 @@ function CatalogCard({
         {p.standalonePackDesign && !p.packOnly && (
           <span
             style={{
-              fontSize: "0.66rem",
-              fontWeight: 600,
-              color: "#856404",
-              background: "#fff3cd",
-              border: "1px solid #ffe08a",
-              borderRadius: "999px",
-              padding: "1px 7px",
-              width: "fit-content",
-              marginTop: "0.15rem",
+              fontSize: "0.64rem",
+              color: "var(--text-muted)",
+              fontStyle: "italic",
+              marginTop: "0.1rem",
+              fontFamily: "var(--font-inter)",
             }}
           >
-            Can be bought alone or in pack
+            Also available in pack
           </span>
         )}
 
@@ -469,7 +467,7 @@ function CatalogCard({
               <button
                 onClick={(e) => { e.stopPropagation(); onUnapprove(); }}
                 disabled={unapproving}
-                style={{ padding: "0.2rem 0.5rem", fontSize: "0.65rem", fontWeight: 700, color: "#fff", background: "#9a3412", border: "none", borderRadius: "999px", cursor: "pointer", fontFamily: "var(--font-inter)" }}
+                style={{ padding: "0.2rem 0.5rem", fontSize: "0.65rem", fontWeight: 700, color: "#fff", background: "var(--brand)", border: "none", borderRadius: "999px", cursor: "pointer", fontFamily: "var(--font-inter)" }}
               >
                 {unapproving ? "Moving…" : "Yes"}
               </button>
@@ -486,12 +484,12 @@ function CatalogCard({
               disabled={unapproving}
               style={{
                 marginTop: "0.4rem",
-                padding: "0.25rem 0.6rem",
-                fontSize: "0.66rem",
+                padding: "0.22rem 0.6rem",
+                fontSize: "0.64rem",
                 fontWeight: 600,
-                color: "#9a3412",
-                background: "#fff7ed",
-                border: "1px solid #fed7aa",
+                color: "var(--brand)",
+                background: "transparent",
+                border: "1px solid var(--border)",
                 borderRadius: "999px",
                 cursor: unapproving ? "not-allowed" : "pointer",
                 fontFamily: "var(--font-inter)",
@@ -538,7 +536,6 @@ function CatalogLightbox({
     return p.imageUrl;
   }, [p]);
 
-  // Touch swipe
   const touchX = useRef<number | null>(null);
 
   const packPrice = p.packType === "HWP" ? WS_PRICE_HWP_PACK : WS_PRICE_RP_PACK;
@@ -608,7 +605,6 @@ function CatalogLightbox({
         padding: "1rem",
       }}
     >
-      {/* Prev / Next arrows */}
       <button
         onClick={(e) => { e.stopPropagation(); onNavigate(index - 1); }}
         disabled={index === 0}
@@ -638,14 +634,15 @@ function CatalogLightbox({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "0.75rem 1rem",
+            padding: "0.875rem 1.25rem",
             borderBottom: "1px solid var(--border)",
+            background: "var(--bg-card)",
           }}
         >
           <h3
             style={{
               fontFamily: "var(--font-cormorant)",
-              fontSize: "1.15rem",
+              fontSize: "1.2rem",
               fontWeight: 600,
               color: "var(--text)",
               margin: 0,
@@ -654,12 +651,13 @@ function CatalogLightbox({
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
+              letterSpacing: "0.01em",
             }}
           >
             {p.name}
           </h3>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)" }}>
               {index + 1} / {products.length}
             </span>
             <button onClick={onClose} aria-label="Close" style={closeBtn}>
@@ -674,7 +672,7 @@ function CatalogLightbox({
           <div
             style={{
               flex: 1,
-              background: "#fdf9f4",
+              background: "var(--bg-card)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -689,7 +687,7 @@ function CatalogLightbox({
                 style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: 6 }}
               />
             ) : (
-              <div style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>No image available</div>
+              <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontFamily: "var(--font-inter)" }}>No image available</div>
             )}
           </div>
 
@@ -703,29 +701,30 @@ function CatalogLightbox({
               overflowY: "auto",
               display: "flex",
               flexDirection: "column",
-              gap: "0.875rem",
+              gap: "1rem",
             }}
           >
             {/* Meta */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
               <span
                 style={{
                   display: "inline-block",
-                  fontSize: "0.66rem",
+                  fontSize: "0.64rem",
                   fontWeight: 600,
                   padding: "2px 8px",
                   borderRadius: "999px",
                   background: p.categoryBg,
                   color: p.categoryText,
                   width: "fit-content",
+                  fontFamily: "var(--font-inter)",
                 }}
               >
                 {p.category}
               </span>
-              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>SKU: {p.sku}</span>
-              {p.size && <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Size: {p.size}</span>}
+              <span style={{ fontSize: "0.74rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)" }}>SKU: {p.sku}</span>
+              {p.size && <span style={{ fontSize: "0.74rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)" }}>Size: {p.size}</span>}
               {p.isNew && (
-                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--gold)" }}>NEW</span>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--gold)", fontFamily: "var(--font-inter)" }}>NEW</span>
               )}
             </div>
 
@@ -734,11 +733,12 @@ function CatalogLightbox({
               <div
                 style={{
                   fontSize: "0.76rem",
-                  color: "#856404",
-                  background: "#fff3cd",
-                  border: "1px solid #ffe08a",
+                  color: "var(--text-muted)",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border)",
                   borderRadius: 8,
-                  padding: "0.5rem 0.7rem",
+                  padding: "0.5rem 0.75rem",
+                  fontFamily: "var(--font-inter)",
                 }}
               >
                 This design is pack-only. You can add the full {packName} from here.
@@ -748,11 +748,12 @@ function CatalogLightbox({
               <div
                 style={{
                   fontSize: "0.76rem",
-                  color: "#856404",
-                  background: "#fff3cd",
-                  border: "1px solid #ffe08a",
+                  color: "var(--text-muted)",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border)",
                   borderRadius: 8,
-                  padding: "0.5rem 0.7rem",
+                  padding: "0.5rem 0.75rem",
+                  fontFamily: "var(--font-inter)",
                 }}
               >
                 This design can be ordered by itself or as part of the full {packName}.
@@ -785,10 +786,10 @@ function CatalogLightbox({
             </div>
 
             {/* Total */}
-            <div style={{ fontSize: "0.82rem", color: "var(--text)" }}>
+            <div style={{ fontSize: "0.84rem", color: "var(--text)", fontFamily: "var(--font-inter)" }}>
               <span style={{ color: "var(--text-muted)" }}>Total: </span>
-              <strong style={{ color: "var(--brand)" }}>${lineTotal}</strong>
-              {orderMode === "pack" && " (full pack)"}
+              <strong style={{ color: "var(--gold)" }}>${lineTotal}</strong>
+              {orderMode === "pack" && <span style={{ color: "var(--text-muted)", fontSize: "0.76rem" }}> (full pack)</span>}
             </div>
 
             <button
@@ -805,6 +806,7 @@ function CatalogLightbox({
                 fontWeight: 600,
                 cursor: "pointer",
                 fontFamily: "var(--font-inter)",
+                letterSpacing: "0.02em",
               }}
             >
               + Add to Order
@@ -826,7 +828,7 @@ function CatalogLightbox({
 }
 
 const navBtnStyle = (disabled: boolean): React.CSSProperties => ({
-  background: "rgba(255,255,255,0.15)",
+  background: "rgba(255,255,255,0.12)",
   border: "none",
   color: disabled ? "rgba(255,255,255,0.2)" : "white",
   width: 44,
@@ -851,11 +853,12 @@ const closeBtn: React.CSSProperties = {
 };
 
 const smallLabel: React.CSSProperties = {
-  fontSize: "0.72rem",
+  fontSize: "0.68rem",
   fontWeight: 600,
   color: "var(--text-muted)",
   textTransform: "uppercase",
-  letterSpacing: "0.05em",
+  letterSpacing: "0.06em",
+  fontFamily: "var(--font-inter)",
 };
 
 const inputSm: React.CSSProperties = {

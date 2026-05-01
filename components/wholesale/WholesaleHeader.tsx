@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/shared/Logo";
 import { SESSION_KEY, CART_KEY_PREFIX } from "@/types/wholesale";
@@ -60,152 +59,153 @@ export function WholesaleHeader({ session, activeTab, onTabChange, cartCount, la
         position: "sticky",
         top: 0,
         zIndex: 50,
-        background: "rgba(248,244,236,0.97)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        borderBottom: "1px solid var(--border)",
       }}
     >
-      {/* Top row */}
+      {/* Top bar — maroon */}
       <div
         style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "0.75rem 1.25rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "1rem",
+          background: "var(--brand)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
-          <Logo />
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "1px",
-            }}
-          >
-            <span
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "0.75rem 1.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <Logo variant="light" />
+            <div
               style={{
-                fontSize: "0.72rem",
-                fontWeight: 600,
-                color: "var(--brand)",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
+                width: 1,
+                height: 20,
+                background: "rgba(239,231,214,0.2)",
+                flexShrink: 0,
               }}
-            >
-              Wholesale
-            </span>
+            />
             <span
               style={{
-                fontSize: "0.8rem",
-                color: "var(--text-muted)",
-                fontWeight: 500,
+                fontFamily: "var(--font-cormorant)",
+                fontSize: "0.95rem",
+                fontStyle: "italic",
+                fontWeight: 400,
+                color: "rgba(239,231,214,0.72)",
+                letterSpacing: "0.01em",
               }}
             >
               {session.displayName}
             </span>
           </div>
-        </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            flexShrink: 0,
-          }}
-        >
-          {lastModFormatted && (
-            <span
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
+            {lastModFormatted && (
+              <span
+                className="ws-last-mod"
+                style={{
+                  display: "none",
+                  fontSize: "0.64rem",
+                  color: "rgba(239,231,214,0.38)",
+                  fontFamily: "var(--font-inter)",
+                }}
+              >
+                Updated {lastModFormatted}
+              </span>
+            )}
+            <button
+              onClick={switchAccount}
               style={{
-                fontSize: "0.68rem",
-                color: "var(--text-muted)",
-                display: "none",
+                fontSize: "0.7rem",
+                color: "rgba(239,231,214,0.72)",
+                background: "transparent",
+                border: "1px solid rgba(239,231,214,0.22)",
+                borderRadius: "var(--radius-btn)",
+                padding: "0.3rem 0.75rem",
+                cursor: "pointer",
+                fontFamily: "var(--font-inter)",
+                letterSpacing: "0.03em",
+                whiteSpace: "nowrap",
+                transition: "border-color 0.15s, color 0.15s",
               }}
-              className="ws-last-mod"
             >
-              Updated {lastModFormatted}
-            </span>
-          )}
-          <button
-            onClick={switchAccount}
-            style={{
-              fontSize: "0.75rem",
-              color: "var(--text-muted)",
-              background: "none",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--radius-btn)",
-              padding: "0.35rem 0.75rem",
-              cursor: "pointer",
-              fontFamily: "var(--font-inter)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Switch account
-          </button>
+              Switch account
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tab strip */}
+      {/* Tab strip — cream */}
       <div
         style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "0 1.25rem",
-          display: "flex",
-          gap: "0",
-          overflowX: "auto",
-          scrollbarWidth: "none",
+          background: "var(--bg)",
+          borderBottom: "1px solid var(--border)",
         }}
       >
-        {tabs.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => onTabChange(key)}
-            aria-current={activeTab === key ? "page" : undefined}
-            style={{
-              padding: "0.65rem 1rem",
-              fontSize: "0.82rem",
-              fontWeight: activeTab === key ? 600 : 400,
-              color: activeTab === key ? "var(--brand)" : "var(--text-muted)",
-              background: "none",
-              border: "none",
-              borderBottom: activeTab === key
-                ? "2px solid var(--brand)"
-                : "2px solid transparent",
-              cursor: "pointer",
-              fontFamily: "var(--font-inter)",
-              transition: "color 0.15s",
-              whiteSpace: "nowrap",
-              position: "relative",
-            }}
-          >
-            {label}
-            {key === "order" && cartCount > 0 && (
-              <span
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "0 1.5rem",
+            display: "flex",
+            overflowX: "auto",
+            scrollbarWidth: "none",
+          }}
+        >
+          {tabs.map(({ key, label }) => {
+            const active = activeTab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => onTabChange(key)}
+                aria-current={active ? "page" : undefined}
                 style={{
-                  marginLeft: 5,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "var(--brand)",
-                  color: "#fff",
-                  borderRadius: "999px",
-                  fontSize: "0.62rem",
-                  fontWeight: 700,
-                  minWidth: "1rem",
-                  height: "1rem",
-                  padding: "0 3px",
+                  padding: "0.7rem 1.1rem",
+                  fontFamily: "var(--font-cormorant)",
+                  fontSize: "1rem",
+                  fontWeight: active ? 600 : 400,
+                  color: active ? "var(--brand)" : "var(--text-muted)",
+                  background: "none",
+                  border: "none",
+                  borderBottom: active ? "2px solid var(--gold)" : "2px solid transparent",
+                  cursor: "pointer",
+                  letterSpacing: "0.01em",
+                  whiteSpace: "nowrap",
+                  position: "relative",
+                  transition: "color 0.15s",
                 }}
               >
-                {cartCount}
-              </span>
-            )}
-          </button>
-        ))}
+                {label}
+                {key === "order" && cartCount > 0 && (
+                  <span
+                    style={{
+                      marginLeft: 4,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "var(--gold)",
+                      color: "#fff",
+                      borderRadius: "999px",
+                      fontSize: "0.58rem",
+                      fontWeight: 700,
+                      minWidth: "1rem",
+                      height: "1rem",
+                      padding: "0 3px",
+                      verticalAlign: "middle",
+                      position: "relative",
+                      top: "-1px",
+                    }}
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <style>{`

@@ -14,9 +14,9 @@ const TYPE_TEMPLATES: Record<string, string> = {
 };
 
 const QUICK_FILLS = [
-  { label: "🎨 Color Fix",  fill: "Color Fix: The [design name] has an issue with its coloring. Specifically: " },
-  { label: "+ New Design",  fill: "New Design: I would love to see a sticker of [subject/scene]. Category: " },
-  { label: "🎁 Pack Idea",  fill: "Pack Idea: A pack themed around [theme] could include: " },
+  { label: "Color Fix",  fill: "Color Fix: The [design name] has an issue with its coloring. Specifically: " },
+  { label: "New Design", fill: "New Design: I would love to see a sticker of [subject/scene]. Category: " },
+  { label: "Pack Idea",  fill: "Pack Idea: A pack themed around [theme] could include: " },
 ];
 
 interface Props {
@@ -68,20 +68,21 @@ export function SuggestionsTab({ products, accountId }: Props) {
   }
 
   return (
-    <div style={{ maxWidth: 680, margin: "0 auto", padding: "1.5rem 1.25rem" }}>
-      <div style={{ marginBottom: "1.5rem" }}>
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "2rem 1.25rem" }}>
+      <div style={{ marginBottom: "2rem" }}>
         <h2
           style={{
             fontFamily: "var(--font-cormorant)",
-            fontSize: "1.5rem",
+            fontSize: "1.75rem",
             fontWeight: 500,
             color: "var(--text)",
             margin: "0 0 0.3rem",
+            letterSpacing: "0.01em",
           }}
         >
           Suggestions &amp; Feedback
         </h2>
-        <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: 0 }}>
+        <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: 0, fontFamily: "var(--font-inter)" }}>
           Help improve the catalog — every submission is reviewed.
         </p>
       </div>
@@ -90,33 +91,26 @@ export function SuggestionsTab({ products, accountId }: Props) {
         <div
           role="alert"
           style={{
-            background: "#d1f5e8",
-            border: "1px solid #6fcf97",
+            background: "#f0f9f4",
+            border: "1px solid #b8dbc5",
             borderRadius: "var(--radius-card)",
             padding: "0.875rem 1rem",
-            marginBottom: "1rem",
+            marginBottom: "1.5rem",
             fontSize: "0.85rem",
-            color: "#065f46",
+            color: "#2c5f3a",
             fontWeight: 600,
+            fontFamily: "var(--font-inter)",
           }}
         >
           Suggestion saved. We'll review it shortly.
         </div>
       )}
 
-      <div
-        style={{
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--radius-card)",
-          padding: "1.5rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-        }}
-      >
+      {/* Form — flat, no card wrapper */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+
         {/* Type + Priority */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
           <div>
             <label style={fieldLabel}>Type</label>
             <select
@@ -135,6 +129,8 @@ export function SuggestionsTab({ products, accountId }: Props) {
           </div>
         </div>
 
+        <div style={{ borderTop: "1px solid var(--border)" }} />
+
         {/* Related design */}
         <div>
           <label style={fieldLabel}>Related Design (optional)</label>
@@ -147,20 +143,29 @@ export function SuggestionsTab({ products, accountId }: Props) {
         {/* Quick fill */}
         <div>
           <label style={fieldLabel}>Quick fill</label>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.3rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.4rem" }}>
             {QUICK_FILLS.map((q) => (
               <button
                 key={q.label}
                 onClick={() => setMessage(q.fill)}
                 style={{
-                  padding: "0.3rem 0.8rem",
-                  borderRadius: "999px",
-                  border: "1.5px solid var(--border)",
+                  padding: "0.3rem 0.85rem",
+                  borderRadius: "var(--radius-btn)",
+                  border: "1px solid var(--border)",
                   background: "white",
                   fontSize: "0.76rem",
-                  color: "var(--text)",
+                  color: "var(--text-muted)",
                   cursor: "pointer",
                   fontFamily: "var(--font-inter)",
+                  transition: "border-color 0.15s, color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "var(--brand)";
+                  (e.currentTarget as HTMLElement).style.color = "var(--brand)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+                  (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
                 }}
               >
                 {q.label}
@@ -169,21 +174,23 @@ export function SuggestionsTab({ products, accountId }: Props) {
           </div>
         </div>
 
+        <div style={{ borderTop: "1px solid var(--border)" }} />
+
         {/* Message */}
         <div>
           <label style={fieldLabel}>Message</label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            rows={5}
+            rows={6}
             placeholder="Be specific: what should change or be added? Include design names, colors, or references."
             style={{
               ...inputStyle,
               width: "100%",
               resize: "vertical",
-              minHeight: 100,
+              minHeight: 120,
               boxSizing: "border-box",
-              lineHeight: 1.5,
+              lineHeight: 1.55,
             }}
           />
         </div>
@@ -193,15 +200,17 @@ export function SuggestionsTab({ products, accountId }: Props) {
           disabled={submitting}
           style={{
             width: "100%",
-            padding: "0.875rem",
+            padding: "0.9rem",
             background: submitting ? "var(--border)" : "var(--brand)",
             color: submitting ? "var(--text-muted)" : "#fff",
             border: "none",
             borderRadius: "var(--radius-btn)",
-            fontSize: "0.9rem",
+            fontSize: "0.88rem",
             fontWeight: 600,
+            letterSpacing: "0.03em",
             cursor: submitting ? "not-allowed" : "pointer",
             fontFamily: "var(--font-inter)",
+            transition: "background 0.15s",
           }}
         >
           {submitting ? "Sending…" : "Submit Suggestion"}
@@ -213,17 +222,18 @@ export function SuggestionsTab({ products, accountId }: Props) {
 
 const fieldLabel: React.CSSProperties = {
   display: "block",
-  fontSize: "0.72rem",
+  fontSize: "0.68rem",
   fontWeight: 600,
   color: "var(--text-muted)",
   textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  marginBottom: 5,
+  letterSpacing: "0.06em",
+  marginBottom: 6,
+  fontFamily: "var(--font-inter)",
 };
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  padding: "0.55rem 0.7rem",
+  padding: "0.55rem 0.75rem",
   border: "1px solid var(--border)",
   borderRadius: "var(--radius-btn)",
   fontSize: "0.85rem",

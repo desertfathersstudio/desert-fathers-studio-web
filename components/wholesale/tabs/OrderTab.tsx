@@ -285,18 +285,18 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
       <div style={{ maxWidth: 640, margin: "3rem auto", padding: "0 1.25rem", textAlign: "center" }}>
         <div
           style={{
-            background: "#d1f5e8",
-            border: "1px solid #6fcf97",
+            background: "#f0f9f4",
+            border: "1px solid #b8dbc5",
             borderRadius: "var(--radius-card)",
             padding: "2rem",
           }}
         >
-          <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>✓</div>
-          <h2 style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.4rem", fontWeight: 600, color: "#065f46", margin: "0 0 0.5rem" }}>
-            Order Submitted!
+          <div style={{ fontSize: "2rem", marginBottom: "0.5rem", color: "#1f6326" }}>✓</div>
+          <h2 style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.5rem", fontWeight: 500, color: "#1f6326", margin: "0 0 0.5rem", letterSpacing: "0.01em" }}>
+            Order Submitted
           </h2>
-          <p style={{ color: "#047857", fontSize: "0.85rem", margin: "0 0 1rem" }}>Order ID: <strong>{submitted}</strong></p>
-          <p style={{ color: "#065f46", fontSize: "0.82rem", margin: 0 }}>
+          <p style={{ color: "#2c5f3a", fontSize: "0.85rem", margin: "0 0 0.75rem", fontFamily: "var(--font-inter)" }}>Order ID: <strong>{submitted}</strong></p>
+          <p style={{ color: "#2c5f3a", fontSize: "0.82rem", margin: 0, fontFamily: "var(--font-inter)" }}>
             A confirmation has been sent to {customerEmail}.
           </p>
         </div>
@@ -372,22 +372,23 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
       {/* Add items */}
       <Section title="Add Items">
         {/* Mode toggle */}
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+        <div style={{ display: "flex", gap: "0", marginBottom: "1rem", borderBottom: "1px solid var(--border)" }}>
           {(["single", "bulk"] as AddMode[]).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
               style={{
-                padding: "0.3rem 0.85rem",
-                borderRadius: "999px",
-                border: "1.5px solid",
-                borderColor: mode === m ? "var(--brand)" : "var(--border)",
-                background: mode === m ? "var(--brand)" : "white",
-                color: mode === m ? "#fff" : "var(--text-muted)",
-                fontSize: "0.76rem",
-                fontWeight: 600,
+                padding: "0.4rem 0.85rem",
+                borderRadius: 0,
+                border: "none",
+                borderBottom: mode === m ? "2px solid var(--gold)" : "2px solid transparent",
+                background: "none",
+                color: mode === m ? "var(--brand)" : "var(--text-muted)",
+                fontSize: "0.82rem",
+                fontWeight: mode === m ? 600 : 400,
                 cursor: "pointer",
                 fontFamily: "var(--font-inter)",
+                transition: "color 0.15s",
               }}
             >
               {m === "single" ? "Single add" : "Add multiple"}
@@ -472,28 +473,32 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
             </p>
 
             {/* Group quick-select chips */}
-            <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
-              {(["All", "Round 1", "Round 2", "HWP", "RP", ...categories] as string[]).map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setBulkGroupFilter(g)}
-                  style={{
-                    padding: "0.25rem 0.7rem",
-                    borderRadius: "999px",
-                    border: "1.5px solid",
-                    borderColor: bulkGroupFilter === g ? "var(--brand)" : "var(--border)",
-                    background: bulkGroupFilter === g ? "var(--brand)" : "white",
-                    color: bulkGroupFilter === g ? "#fff" : "var(--text-muted)",
-                    fontSize: "0.72rem",
-                    fontWeight: bulkGroupFilter === g ? 600 : 400,
-                    cursor: "pointer",
-                    fontFamily: "var(--font-inter)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {g === "HWP" ? "Holy Week Pack" : g === "RP" ? "Resurrection Pack" : g === "Round 1" ? "Round 1 (STK 1–35)" : g === "Round 2" ? "Round 2 (STK 36–67)" : g}
-                </button>
-              ))}
+            <div style={{ display: "flex", gap: "0", flexWrap: "wrap", marginBottom: "0.75rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.1rem" }}>
+              {(["All", "Round 1", "Round 2", "HWP", "RP", ...categories] as string[]).map((g) => {
+                const active = bulkGroupFilter === g;
+                return (
+                  <button
+                    key={g}
+                    onClick={() => setBulkGroupFilter(g)}
+                    style={{
+                      padding: "0.35rem 0.65rem",
+                      borderRadius: 0,
+                      border: "none",
+                      borderBottom: active ? "2px solid var(--gold)" : "2px solid transparent",
+                      background: "none",
+                      color: active ? "var(--brand)" : "var(--text-muted)",
+                      fontSize: "0.74rem",
+                      fontWeight: active ? 600 : 400,
+                      cursor: "pointer",
+                      fontFamily: "var(--font-inter)",
+                      whiteSpace: "nowrap",
+                      transition: "color 0.15s",
+                    }}
+                  >
+                    {g === "HWP" ? "Holy Week Pack" : g === "RP" ? "Resurrection Pack" : g === "Round 1" ? "Round 1 (STK 1–35)" : g === "Round 2" ? "Round 2 (STK 36–67)" : g}
+                  </button>
+                );
+              })}
             </div>
 
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.65rem", alignItems: "center", flexWrap: "wrap" }}>
@@ -718,7 +723,14 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            style={{ ...brandBtn, width: "100%", padding: "1rem", fontSize: "0.95rem", opacity: submitting ? 0.7 : 1 }}
+            style={{
+              ...brandBtn,
+              width: "100%",
+              padding: "1rem",
+              fontSize: "0.9rem",
+              letterSpacing: "0.04em",
+              opacity: submitting ? 0.7 : 1,
+            }}
           >
             {submitting ? "Submitting…" : "Submit Order"}
           </button>
@@ -742,12 +754,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2
         style={{
           fontFamily: "var(--font-cormorant)",
-          fontSize: "1.15rem",
-          fontWeight: 600,
+          fontSize: "1.3rem",
+          fontWeight: 500,
           color: "var(--text)",
           margin: "0 0 1rem",
-          paddingBottom: "0.6rem",
+          paddingBottom: "0.5rem",
           borderBottom: "1px solid var(--border)",
+          letterSpacing: "0.01em",
         }}
       >
         {title}
