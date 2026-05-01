@@ -116,7 +116,6 @@ export function Footer() {
             <ul className="space-y-3">
               {[
                 { label: "Wholesale Inquiry", href: "/wholesale" },
-                { label: "Our Story", href: "#story" },
                 { label: "Contact Us", href: "mailto:desertfathersstudio@gmail.com" },
               ].map(({ label, href }) => (
                 <li key={label}>
