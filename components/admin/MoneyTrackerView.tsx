@@ -17,6 +17,7 @@ interface WholesaleOrderRow {
   grand_total: number | null;
   order_stage: string | null;
   payment_sent: boolean | null;
+  payment_received: boolean | null;
 }
 
 interface MoneyTrackerProps {
@@ -62,7 +63,7 @@ export function MoneyTrackerView({ mfgOrders, miscExpenses, salesOrders, wholesa
     .reduce((s, o) => s + (o.grand_total ?? 0), 0);
 
   const pendingToBePaid = wholesaleOrders
-    .filter((o) => !o.payment_sent && o.order_stage !== "Cancelled" && o.order_stage !== "Delivered")
+    .filter((o) => !o.payment_received && o.order_stage !== "Cancelled")
     .reduce((s, o) => s + (o.grand_total ?? 0), 0);
 
   const revenue = d2cRevenue + wsRevenue;
@@ -107,7 +108,7 @@ export function MoneyTrackerView({ mfgOrders, miscExpenses, salesOrders, wholesa
         <StatCard label="Total Revenue"    value={revenue > 0 ? `$${revenue.toFixed(2)}` : "—"} sub={`D2C $${d2cRevenue.toFixed(2)} + Wholesale $${wsRevenue.toFixed(2)}`} accent="#16a34a" />
         <StatCard label="Profit / Loss"    value={revenue > 0 ? `${profit >= 0 ? "+" : ""}$${profit.toFixed(2)}` : "—"} sub={margin != null ? `${margin.toFixed(1)}% margin` : "No sales yet"} accent={profit >= 0 ? "#16a34a" : "#dc2626"} />
         <StatCard label="Wholesale Rev."   value={wsRevenue > 0 ? `$${wsRevenue.toFixed(2)}` : "—"} sub={`${wholesaleOrders.filter(o => o.order_stage !== "Cancelled").length} orders`} accent="#0369a1" />
-        <StatCard label="Pending to Be Paid" value={pendingToBePaid > 0 ? `$${pendingToBePaid.toFixed(2)}` : "$0.00"} sub="Wholesale — payment not yet sent" accent={pendingToBePaid > 0 ? "#b45309" : "#9a7080"} />
+        <StatCard label="Pending to Be Paid" value={pendingToBePaid > 0 ? `$${pendingToBePaid.toFixed(2)}` : "$0.00"} sub={`${wholesaleOrders.filter(o => !o.payment_received && o.order_stage !== "Cancelled").length} order${wholesaleOrders.filter(o => !o.payment_received && o.order_stage !== "Cancelled").length !== 1 ? "s" : ""} unpaid`} accent={pendingToBePaid > 0 ? "#b45309" : "#9a7080"} />
         <StatCard label="Printing Costs"   value={`$${printingCost.toFixed(2)}`} sub={`${mfgOrders.filter(o => o.status !== "canceled").length} print orders`} />
         <StatCard label="Misc. Expenses"   value={`$${miscCost.toFixed(2)}`} sub={`${miscExpenses.length} entries`} />
       </div>

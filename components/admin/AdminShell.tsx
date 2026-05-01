@@ -296,7 +296,7 @@ export function AdminShell({
           style={{
             flex: 1,
             background: C.contentBg,
-            paddingBottom: 80, // space for mobile bottom tabs
+            paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))", // space for mobile bottom tabs + safe area
           }}
           className="md:pb-0"
         >
@@ -410,7 +410,7 @@ export function AdminShell({
           background: C.sidebarBg,
           borderTop: `1px solid ${C.sidebarBorder}`,
           zIndex: 40,
-          height: 64,
+          paddingBottom: "env(safe-area-inset-bottom, 8px)",
           alignItems: "stretch",
         }}
       >
@@ -422,6 +422,7 @@ export function AdminShell({
               href={href}
               style={{
                 flex: 1,
+                height: 58,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -443,6 +444,7 @@ export function AdminShell({
           onClick={() => setMobileMenuOpen(true)}
           style={{
             flex: 1,
+            height: 58,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",

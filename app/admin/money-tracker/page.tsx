@@ -18,7 +18,7 @@ export default async function MoneyTrackerPage() {
       .select("id, created_at, total_amount, status")
       .order("created_at", { ascending: false }),
     sb.from("wholesale_orders")
-      .select("id, order_id, created_at, grand_total, order_stage, payment_sent")
+      .select("id, order_id, created_at, grand_total, order_stage, payment_sent, payment_received")
       .order("created_at", { ascending: false }),
   ]);
 
