@@ -31,7 +31,7 @@ export function InventoryView({
   const [products, setProducts] = useState<ProductWithInventory[]>(initialProducts);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [sortBy, setSortBy] = useState<SortBy>("name_asc");
+  const [sortBy, setSortBy] = useState<SortBy>("sku");
   const [addOpen, setAddOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<ProductWithInventory | null>(null);
   const [detailProduct, setDetailProduct] = useState<ProductWithInventory | null>(null);

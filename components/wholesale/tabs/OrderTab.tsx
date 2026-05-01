@@ -8,7 +8,15 @@ import {
   unitPriceForSku,
   WS_PRICE_HWP_PACK,
   WS_PRICE_RP_PACK,
+  WS_PRICE_SINGLE,
 } from "@/lib/wholesale/pricing";
+
+const ABBEY_NAMES = [
+  "Fr. Arsanios Abba Moses",
+  "Fr. Karas Abba Moses",
+  "Fr. Zosima Abba Moses",
+  "Br. Abanob Abba Moses",
+];
 
 const QTY_OPTIONS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
@@ -202,12 +210,12 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   const defaultName = session.displayName;
   const defaultEmail = session.notifyEmail;
-  const [nameChoice, setNameChoice] = useState<"default" | "other">("default");
+  const [nameChoice, setNameChoice] = useState<string>(ABBEY_NAMES[0]);
   const [customName, setCustomName] = useState("");
   const [emailChoice, setEmailChoice] = useState<"default" | "other">("default");
   const [customEmail, setCustomEmail] = useState("");
 
-  const customerName = nameChoice === "other" ? customName : defaultName;
+  const customerName = nameChoice === "other" ? customName : nameChoice;
   const customerEmail = emailChoice === "other" ? customEmail : defaultEmail;
 
   async function handleSubmit() {
@@ -302,10 +310,10 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
           <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", minWidth: 42 }}>Name</span>
           <select
             value={nameChoice}
-            onChange={(e) => setNameChoice(e.target.value as "default" | "other")}
+            onChange={(e) => setNameChoice(e.target.value)}
             style={inlineSelect}
           >
-            <option value="default">{defaultName}</option>
+            {ABBEY_NAMES.map((n) => <option key={n} value={n}>{n}</option>)}
             <option value="other">Other…</option>
           </select>
           {nameChoice === "other" && (
@@ -417,7 +425,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
             {/* Price note */}
             <p style={{ fontSize: "0.77rem", color: "var(--text-muted)", margin: "0 0 0.4rem" }}>
-              $0.55/sticker &nbsp;|&nbsp; Resurrection Pack $3.00 &nbsp;|&nbsp; Holy Week Pack $7.00
+              ${WS_PRICE_SINGLE.toFixed(2)}/sticker &nbsp;|&nbsp; Resurrection Pack $3.00 &nbsp;|&nbsp; Holy Week Pack $7.00
             </p>
             <p style={{ fontSize: "0.77rem", color: "var(--text-muted)", margin: "0 0 0.75rem" }}>
               🔔 Reminder: Order when you have ~10 left — delivery takes ~2 weeks.
