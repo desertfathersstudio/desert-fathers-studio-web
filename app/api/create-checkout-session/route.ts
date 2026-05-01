@@ -107,7 +107,9 @@ export async function POST(req: Request) {
       shipping_address_collection: { allowed_countries: ["US"] },
 
       line_items: resolvedItems.map((item) => {
-        const imageUrl = imageBase ? `${imageBase}/stickers/${item.filename}` : null;
+        const imageUrl = imageBase
+          ? `${imageBase}/stickers/${encodeURIComponent(item.filename)}`
+          : null;
         console.log("[create-checkout-session] image:", imageUrl ?? "(skipped — not HTTPS)");
         return {
           price_data: {
