@@ -66,17 +66,33 @@ export async function POST(req: Request) {
     const shipping      = calculateShipping(subtotalDollars, zip5);
     const shippingCents = shipping.costCents;
 
-    // APP_URL (server-only) takes priority; fall back to NEXT_PUBLIC variants
-    const rawUrl  = process.env.APP_URL
-      ?? process.env.NEXT_PUBLIC_APP_URL
-      ?? process.env.NEXT_PUBLIC_SITE_URL
-      ?? "http://localhost:3001";
-    const baseUrl = rawUrl.replace(/\/$/, ""); // strip trailing slash
+    // Use || (not ??) so empty strings fall through to the next option
+    const rawUrl = (
+      process.env.APP_URL?.trim() ||
+      process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+      process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+      "http://localhost:3001"
+    );
+    const baseUrl = rawUrl.replace(/\/$/, "");
+
+    // Log every env source so Vercel logs show exactly what was resolved
+    console.log("[create-checkout-session] APP_URL:", process.env.APP_URL ?? "(not set)");
+    console.log("[create-checkout-session] NEXT_PUBLIC_APP_URL:", process.env.NEXT_PUBLIC_APP_URL ?? "(not set)");
+    console.log("[create-checkout-session] NEXT_PUBLIC_SITE_URL:", process.env.NEXT_PUBLIC_SITE_URL ?? "(not set)");
+    console.log("[create-checkout-session] resolved baseUrl:", baseUrl);
+
+    // Validate before hitting Stripe — catches misconfigured env vars immediately
+    try { new URL(baseUrl); } catch {
+      console.error("[create-checkout-session] baseUrl is not a valid URL:", baseUrl);
+      return NextResponse.json(
+        { error: `Site URL is misconfigured ("${baseUrl}"). Set APP_URL in environment variables.` },
+        { status: 500 }
+      );
+    }
 
     const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl  = `${baseUrl}/checkout`;
 
-    console.log("[create-checkout-session] baseUrl:", baseUrl);
     console.log("[create-checkout-session] success_url:", successUrl);
     console.log("[create-checkout-session] cancel_url:", cancelUrl);
 
