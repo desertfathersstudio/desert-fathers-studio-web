@@ -49,12 +49,12 @@ function labelEl(text: string, required?: boolean) {
 
 function Field({
   id, label, type = "text", value, onChange, onBlur,
-  placeholder, required, hint, error, autoComplete,
+  placeholder, required, hint, error, autoComplete, maxLength,
 }: {
   id: string; label: string; type?: string; value: string;
   onChange: (v: string) => void; onBlur?: () => void;
   placeholder?: string; required?: boolean; hint?: string;
-  error?: string; autoComplete?: string;
+  error?: string; autoComplete?: string; maxLength?: number;
 }) {
   const hasError = Boolean(error);
   return (
@@ -64,6 +64,7 @@ function Field({
         id={id} type={type}
         autoComplete={autoComplete ?? id}
         value={value}
+        maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
         onBlur={(e) => {
           e.currentTarget.style.borderColor = hasError ? "#c0392b" : "var(--border)";
@@ -141,7 +142,7 @@ function FreeShippingBar({ subtotalDollars }: { subtotalDollars: number }) {
 // ── Session persistence ────────────────────────────────────────────────
 const FIELDS_KEY = "dfs-checkout-fields";
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const zipRe   = /^\d{5}$/;
+const zipRe   = /^\d{5}(-?\d{4})?$/; // accepts 12345 or 12345-6789 or 123456789
 
 interface SavedFields {
   firstName: string; lastName: string; email: string; phone: string; notes: string;
@@ -391,7 +392,13 @@ export function DetailsForm() {
             <div className="grid grid-cols-[1fr_100px] gap-3">
               <StateSelect value={addrState} onChange={setAddrState} onBlur={() => touch("addrState")} error={stateError} />
               <Field id="addrZip" label="ZIP" required autoComplete="postal-code"
-                value={addrZip} onChange={setAddrZip} onBlur={() => touch("addrZip")}
+                value={addrZip} onChange={setAddrZip} maxLength={10}
+                onBlur={() => {
+                  // Auto-format 9-digit ZIP to ZIP+4: 123456789 → 12345-6789
+                  const raw = addrZip.trim();
+                  if (/^\d{9}$/.test(raw)) setAddrZip(`${raw.slice(0, 5)}-${raw.slice(5)}`);
+                  touch("addrZip");
+                }}
                 placeholder="27601" error={zipError} />
             </div>
 

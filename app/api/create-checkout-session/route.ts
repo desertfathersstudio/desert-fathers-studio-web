@@ -61,10 +61,27 @@ export async function POST(req: Request) {
     const subtotalCents  = resolvedItems.reduce((sum, i) => sum + i.line_total_cents, 0);
     const subtotalDollars = subtotalCents / 100;
 
-    const shipping     = calculateShipping(subtotalDollars, customerInfo.address.postal_code);
+    // Use first 5 digits for zone lookup so ZIP+4 works correctly
+    const zip5 = customerInfo.address.postal_code.replace(/\D/g, "").slice(0, 5);
+    const shipping      = calculateShipping(subtotalDollars, zip5);
     const shippingCents = shipping.costCents;
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
+    // APP_URL (server-only) takes priority; fall back to NEXT_PUBLIC variants
+    const rawUrl  = process.env.APP_URL
+      ?? process.env.NEXT_PUBLIC_APP_URL
+      ?? process.env.NEXT_PUBLIC_SITE_URL
+      ?? "http://localhost:3001";
+    const baseUrl = rawUrl.replace(/\/$/, ""); // strip trailing slash
+
+    const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl  = `${baseUrl}/checkout`;
+
+    console.log("[create-checkout-session] baseUrl:", baseUrl);
+    console.log("[create-checkout-session] success_url:", successUrl);
+    console.log("[create-checkout-session] cancel_url:", cancelUrl);
+
+    // Stripe requires absolute HTTPS URLs for product images; skip on localhost
+    const imageBase = baseUrl.startsWith("https://") ? baseUrl : null;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -73,17 +90,21 @@ export async function POST(req: Request) {
       phone_number_collection: { enabled: true },
       shipping_address_collection: { allowed_countries: ["US"] },
 
-      line_items: resolvedItems.map((item) => ({
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name:   item.product_name,
-            images: [`${siteUrl}/stickers/${item.filename}`],
+      line_items: resolvedItems.map((item) => {
+        const imageUrl = imageBase ? `${imageBase}/stickers/${item.filename}` : null;
+        console.log("[create-checkout-session] image:", imageUrl ?? "(skipped — not HTTPS)");
+        return {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name:   item.product_name,
+              ...(imageUrl ? { images: [imageUrl] } : {}),
+            },
+            unit_amount: item.unit_price_cents,
           },
-          unit_amount: item.unit_price_cents,
-        },
-        quantity: item.quantity,
-      })),
+          quantity: item.quantity,
+        };
+      }),
 
       shipping_options: [
         {
@@ -119,8 +140,8 @@ export async function POST(req: Request) {
         shipping_cents:   String(shippingCents),
       },
 
-      success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${siteUrl}/checkout`,
+      success_url: successUrl,
+      cancel_url:  cancelUrl,
     });
 
     return NextResponse.json({ url: session.url });
