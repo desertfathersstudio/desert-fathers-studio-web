@@ -9,12 +9,13 @@ export function generateStaticParams() {
   return VALID_SLUGS.map((slug) => ({ slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const names: Record<string, string> = {
     "holy-week-pack": "Holy Week Pack",
     "resurrection-pack": "Resurrection Pack",
   };
-  const name = names[params.slug];
+  const name = names[slug];
   if (!name) return {};
   return {
     title: name,
@@ -22,14 +23,15 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   };
 }
 
-export default function PackPage({ params }: { params: { slug: string } }) {
-  if (!VALID_SLUGS.includes(params.slug)) notFound();
+export default async function PackPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  if (!VALID_SLUGS.includes(slug)) notFound();
 
   return (
     <>
       <Nav />
       <main className="pt-16">
-        <PackDetail slug={params.slug} />
+        <PackDetail slug={slug} />
       </main>
       <Footer />
     </>
