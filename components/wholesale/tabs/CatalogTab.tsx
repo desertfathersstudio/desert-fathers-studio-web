@@ -354,24 +354,6 @@ function CatalogCard({
             New
           </span>
         )}
-        {p.packOnly && (
-          <span
-            style={{
-              position: "absolute",
-              top: 6,
-              right: 6,
-              background: "rgba(42,26,14,0.55)",
-              color: "#fff",
-              fontSize: "0.58rem",
-              fontWeight: 600,
-              padding: "2px 5px",
-              borderRadius: 3,
-              fontFamily: "var(--font-inter)",
-            }}
-          >
-            Pack only
-          </span>
-        )}
       </div>
 
       {/* Body */}
@@ -423,33 +405,6 @@ function CatalogCard({
           {priceLabel}
         </span>
 
-        {p.packOnly && (
-          <span
-            style={{
-              fontSize: "0.64rem",
-              fontWeight: 600,
-              color: "var(--text-muted)",
-              fontStyle: "italic",
-              marginTop: "0.1rem",
-              fontFamily: "var(--font-inter)",
-            }}
-          >
-            Pack-only sticker
-          </span>
-        )}
-        {p.standalonePackDesign && !p.packOnly && (
-          <span
-            style={{
-              fontSize: "0.64rem",
-              color: "var(--text-muted)",
-              fontStyle: "italic",
-              marginTop: "0.1rem",
-              fontFamily: "var(--font-inter)",
-            }}
-          >
-            Also available in pack
-          </span>
-        )}
 
         {hasPendingTab && (
           confirming ? (
@@ -488,6 +443,15 @@ function CatalogCard({
                 cursor: unapproving ? "not-allowed" : "pointer",
                 fontFamily: "var(--font-inter)",
                 width: "fit-content",
+                transition: "background-color 150ms ease-out, border-color 150ms ease-out",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(107,31,42,0.07)";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--brand)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
               }}
             >
               Needs Review
@@ -722,22 +686,7 @@ function CatalogLightbox({
               )}
             </div>
 
-            {/* Notes */}
-            {p.packOnly && (
-              <div
-                style={{
-                  fontSize: "0.76rem",
-                  color: "var(--text-muted)",
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  padding: "0.5rem 0.75rem",
-                  fontFamily: "var(--font-inter)",
-                }}
-              >
-                This design is pack-only. You can add the full {packName} from here.
-              </div>
-            )}
+            {/* Pack note — only shown when pack ordering is available */}
             {p.standalonePackDesign && (
               <div
                 style={{
@@ -750,7 +699,7 @@ function CatalogLightbox({
                   fontFamily: "var(--font-inter)",
                 }}
               >
-                This design can be ordered by itself or as part of the full {packName}.
+                Also available as part of the full {packName}.
               </div>
             )}
 
@@ -788,7 +737,7 @@ function CatalogLightbox({
 
             <button
               onClick={handleAdd}
-              disabled={p.packOnly && !showPackOption}
+              disabled={false}
               style={{
                 width: "100%",
                 padding: "0.75rem",

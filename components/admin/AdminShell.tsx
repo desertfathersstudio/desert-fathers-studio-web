@@ -9,6 +9,7 @@ import {
   Lightbulb,
   Users,
   MessageSquare,
+  Flag,
   LogOut,
   Menu,
   X,
@@ -29,6 +30,7 @@ const NAV = [
   { href: "/admin/misc-expenses", label: "Expenses",     icon: Receipt },
   { href: "/admin/wholesale",     label: "Wholesale",    icon: Users },
   { href: "/admin/suggestions",   label: "Suggestions",  icon: MessageSquare },
+  { href: "/admin/feedback",      label: "Feedback",     icon: Flag },
 ];
 
 const BOTTOM_TABS = [NAV[0], NAV[1], NAV[4], NAV[6]]; // Inventory, Orders, Money, Wholesale

@@ -2,9 +2,8 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { WholesaleProduct } from "@/types/wholesale";
-import { driveThumbUrl, extractDriveFileId } from "@/lib/wholesale/pricing";
+import type { ProductComment } from "@/types/wholesale";
 
 interface Props {
   products: WholesaleProduct[];
@@ -15,10 +14,22 @@ interface Props {
 
 type CommentFilter = "All" | "has" | "none";
 
+interface BadgeData {
+  adminCommentCount: number;
+  hasResolution: boolean;
+}
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
+    " · " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
 export function PendingTab({ products, onProductApproved, onProductsUpdated, accountId }: Props) {
   const [statusFilter, setStatusFilter] = useState<CommentFilter>("All");
   const [catFilter, setCatFilter] = useState("All");
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [commentBadges, setCommentBadges] = useState<Record<string, BadgeData>>({});
 
   const pending = useMemo(
     () => products.filter((p) => p.reviewStatus === "under_review"),
@@ -42,6 +53,20 @@ export function PendingTab({ products, onProductApproved, onProductsUpdated, acc
       return okStatus && okCat;
     });
   }, [pending, statusFilter, catFilter]);
+
+  useEffect(() => {
+    fetch(`/api/wholesale/comment-badges?accountId=${accountId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!Array.isArray(data)) return;
+        const map: Record<string, BadgeData> = {};
+        for (const b of data) {
+          map[b.productId] = { adminCommentCount: b.adminCommentCount, hasResolution: b.hasResolution };
+        }
+        setCommentBadges(map);
+      })
+      .catch(() => {});
+  }, [accountId]);
 
   useEffect(() => {
     if (lightboxIdx !== null) return;
@@ -83,7 +108,6 @@ export function PendingTab({ products, onProductApproved, onProductsUpdated, acc
 
       {/* Filters */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginBottom: "1.5rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.5rem" }}>
-        {/* Status */}
         <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
           <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--text-muted)", fontFamily: "var(--font-inter)", minWidth: 84, letterSpacing: "0.05em", textTransform: "uppercase" }}>Comments:</span>
           {(["All", "has", "none"] as CommentFilter[]).map((f) => {
@@ -94,8 +118,6 @@ export function PendingTab({ products, onProductApproved, onProductsUpdated, acc
             );
           })}
         </div>
-
-        {/* Category */}
         <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
           <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--text-muted)", fontFamily: "var(--font-inter)", minWidth: 84, letterSpacing: "0.05em", textTransform: "uppercase" }}>Category:</span>
           <button onClick={() => setCatFilter("All")} style={filterTab(catFilter === "All")}>All</button>
@@ -133,6 +155,7 @@ export function PendingTab({ products, onProductApproved, onProductsUpdated, acc
             <PendingCard
               key={p.id}
               product={p}
+              badge={commentBadges[p.id]}
               onOpen={() => setLightboxIdx(idx)}
               onApprove={async () => {
                 try {
@@ -178,10 +201,12 @@ export function PendingTab({ products, onProductApproved, onProductsUpdated, acc
 
 function PendingCard({
   product: p,
+  badge,
   onOpen,
   onApprove,
 }: {
   product: WholesaleProduct;
+  badge?: BadgeData;
   onOpen: () => void;
   onApprove: () => Promise<void>;
 }) {
@@ -190,6 +215,9 @@ function PendingCard({
     const lines = (p.reviewComments ?? "").split("\n").filter((l) => l.trim());
     return lines[lines.length - 1] ?? "";
   }, [p.reviewComments]);
+
+  const hasAdminReply = badge && badge.adminCommentCount > 0;
+  const isResolved = badge && badge.hasResolution;
 
   async function handleApprove(e: React.MouseEvent) {
     e.stopPropagation();
@@ -215,11 +243,49 @@ function PendingCard({
         flexDirection: "column",
       }}
     >
-      <div style={{ aspectRatio: "1", background: "var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0.75rem", overflow: "hidden" }}>
+      <div style={{ aspectRatio: "1", background: "var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0.75rem", overflow: "hidden", position: "relative" }}>
         {p.imageUrl ? (
           <img src={p.imageUrl} alt={p.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
         ) : (
           <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)" }}>No image</span>
+        )}
+        {/* Badge indicators */}
+        {(hasAdminReply || isResolved) && (
+          <div style={{ position: "absolute", top: 6, right: 6, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+            {isResolved ? (
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 3,
+                padding: "2px 7px",
+                borderRadius: 999,
+                fontSize: "0.6rem",
+                fontWeight: 700,
+                background: "#d1fae5",
+                color: "#065f46",
+                fontFamily: "var(--font-inter)",
+                letterSpacing: "0.03em",
+              }}>
+                ✓ Resolved
+              </span>
+            ) : hasAdminReply ? (
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 3,
+                padding: "2px 7px",
+                borderRadius: 999,
+                fontSize: "0.6rem",
+                fontWeight: 700,
+                background: "#fef3c7",
+                color: "#92400e",
+                fontFamily: "var(--font-inter)",
+                letterSpacing: "0.03em",
+              }}>
+                ↩ Admin replied
+              </span>
+            ) : null}
+          </div>
         )}
       </div>
       <div style={{ padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
@@ -300,6 +366,8 @@ function PendingLightbox({
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [structuredComments, setStructuredComments] = useState<ProductComment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
   const threadRef = useRef<HTMLDivElement>(null);
   const touchX = useRef<number | null>(null);
 
@@ -307,15 +375,40 @@ function PendingLightbox({
     ? p.imageUrl.replace(/&sz=w\d+/, "&sz=w1600")
     : p.imageUrl;
 
-  const commentLines = useMemo(() => {
-    return (p.reviewComments ?? "").split("\n").filter((l) => l.trim());
-  }, [p.reviewComments]);
+  const fetchComments = useCallback(async () => {
+    setLoadingComments(true);
+    try {
+      const res = await fetch(`/api/wholesale/product-comments?accountId=${accountId}&productId=${p.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setStructuredComments(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // silently fail — legacy text still shows on card
+    } finally {
+      setLoadingComments(false);
+    }
+  }, [accountId, p.id]);
+
+  useEffect(() => {
+    setStructuredComments([]);
+    fetchComments();
+  }, [p.id, fetchComments]);
 
   useEffect(() => {
     if (threadRef.current) {
       threadRef.current.scrollTop = threadRef.current.scrollHeight;
     }
-  }, [p.reviewComments]);
+  }, [structuredComments]);
+
+  // Build threaded view: top-level comments + their replies grouped
+  const threads = useMemo(() => {
+    const topLevel = structuredComments.filter((c) => !c.parent_id);
+    return topLevel.map((parent) => ({
+      parent,
+      replies: structuredComments.filter((c) => c.parent_id === parent.id),
+    }));
+  }, [structuredComments]);
 
   async function handleSaveComment() {
     const text = comment.trim();
@@ -331,6 +424,7 @@ function PendingLightbox({
       const { full } = await res.json();
       onCommentSaved(p.id, full);
       setComment("");
+      await fetchComments();
       toast.success("Comment saved!");
     } catch (err) {
       toast.error("Error: " + String(err));
@@ -461,28 +555,25 @@ function PendingLightbox({
           {/* Side panel */}
           <div
             style={{
-              width: 310,
+              width: 320,
               flexShrink: 0,
-              padding: "1.25rem",
-              borderLeft: "1px solid var(--border)",
               display: "flex",
               flexDirection: "column",
-              gap: "1rem",
-              overflowY: "auto",
+              overflow: "hidden",
+              borderLeft: "1px solid var(--border)",
             }}
           >
             {/* Meta */}
-            <div>
-              <p style={{ fontSize: "0.74rem", color: "var(--text-muted)", margin: 0, fontFamily: "var(--font-inter)" }}>
-                {p.sku} | {p.category} | {p.size}
+            <div style={{ padding: "1rem 1.25rem 0.75rem", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+              <p style={{ fontSize: "0.74rem", color: "var(--text-muted)", margin: "0 0 0.3rem", fontFamily: "var(--font-inter)" }}>
+                {p.sku} · {p.category} · {p.size}
               </p>
               <span
                 style={{
                   display: "inline-block",
-                  marginTop: 6,
                   padding: "2px 8px",
                   borderRadius: "999px",
-                  fontSize: "0.66rem",
+                  fontSize: "0.63rem",
                   fontWeight: 600,
                   background: "var(--bg-card)",
                   color: "var(--text-muted)",
@@ -494,64 +585,142 @@ function PendingLightbox({
               </span>
             </div>
 
-            {/* Comment thread */}
-            <div>
-              <label style={sideLabel}>Comment History</label>
-              <div
-                ref={threadRef}
-                style={{ maxHeight: 180, overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.4rem" }}
-              >
-                {commentLines.length === 0 ? (
-                  <p style={{ fontSize: "0.74rem", color: "var(--text-muted)", fontStyle: "italic", fontFamily: "var(--font-inter)" }}>No comments yet.</p>
-                ) : (
-                  commentLines.map((line, i) => {
-                    const m = line.match(/^\[([^\]]+)\]\s*(.*)$/);
-                    return (
+            {/* Thread */}
+            <div
+              ref={threadRef}
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: "0.875rem 1.25rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0",
+              }}
+            >
+              <p style={sideLabel}>
+                {threads.length === 0 ? "No comments yet" : `${threads.length} comment${threads.length === 1 ? "" : "s"}`}
+              </p>
+
+              {loadingComments && threads.length === 0 && (
+                <p style={{ fontSize: "0.76rem", color: "var(--text-muted)", fontStyle: "italic", fontFamily: "var(--font-inter)", margin: "0.5rem 0 0" }}>
+                  Loading…
+                </p>
+              )}
+
+              {threads.map(({ parent, replies }, ti) => {
+                const resolved = parent.is_resolved || replies.some((r) => r.is_resolved);
+                return (
+                  <div
+                    key={parent.id}
+                    style={{
+                      paddingTop: ti === 0 ? "0.5rem" : "0.875rem",
+                      paddingBottom: "0.875rem",
+                      borderBottom: ti < threads.length - 1 ? "1px solid var(--border)" : "none",
+                    }}
+                  >
+                    {/* Parent comment */}
+                    <div>
+                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "0.5rem", marginBottom: "0.25rem" }}>
+                        <span style={{
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          color: "var(--brand)",
+                          fontFamily: "var(--font-inter)",
+                        }}>
+                          {parent.author}
+                        </span>
+                        <span style={{ fontSize: "0.64rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)", whiteSpace: "nowrap", flexShrink: 0 }}>
+                          {formatDate(parent.created_at)}
+                        </span>
+                      </div>
+                      <p style={{
+                        fontSize: "0.82rem",
+                        color: "var(--text)",
+                        margin: 0,
+                        lineHeight: 1.5,
+                        fontFamily: "var(--font-inter)",
+                      }}>
+                        {parent.body}
+                      </p>
+                      {resolved && (
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 3,
+                          marginTop: 6,
+                          padding: "1px 7px",
+                          borderRadius: 999,
+                          fontSize: "0.6rem",
+                          fontWeight: 700,
+                          background: "#d1fae5",
+                          color: "#065f46",
+                          fontFamily: "var(--font-inter)",
+                        }}>
+                          ✓ Resolved
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Replies */}
+                    {replies.map((reply) => (
                       <div
-                        key={i}
+                        key={reply.id}
                         style={{
-                          background: "var(--bg-card)",
-                          border: "1px solid var(--border)",
-                          borderRadius: 6,
-                          padding: "0.4rem 0.65rem",
+                          marginTop: "0.625rem",
+                          marginLeft: "0.875rem",
+                          paddingLeft: "0.875rem",
+                          borderLeft: "2px solid var(--gold)",
                         }}
                       >
-                        {m && (
-                          <p style={{ fontSize: "0.64rem", color: "var(--brand)", fontWeight: 600, margin: "0 0 2px", fontFamily: "var(--font-inter)" }}>
-                            {m[1]}
-                          </p>
-                        )}
-                        <p style={{ fontSize: "0.74rem", color: "var(--text)", margin: 0, lineHeight: 1.4, fontFamily: "var(--font-inter)" }}>
-                          {m ? m[2] : line}
+                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "0.5rem", marginBottom: "0.2rem" }}>
+                          <span style={{
+                            fontSize: "0.68rem",
+                            fontWeight: 700,
+                            color: "#8B6914",
+                            fontFamily: "var(--font-inter)",
+                          }}>
+                            {reply.author}
+                          </span>
+                          <span style={{ fontSize: "0.62rem", color: "var(--text-muted)", fontFamily: "var(--font-inter)", whiteSpace: "nowrap", flexShrink: 0 }}>
+                            {formatDate(reply.created_at)}
+                          </span>
+                        </div>
+                        <p style={{
+                          fontSize: "0.79rem",
+                          color: "var(--text)",
+                          margin: 0,
+                          lineHeight: 1.5,
+                          fontFamily: "var(--font-inter)",
+                        }}>
+                          {reply.body}
                         </p>
                       </div>
-                    );
-                  })
-                )}
-              </div>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Add comment */}
-            <div>
-              <label style={sideLabel}>Add a Comment</label>
+            {/* Add comment + Approve */}
+            <div style={{ padding: "0.875rem 1.25rem", borderTop: "1px solid var(--border)", flexShrink: 0, display: "flex", flexDirection: "column", gap: "0.625rem" }}>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Write feedback or notes…"
+                placeholder="Add a comment or note…"
                 rows={3}
                 style={{
                   width: "100%",
-                  marginTop: "0.35rem",
                   padding: "0.5rem 0.65rem",
                   border: "1px solid var(--border)",
-                  borderRadius: 7,
+                  borderRadius: 8,
                   fontSize: "0.82rem",
                   fontFamily: "var(--font-inter)",
                   color: "var(--text)",
                   outline: "none",
                   resize: "vertical",
                   boxSizing: "border-box",
-                  background: "white",
+                  background: "var(--bg-card)",
+                  lineHeight: 1.5,
                 }}
               />
               <button
@@ -561,27 +730,25 @@ function PendingLightbox({
               >
                 {saving ? "Saving…" : "Add Comment"}
               </button>
+              <button
+                onClick={handleApprove}
+                disabled={approving}
+                style={{
+                  width: "100%",
+                  padding: "0.6rem",
+                  background: approving ? "var(--border)" : "#1f6326",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  fontSize: "0.84rem",
+                  fontWeight: 600,
+                  cursor: approving ? "not-allowed" : "pointer",
+                  fontFamily: "var(--font-inter)",
+                }}
+              >
+                {approving ? "Approving…" : "Looks Good — Approve"}
+              </button>
             </div>
-
-            {/* Approve */}
-            <button
-              onClick={handleApprove}
-              disabled={approving}
-              style={{
-                width: "100%",
-                padding: "0.7rem",
-                background: approving ? "var(--border)" : "#1f6326",
-                color: "white",
-                border: "none",
-                borderRadius: 7,
-                fontSize: "0.86rem",
-                fontWeight: 600,
-                cursor: approving ? "not-allowed" : "pointer",
-                fontFamily: "var(--font-inter)",
-              }}
-            >
-              {approving ? "Approving…" : "Looks Good"}
-            </button>
           </div>
         </div>
       </div>
@@ -605,22 +772,22 @@ const filterTab = (active: boolean): React.CSSProperties => ({
 });
 
 const sideLabel: React.CSSProperties = {
-  fontSize: "0.68rem",
-  fontWeight: 600,
+  fontSize: "0.66rem",
+  fontWeight: 700,
   color: "var(--text-muted)",
   textTransform: "uppercase" as const,
-  letterSpacing: "0.06em",
+  letterSpacing: "0.07em",
   fontFamily: "var(--font-inter)",
+  margin: 0,
 };
 
 const primaryBtn = (disabled: boolean): React.CSSProperties => ({
   width: "100%",
-  marginTop: "0.5rem",
   padding: "0.55rem",
   background: disabled ? "var(--border)" : "var(--brand)",
   color: disabled ? "var(--text-muted)" : "white",
   border: "none",
-  borderRadius: 7,
+  borderRadius: 8,
   fontSize: "0.84rem",
   fontWeight: 600,
   cursor: disabled ? "not-allowed" : "pointer",

@@ -43,12 +43,21 @@ export async function POST(req: NextRequest) {
     const existing = String(product.review_comments ?? "").trim();
     const updated = existing ? `${existing}\n${entry}` : entry;
 
+    // Update legacy text field (backwards compat)
     const { error: updateErr } = await sb
       .from("products")
       .update({ review_comments: updated })
       .eq("id", productId);
 
     if (updateErr) throw updateErr;
+
+    // Write to structured comments table
+    await sb.from("product_comments").insert({
+      product_id: productId,
+      body: comment.trim(),
+      author: account.displayName,
+      author_type: "reviewer",
+    });
 
     return NextResponse.json({ full: updated, entry });
   } catch (err) {

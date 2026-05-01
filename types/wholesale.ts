@@ -90,3 +90,16 @@ export interface WholesaleSession {
 
 export const SESSION_KEY = "ws_session";
 export const CART_KEY_PREFIX = "ws_cart_";
+
+export interface ProductComment {
+  id: string;
+  product_id: string;
+  body: string;
+  author: string;
+  author_type: "admin" | "reviewer";
+  parent_id: string | null;
+  is_resolved: boolean;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  created_at: string;
+}

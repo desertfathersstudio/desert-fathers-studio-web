@@ -312,7 +312,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", padding: "1.5rem 1.25rem" }}>
-      {/* Customer name + email */}
+      {/* Customer name + email — side by side */}
       <div
         style={{
           background: "var(--bg-card)",
@@ -320,18 +320,18 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
           borderRadius: "var(--radius-card)",
           padding: "1rem 1.25rem",
           marginBottom: "1.5rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.75rem",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "0.75rem 1.5rem",
         }}
       >
-        {/* Name row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", minWidth: 42 }}>Name</span>
+        {/* Name */}
+        <div>
+          <label style={fieldLabel}>Name</label>
           <select
             value={nameChoice}
             onChange={(e) => setNameChoice(e.target.value)}
-            style={inlineSelect}
+            style={{ ...inputStyle, width: "100%" }}
           >
             {ABBEY_NAMES.map((n) => <option key={n} value={n}>{n}</option>)}
             <option value="other">Other…</option>
@@ -342,17 +342,17 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
               placeholder="Enter name"
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
-              style={inlineInput}
+              style={{ ...inputStyle, width: "100%", marginTop: "0.4rem" }}
             />
           )}
         </div>
-        {/* Email row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", minWidth: 42 }}>Email</span>
+        {/* Email */}
+        <div>
+          <label style={fieldLabel}>Email</label>
           <select
             value={emailChoice}
             onChange={(e) => setEmailChoice(e.target.value as "default" | "other")}
-            style={inlineSelect}
+            style={{ ...inputStyle, width: "100%" }}
           >
             <option value="default">{defaultEmail}</option>
             <option value="other">Other…</option>
@@ -363,7 +363,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
               placeholder="Enter email"
               value={customEmail}
               onChange={(e) => setCustomEmail(e.target.value)}
-              style={inlineInput}
+              style={{ ...inputStyle, width: "100%", marginTop: "0.4rem" }}
             />
           )}
         </div>

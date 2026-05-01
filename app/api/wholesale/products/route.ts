@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     const cacheBust = String(Date.now());
-    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    // Only designs added after this date get the "New" badge going forward
+    const NEW_BADGE_CUTOFF = new Date("2026-04-30T00:00:00Z").getTime();
 
     const products: WholesaleProduct[] = (data ?? []).map((row) => {
       const categoriesRaw = row.categories as { name: string }[] | { name: string } | null;
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
       );
 
       const dateAdded = row.created_at as string;
-      const isNew = new Date(dateAdded).getTime() > thirtyDaysAgo;
+      const isNew = new Date(dateAdded).getTime() > NEW_BADGE_CUTOFF;
 
       return {
         id: String(row.id),
