@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Save, Check, Trash2, XCircle } from "lucide-react";
 import { ORDER_STAGES, ORDER_STAGES_WITH_CANCEL } from "@/types/wholesale";
@@ -23,11 +23,26 @@ const STAGE_COLOR: Record<OrderStage, { bg: string; text: string }> = {
   Cancelled:  { bg: "#fee2e2", text: "#991b1b" },
 };
 
-export function WholesaleOrdersAdminView({ initialOrders }: { initialOrders: WholesaleOrder[] }) {
-  const [orders, setOrders] = useState(initialOrders);
+export function WholesaleOrdersAdminView() {
+  const [orders, setOrders] = useState<WholesaleOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<OrderStage | "All">("All");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setLoading(true);
+    setFetchError("");
+    fetch("/api/admin/wholesale-orders")
+      .then((r) => r.json())
+      .then(({ orders: data, error }) => {
+        if (error) { setFetchError(error); return; }
+        setOrders(data ?? []);
+      })
+      .catch((e) => setFetchError(String(e)))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = orders.filter((o) => {
     const q = search.toLowerCase();
@@ -42,6 +57,9 @@ export function WholesaleOrdersAdminView({ initialOrders }: { initialOrders: Who
 
   const pendingPayment = orders.filter((o) => o.paymentSent && !o.paymentReceived).length;
   const activeOrders = orders.filter((o) => !["Delivered", "Cancelled"].includes(o.orderStage));
+
+  if (loading) return <div style={{ padding: "2rem", color: "var(--text-muted, #7a6a5a)", fontSize: "0.88rem" }}>Loading orders…</div>;
+  if (fetchError) return <div style={{ padding: "1.5rem", background: "#fee2e2", borderRadius: 8, color: "#991b1b", fontFamily: "monospace", fontSize: 13 }}>Error: {fetchError}</div>;
 
   return (
     <div>

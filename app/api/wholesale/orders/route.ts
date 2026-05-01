@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
 import { generateOrderPdf } from "@/lib/wholesale/generate-order-pdf";
@@ -9,8 +11,18 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://desertfathersstudi
 
 type EmailAttachment = { filename: string; content: string; content_id?: string };
 
-const LOGO_URL = `${SITE_URL}/images/Logo.png`;
-console.log("[wholesale] LOGO_URL:", LOGO_URL, "| SITE_URL env:", process.env.NEXT_PUBLIC_SITE_URL);
+// Read logo once at module load — same approach pdfkit uses for the PDF
+function readLogoBase64(): string | null {
+  try {
+    const p = path.join(process.cwd(), "public", "images", "Logo.png");
+    if (fs.existsSync(p)) return fs.readFileSync(p).toString("base64");
+    console.warn("[wholesale] Logo.png not found at", p);
+  } catch (e) {
+    console.error("[wholesale] logo read error:", e);
+  }
+  return null;
+}
+const LOGO_B64 = readLogoBase64();
 
 async function nextOrderNumber(sb: ReturnType<typeof createSupabaseService>): Promise<string> {
   const { count } = await sb
@@ -134,6 +146,12 @@ async function sendOrderEmails(opts: {
   const fromEmail = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
   const from = `Desert Fathers Studio <${fromEmail}>`;
 
+  // Logo: CID inline attachment (works in all email clients, no external URL needed)
+  const logoAttachment: EmailAttachment | null = LOGO_B64
+    ? { filename: "Logo.png", content: LOGO_B64, content_id: "dfs-logo" }
+    : null;
+  const logoSrc = logoAttachment ? "cid:dfs-logo" : `${SITE_URL}/images/Logo.png`;
+
   // Generate PDF (non-blocking — failure doesn't prevent emails)
   let pdfBuffer: Buffer | null = null;
   try {
@@ -147,8 +165,8 @@ async function sendOrderEmails(opts: {
     : null;
 
   await Promise.all([
-    sendCustomerEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl: LOGO_URL, pdfAttachment }),
-    sendAdminEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl: LOGO_URL }),
+    sendCustomerEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoSrc, logoAttachment, pdfAttachment }),
+    sendAdminEmail({ apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoSrc, logoAttachment }),
   ]);
 }
 
@@ -157,10 +175,10 @@ async function sendOrderEmails(opts: {
 async function sendCustomerEmail(opts: {
   apiKey: string; from: string; orderId: string; customerName: string;
   customerEmail: string; items: WholesaleOrderItem[]; grandTotal: number;
-  asap: boolean; date: string; logoUrl: string;
+  asap: boolean; date: string; logoSrc: string; logoAttachment: EmailAttachment | null;
   pdfAttachment: EmailAttachment | null;
 }) {
-  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl, pdfAttachment } = opts;
+  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoSrc, logoAttachment, pdfAttachment } = opts;
 
   const EVEN = "#111d2e";
   const ODD  = "#0d1829";
@@ -183,9 +201,7 @@ async function sendCustomerEmail(opts: {
     </tr>`;
   }).join("");
 
-  const logoImg = logoUrl
-    ? `<img src="${logoUrl}" alt="Desert Fathers Studio" width="90" height="90" style="display:block;margin:0 auto 14px;border-radius:12px">`
-    : "";
+  const logoImg = `<img src="${logoSrc}" alt="Desert Fathers Studio" width="90" height="90" style="display:block;margin:0 auto 14px;border-radius:12px">`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -276,7 +292,10 @@ async function sendCustomerEmail(opts: {
 </body>
 </html>`;
 
-  const attachments: EmailAttachment[] = pdfAttachment ? [pdfAttachment] : [];
+  const attachments: EmailAttachment[] = [
+    ...(logoAttachment ? [logoAttachment] : []),
+    ...(pdfAttachment ? [pdfAttachment] : []),
+  ];
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -298,9 +317,9 @@ async function sendCustomerEmail(opts: {
 async function sendAdminEmail(opts: {
   apiKey: string; from: string; orderId: string; customerName: string;
   customerEmail: string; items: WholesaleOrderItem[]; grandTotal: number;
-  asap: boolean; date: string; logoUrl: string;
+  asap: boolean; date: string; logoSrc: string; logoAttachment: EmailAttachment | null;
 }) {
-  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoUrl } = opts;
+  const { apiKey, from, orderId, customerName, customerEmail, items, grandTotal, asap, date, logoSrc, logoAttachment } = opts;
 
   const packRows = items.map((item, idx) => {
     const bg = idx % 2 === 0 ? "#ffffff" : "#f4f7fb";
@@ -322,9 +341,7 @@ async function sendAdminEmail(opts: {
     </tr>`;
   }).join("");
 
-  const logoImg = logoUrl
-    ? `<img src="${logoUrl}" alt="Desert Fathers Studio" width="44" height="44" style="display:block;border-radius:6px">`
-    : "";
+  const logoImg = `<img src="${logoSrc}" alt="Desert Fathers Studio" width="44" height="44" style="display:block;border-radius:6px">`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -410,6 +427,8 @@ async function sendAdminEmail(opts: {
 </body>
 </html>`;
 
+  const adminAttachments: EmailAttachment[] = logoAttachment ? [logoAttachment] : [];
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
@@ -419,6 +438,7 @@ async function sendAdminEmail(opts: {
       reply_to: customerEmail,
       subject: `${asap ? "⚡ ASAP — " : ""}📦 Pack & Ship: ${orderId} | ${customerName}`,
       html,
+      ...(adminAttachments.length ? { attachments: adminAttachments } : {}),
     }),
   });
   if (!res.ok) throw new Error(`Resend admin email ${res.status}: ${await res.text()}`);
