@@ -307,7 +307,7 @@ function CatalogCard({
         style={{
           position: "relative",
           aspectRatio: "1",
-          background: "var(--bg-card)",
+          background: "white",
           overflow: "hidden",
         }}
       >
