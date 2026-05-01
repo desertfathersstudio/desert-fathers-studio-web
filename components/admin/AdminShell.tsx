@@ -229,18 +229,23 @@ export function AdminShell({
         {/* Top bar */}
         <header
           style={{
-            height: 52,
             background: C.topbarBg,
             borderBottom: `1px solid ${C.sidebarBorder}`,
+            paddingTop: "env(safe-area-inset-top, 0px)",
+            paddingLeft: "1rem",
+            paddingRight: "1rem",
+            paddingBottom: 0,
+            minHeight: "calc(52px + env(safe-area-inset-top, 0px))",
             display: "flex",
-            alignItems: "center",
-            padding: "0 1rem",
+            alignItems: "flex-end",
             position: "sticky",
             top: 0,
             zIndex: 30,
             gap: "0.75rem",
           }}
         >
+          {/* inner row: fixed 52px tall, content centered */}
+          <div style={{ display: "flex", alignItems: "center", width: "100%", height: 52, gap: "0.75rem" }}>
           {/* Mobile brand */}
           <div className="flex md:hidden" style={{ alignItems: "center", gap: "0.5rem" }}>
             <div
@@ -289,6 +294,7 @@ export function AdminShell({
           >
             <Menu size={20} />
           </button>
+          </div>
         </header>
 
         {/* Page content */}
