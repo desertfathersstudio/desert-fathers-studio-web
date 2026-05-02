@@ -98,7 +98,7 @@ export function AdminShell({
       <aside
         className="hidden md:flex"
         style={{
-          width: 220,
+          width: 248,
           flexShrink: 0,
           flexDirection: "column",
           background: C.sidebarBg,
@@ -148,7 +148,7 @@ export function AdminShell({
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: "0.75rem 0.5rem", overflowY: "auto" }}>
+        <nav style={{ flex: 1, padding: "0.875rem 0.625rem", overflowY: "auto" }}>
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = isActive(href);
             return (
@@ -158,14 +158,14 @@ export function AdminShell({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.625rem",
-                  padding: "0.55rem 0.75rem",
+                  gap: "0.75rem",
+                  padding: "0.625rem 0.875rem",
                   borderRadius: 8,
-                  marginBottom: 2,
+                  marginBottom: 3,
                   color: active ? C.activeText : C.inactiveText,
                   background: active ? C.activeBg : "transparent",
                   fontWeight: active ? 600 : 400,
-                  fontSize: "0.85rem",
+                  fontSize: "0.9rem",
                   textDecoration: "none",
                   transition: "background 0.12s, color 0.12s",
                 }}
@@ -176,7 +176,7 @@ export function AdminShell({
                   if (!active) (e.currentTarget as HTMLElement).style.background = "transparent";
                 }}
               >
-                <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
+                <Icon size={17} strokeWidth={active ? 2.2 : 1.8} />
                 {label}
               </Link>
             );
@@ -224,7 +224,7 @@ export function AdminShell({
           marginLeft: 0,
           minWidth: 0,
         }}
-        className="md:ml-[220px]"
+        className="md:ml-[248px]"
       >
         {/* Top bar */}
         <header
@@ -246,6 +246,7 @@ export function AdminShell({
         >
           {/* inner row: fixed 52px tall, content centered */}
           <div style={{ display: "flex", alignItems: "center", width: "100%", height: 52, gap: "0.75rem" }}>
+
           {/* Mobile brand */}
           <div className="flex md:hidden" style={{ alignItems: "center", gap: "0.5rem" }}>
             <div
@@ -267,13 +268,35 @@ export function AdminShell({
             </div>
           </div>
 
+          {/* Desktop: breadcrumb-style label */}
+          <div className="hidden md:flex" style={{ alignItems: "center", gap: "0.5rem", flex: 1, minWidth: 0 }}>
+            <span style={{ color: C.inactiveText, fontSize: "0.82rem", fontWeight: 400 }}>
+              DFS Admin
+            </span>
+            <span style={{ color: C.inactiveText, fontSize: "0.82rem" }}>/</span>
+            <h1
+              style={{
+                color: "#f5f0ea",
+                fontWeight: 700,
+                fontSize: "0.95rem",
+                letterSpacing: "-0.01em",
+                margin: 0,
+              }}
+            >
+              {title}
+            </h1>
+          </div>
+
+          {/* Mobile: just the title */}
           <h1
+            className="flex md:hidden"
             style={{
               flex: 1,
               color: "#f5f0ea",
               fontWeight: 700,
               fontSize: "0.95rem",
               letterSpacing: "-0.01em",
+              margin: 0,
             }}
           >
             {title}

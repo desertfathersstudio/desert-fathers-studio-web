@@ -97,7 +97,7 @@ export function WholesaleOrdersAdminView() {
   if (fetchError) return <div style={{ padding: "1.5rem", background: "#fee2e2", borderRadius: 8, color: "#991b1b", fontFamily: "monospace", fontSize: 13 }}>Error: {fetchError}</div>;
 
   return (
-    <div style={{ padding: "1.25rem 1.5rem" }}>
+    <div style={{ padding: "1.25rem 1.5rem", maxWidth: 1100, margin: "0 auto" }}>
       {/* Stats row */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
         {[
