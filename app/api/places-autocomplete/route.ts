@@ -7,11 +7,13 @@ export async function GET(req: NextRequest) {
   const key = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
   if (!key) return NextResponse.json({ predictions: [] });
 
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.desertfathersstudio.com";
   const res = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": key,
+      "Referer": origin,
     },
     body: JSON.stringify({
       input,

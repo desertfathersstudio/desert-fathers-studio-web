@@ -9,10 +9,12 @@ export async function GET(req: NextRequest) {
   const key = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
   if (!key) return NextResponse.json({ result: null });
 
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.desertfathersstudio.com";
   const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
     headers: {
       "X-Goog-Api-Key": key,
       "X-Goog-FieldMask": "addressComponents",
+      "Referer": origin,
     },
   });
 
