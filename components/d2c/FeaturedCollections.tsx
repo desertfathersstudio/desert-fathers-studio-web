@@ -114,18 +114,6 @@ export function FeaturedCollections() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       />
                     </div>
-                    {col.topSelling && (
-                      <span
-                        className="absolute top-3 right-3 text-[10px] font-medium uppercase tracking-wider px-2.5 py-1 rounded-full"
-                        style={{
-                          background: "var(--gold)",
-                          color: "#fff",
-                          letterSpacing: "0.1em",
-                        }}
-                      >
-                        Best Seller
-                      </span>
-                    )}
                   </div>
 
                   {/* Content */}

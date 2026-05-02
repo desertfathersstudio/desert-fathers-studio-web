@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -37,6 +37,11 @@ export function CatalogSection({
   const { add } = useCart();
   const { open: openLightbox } = useLightbox();
 
+  // Sync active filter when initialCategory changes via URL navigation
+  useEffect(() => {
+    setActive(initialCategory ?? "all");
+  }, [initialCategory]);
+
   const grouped = useMemo(() => {
     return CATEGORY_ORDER.map((key) => ({
       key,
@@ -53,7 +58,7 @@ export function CatalogSection({
   const flatStickers = useMemo(
     () =>
       CATEGORY_ORDER.filter((k) => k !== "packs").flatMap((key) =>
-        CATALOG.filter((s) => s.category === key)
+        CATALOG.filter((s) => s.category === key && !s.isPack)
       ),
     []
   );
@@ -191,12 +196,6 @@ function PackRow({ items }: { items: Sticker[] }) {
                 borderTop: "1px solid var(--border)",
               }}
             >
-              <p
-                className="text-[10px] uppercase tracking-[0.18em] mb-1"
-                style={{ color: "var(--gold)", fontFamily: "var(--font-sans)" }}
-              >
-                Set of {pack.packSize}
-              </p>
               <h3
                 style={{
                   fontFamily: "var(--font-serif)",
@@ -204,7 +203,7 @@ function PackRow({ items }: { items: Sticker[] }) {
                   color: "var(--text)",
                 }}
               >
-                {pack.name}
+                {pack.name} — Set of {pack.packSize}
               </h3>
               <p
                 className="mt-1.5 text-sm font-medium"

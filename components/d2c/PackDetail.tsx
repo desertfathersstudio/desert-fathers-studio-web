@@ -83,12 +83,6 @@ export function PackDetail({ slug }: { slug: string }) {
 
           {/* Pack info */}
           <div className="md:sticky md:top-24">
-            <p
-              className="text-[11px] uppercase tracking-[0.2em] font-medium mb-4"
-              style={{ color: pack.accent }}
-            >
-              Set of {pack.packSize}
-            </p>
             <h1
               className="mb-5 leading-tight"
               style={{
@@ -98,7 +92,7 @@ export function PackDetail({ slug }: { slug: string }) {
                 color: "var(--text)",
               }}
             >
-              {pack.name}
+              {pack.name} — Set of {pack.packSize}
             </h1>
             <p
               className="mb-8 leading-relaxed"

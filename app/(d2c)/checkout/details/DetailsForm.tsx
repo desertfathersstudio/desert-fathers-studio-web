@@ -195,21 +195,20 @@ export function DetailsForm() {
       });
       ac.addListener("place_changed", () => {
         const place = ac.getPlace();
+        // Sync what Google placed into the input (bypasses React onChange)
+        if (input.value) setAddrLine1(input.value);
         if (!place.address_components) return;
-        let streetNum = "", route = "", city = "", state = "", zip = "";
+        let city = "", state = "", zip = "";
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for (const comp of place.address_components as any[]) {
           const t = comp.types[0];
-          if (t === "street_number") streetNum = comp.long_name;
-          if (t === "route")         route     = comp.short_name;
-          if (t === "locality")      city      = comp.long_name;
+          if (t === "locality")      city  = comp.long_name;
           if (t === "administrative_area_level_1") state = comp.short_name;
-          if (t === "postal_code")   zip       = comp.long_name;
+          if (t === "postal_code")   zip   = comp.long_name;
         }
-        setAddrLine1(`${streetNum} ${route}`.trim());
-        setAddrCity(city);
-        setAddrState(state);
-        setAddrZip(zip);
+        if (city)  setAddrCity(city);
+        if (state) setAddrState(state);
+        if (zip)   setAddrZip(zip);
       });
     };
 

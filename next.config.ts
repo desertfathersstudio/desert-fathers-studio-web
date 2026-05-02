@@ -3,12 +3,12 @@ import type { NextConfig } from "next";
 const CSP = [
   "default-src 'self'",
   // unsafe-inline required: admin layout service-worker script, inline animation styles in wholesale portal
-  "script-src 'self' 'unsafe-inline' https://js.stripe.com",
+  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://maps.googleapis.com https://maps.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   // blob: for PDF generation; https: for sticker images served from own domain
   "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.resend.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.resend.com https://maps.googleapis.com",
   "frame-src https://js.stripe.com",
   "object-src 'none'",
   "base-uri 'self'",
