@@ -493,7 +493,7 @@ export function DetailsForm() {
                 {placesReady === "no-key"  && "Places: no API key"}
                 {placesReady === "loading" && "Places: loading…"}
                 {placesReady === "timeout" && "Places: script failed to load"}
-                {placesReady === "ready"   && `Places: ready · field="${addrLine1}" len=${addrLine1.length} status=${placesStatus ?? "none"}`}
+                {placesReady === "ready"   && `Places: ready · len=${addrLine1.length} status=${placesStatus ?? "none"} sug=${suggestions.length} show=${showSuggestions}`}
               </p>
               {showSuggestions && suggestions.length > 0 && (
                 <ul
