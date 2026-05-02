@@ -3,12 +3,6 @@
 import { createSupabaseService } from "@/lib/supabase/service";
 import type { ProductWithInventory, ReviewStatus } from "@/lib/admin/types";
 
-type InventoryStatus = "in_stock" | "low" | "sold_out";
-
-function computeStatus(onHand: number, threshold: number): InventoryStatus {
-  return onHand === 0 ? "sold_out" : onHand <= threshold ? "low" : "in_stock";
-}
-
 export async function adminUpdateProduct(
   productId: string,
   input: {
@@ -36,8 +30,6 @@ export async function adminUpdateProduct(
     .eq("id", productId);
   if (pErr) throw new Error(pErr.message);
 
-  const status = computeStatus(input.onHand, input.threshold);
-
   if (input.hasInventory) {
     const { error: iErr } = await sb
       .from("inventory")
@@ -45,7 +37,6 @@ export async function adminUpdateProduct(
         on_hand: input.onHand,
         incoming: input.incoming,
         low_stock_threshold: input.threshold,
-        status,
         last_updated: new Date().toISOString(),
       })
       .eq("product_id", productId);
@@ -58,7 +49,6 @@ export async function adminUpdateProduct(
         on_hand: input.onHand,
         incoming: input.incoming,
         low_stock_threshold: input.threshold,
-        status,
       });
     if (iErr) throw new Error(iErr.message);
   }
@@ -86,8 +76,6 @@ export async function adminAddProduct(input: {
 }): Promise<ProductWithInventory> {
   const sb = createSupabaseService();
 
-  const status = computeStatus(input.onHand, input.threshold);
-
   const { data: prod, error: pErr } = await sb
     .from("products")
     .insert({
@@ -111,7 +99,6 @@ export async function adminAddProduct(input: {
       on_hand: input.onHand,
       incoming: input.incoming,
       low_stock_threshold: input.threshold,
-      status,
     })
     .select()
     .single();
