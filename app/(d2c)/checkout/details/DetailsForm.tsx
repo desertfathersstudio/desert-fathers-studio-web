@@ -1,11 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Loader2, Lock, MapPin, RotateCcw, ArrowRight, ChevronDown, Truck,
 } from "lucide-react";
+
+// Minimal Google Places typings (no @types/google.maps needed)
+interface GmPrediction { place_id: string; description: string; }
+interface GmAddressComponent { types: string[]; long_name: string; short_name: string; }
+type PlacesServiceStatus = "OK" | "ZERO_RESULTS" | "INVALID_REQUEST" | "OVER_QUERY_LIMIT" | "REQUEST_DENIED" | "UNKNOWN_ERROR";
+interface Gm {
+  maps: {
+    places: {
+      AutocompleteService: new() => {
+        getPlacePredictions(
+          req: { input: string; componentRestrictions: { country: string }; types: string[] },
+          cb: (p: GmPrediction[] | null, s: PlacesServiceStatus) => void
+        ): void;
+      };
+      PlacesService: new(el: HTMLElement) => {
+        getDetails(
+          req: { placeId: string; fields: string[] },
+          cb: (r: { address_components?: GmAddressComponent[] } | null, s: PlacesServiceStatus) => void
+        ): void;
+      };
+      PlacesServiceStatus: { OK: "OK" };
+    };
+  };
+}
 import { FREE_SHIPPING_THRESHOLD_DOLLARS } from "@/lib/shipping";
 import { useCart } from "@/lib/cart";
 
@@ -168,11 +192,76 @@ export function DetailsForm() {
   const [showNotes,     setShowNotes]     = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
 
+  const [suggestions,     setSuggestions]     = useState<GmPrediction[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [touched,     setTouched]     = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError,  setSubmitError]  = useState<string | null>(null);
 
   const touch = (f: string) => setTouched((p) => new Set(p).add(f));
+
+  // Load Google Maps Places script once
+  useEffect(() => {
+    const key = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+    if (!key || document.getElementById("gm-places-script")) return;
+    const s = document.createElement("script");
+    s.id = "gm-places-script";
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
+    s.async = true;
+    document.head.appendChild(s);
+  }, []);
+
+  // Debounced suggestions fetch
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (addrLine1.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
+    debounceRef.current = setTimeout(() => {
+      const gm = (window as unknown as { google?: Gm }).google;
+      if (!gm?.maps?.places) return;
+      const svc = new gm.maps.places.AutocompleteService();
+      svc.getPlacePredictions(
+        { input: addrLine1, componentRestrictions: { country: "us" }, types: ["address"] },
+        (predictions, status) => {
+          if (status === "OK" && predictions) {
+            setSuggestions(predictions);
+            setShowSuggestions(true);
+          } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+          }
+        }
+      );
+    }, 300);
+  }, [addrLine1]);
+
+  const handleSelectSuggestion = useCallback((placeId: string) => {
+    setShowSuggestions(false);
+    setSuggestions([]);
+    const gm = (window as unknown as { google?: Gm }).google;
+    if (!gm?.maps?.places) return;
+    const tempDiv = document.createElement("div");
+    const svc = new gm.maps.places.PlacesService(tempDiv);
+    svc.getDetails({ placeId, fields: ["address_components"] }, (place, status) => {
+      if (status !== "OK" || !place?.address_components) return;
+      let streetNum = "", route = "", city = "", state = "", zip = "";
+      for (const c of place.address_components) {
+        if (c.types.includes("street_number")) streetNum = c.long_name;
+        else if (c.types.includes("route"))    route = c.long_name;
+        else if (c.types.includes("locality")) city = c.long_name;
+        else if (c.types.includes("sublocality_level_1") && !city) city = c.long_name;
+        else if (c.types.includes("administrative_area_level_1")) state = c.short_name;
+        else if (c.types.includes("postal_code")) zip = c.long_name;
+      }
+      const street = [streetNum, route].filter(Boolean).join(" ");
+      if (street) setAddrLine1(street);
+      if (city)  setAddrCity(city);
+      if (state) setAddrState(state);
+      if (zip)   setAddrZip(zip);
+      touch("addrLine1"); touch("addrCity"); touch("addrState"); touch("addrZip");
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Restore saved fields from sessionStorage
   useEffect(() => {
@@ -379,9 +468,39 @@ export function DetailsForm() {
           <section className="space-y-3">
             <h2 className="font-serif text-xl font-semibold" style={{ color: "var(--text)" }}>Shipping Address</h2>
 
-            <Field id="addrLine1" label="Address" required autoComplete="address-line1"
-              value={addrLine1} onChange={setAddrLine1} onBlur={() => touch("addrLine1")}
-              placeholder="123 Main St" error={line1Error} />
+            {/* Address with Places autocomplete dropdown */}
+            <div className="relative">
+              <Field id="addrLine1" label="Address" required autoComplete="off"
+                value={addrLine1} onChange={setAddrLine1}
+                onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); touch("addrLine1"); }}
+                placeholder="123 Main St" error={line1Error} />
+              {showSuggestions && suggestions.length > 0 && (
+                <ul
+                  className="absolute z-50 w-full mt-1 overflow-hidden"
+                  style={{
+                    background: "var(--bg)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "var(--radius-btn)",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+                  }}
+                >
+                  {suggestions.map((s) => (
+                    <li key={s.place_id}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-3 py-2.5 text-sm transition-colors"
+                        style={{ color: "var(--text)", borderBottom: "1px solid var(--border)" }}
+                        onMouseOver={(e) => (e.currentTarget.style.background = "var(--bg-card)")}
+                        onMouseOut={(e)  => (e.currentTarget.style.background = "transparent")}
+                        onMouseDown={(e) => { e.preventDefault(); handleSelectSuggestion(s.place_id); }}
+                      >
+                        {s.description}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
             <Field id="addrLine2" label="Apartment, suite, etc." autoComplete="address-line2"
               value={addrLine2} onChange={setAddrLine2} placeholder="Apt 4B (optional)" />
