@@ -10,23 +10,21 @@ import {
 // Minimal Google Places typings (no @types/google.maps needed)
 interface GmPrediction { place_id: string; description: string; }
 interface GmAddressComponent { types: string[]; long_name: string; short_name: string; }
-type PlacesServiceStatus = "OK" | "ZERO_RESULTS" | "INVALID_REQUEST" | "OVER_QUERY_LIMIT" | "REQUEST_DENIED" | "UNKNOWN_ERROR";
 interface Gm {
   maps: {
     places: {
       AutocompleteService: new() => {
+        // New Maps JS API returns a Promise (callback form is silently dropped)
         getPlacePredictions(
-          req: { input: string; componentRestrictions: { country: string }; types: string[] },
-          cb: (p: GmPrediction[] | null, s: PlacesServiceStatus) => void
-        ): void;
+          req: { input: string; componentRestrictions: { country: string }; types: string[] }
+        ): Promise<{ predictions: GmPrediction[] }>;
       };
       PlacesService: new(el: HTMLElement) => {
         getDetails(
           req: { placeId: string; fields: string[] },
-          cb: (r: { address_components?: GmAddressComponent[] } | null, s: PlacesServiceStatus) => void
+          cb: (r: { address_components?: GmAddressComponent[] } | null, s: string) => void
         ): void;
       };
-      PlacesServiceStatus: { OK: "OK" };
     };
   };
 }
@@ -232,22 +230,24 @@ export function DetailsForm() {
     debounceRef.current = setTimeout(() => {
       const gm = (window as unknown as { google?: Gm }).google;
       if (!gm?.maps?.places) { setPlacesStatus("script-not-loaded"); return; }
-      setPlacesStatus(null);
       const svc = new gm.maps.places.AutocompleteService();
       svc.getPlacePredictions(
-        { input: addrLine1, componentRestrictions: { country: "us" }, types: ["address"] },
-        (predictions, status) => {
-          if (status === "OK" && predictions) {
-            setSuggestions(predictions);
-            setShowSuggestions(true);
-            setPlacesStatus(null);
-          } else {
-            setSuggestions([]);
-            setShowSuggestions(false);
-            setPlacesStatus(status);
-          }
+        { input: addrLine1, componentRestrictions: { country: "us" }, types: ["address"] }
+      ).then(({ predictions }) => {
+        if (predictions && predictions.length > 0) {
+          setSuggestions(predictions);
+          setShowSuggestions(true);
+          setPlacesStatus(null);
+        } else {
+          setSuggestions([]);
+          setShowSuggestions(false);
+          setPlacesStatus("ZERO_RESULTS");
         }
-      );
+      }).catch((err: unknown) => {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setPlacesStatus("ERR:" + String(err));
+      });
     }, 300);
   }, [addrLine1]);
 
