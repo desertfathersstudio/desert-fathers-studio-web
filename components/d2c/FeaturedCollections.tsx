@@ -8,8 +8,9 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 const COLLECTIONS = [
   {
     id: "holy-week",
-    title: "Holy Week Pack",
-    badge: "Set of 23 · $18.00",
+    title: "Holy Week Pack — Set of 23",
+    badge: "$18.00",
+    topSelling: true,
     description:
       "The complete story of Holy Week, from the Raising of Lazarus to the Resurrection.",
     href: "/shop/holy-week-pack",
@@ -18,8 +19,9 @@ const COLLECTIONS = [
   },
   {
     id: "resurrection",
-    title: "Resurrection Pack",
-    badge: "Set of 10 · $10.00",
+    title: "Resurrection Pack — Set of 10",
+    badge: "$10.00",
+    topSelling: true,
     description:
       "Ten Resurrection appearances — from the Empty Tomb to Pentecost.",
     href: "/shop/resurrection-pack",
@@ -30,6 +32,7 @@ const COLLECTIONS = [
     id: "individual",
     title: "Individual Stickers",
     badge: "$2.00 each",
+    topSelling: false,
     description:
       "Saints, angels, prophets, Christ, Our Lady, and more — browse 80+ designs.",
     href: "/shop",
@@ -111,6 +114,18 @@ export function FeaturedCollections() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       />
                     </div>
+                    {col.topSelling && (
+                      <span
+                        className="absolute top-3 right-3 text-[10px] font-medium uppercase tracking-wider px-2.5 py-1 rounded-full"
+                        style={{
+                          background: "var(--gold)",
+                          color: "#fff",
+                          letterSpacing: "0.1em",
+                        }}
+                      >
+                        Best Seller
+                      </span>
+                    )}
                   </div>
 
                   {/* Content */}

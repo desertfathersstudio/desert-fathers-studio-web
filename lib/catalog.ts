@@ -2,6 +2,7 @@ import { D2C_PRICE, HWP_PACK_PRICE, RP_PACK_PRICE } from "./pricing";
 
 export type CategoryKey =
   | "all"
+  | "individuals"
   | "packs"
   | "christ"
   | "our-lady"
@@ -24,7 +25,7 @@ export interface Sticker {
   packOnly?: boolean;
 }
 
-export const CATEGORY_LABELS: Record<Exclude<CategoryKey, "all">, string> = {
+export const CATEGORY_LABELS: Record<Exclude<CategoryKey, "all" | "individuals">, string> = {
   packs: "Packs",
   christ: "Christ",
   "our-lady": "Our Lady",
@@ -36,7 +37,7 @@ export const CATEGORY_LABELS: Record<Exclude<CategoryKey, "all">, string> = {
   resurrection: "Resurrection",
 };
 
-export const CATEGORY_ORDER: Exclude<CategoryKey, "all">[] = [
+export const CATEGORY_ORDER: Exclude<CategoryKey, "all" | "individuals">[] = [
   "packs", "christ", "our-lady", "angels", "saints",
   "prophets", "scenes", "holy-week", "resurrection",
 ];

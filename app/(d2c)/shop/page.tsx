@@ -4,7 +4,7 @@ import { Footer } from "@/components/d2c/Footer";
 import { type CategoryKey } from "@/lib/catalog";
 
 const VALID_CATEGORIES: CategoryKey[] = [
-  "packs", "christ", "our-lady", "angels", "saints",
+  "individuals", "packs", "christ", "our-lady", "angels", "saints",
   "prophets", "scenes", "holy-week", "resurrection",
 ];
 

@@ -79,8 +79,18 @@ export function CatalogSection({
               color: "var(--text)",
             }}
           >
-            {totalDesigns} designs, all sacred.
+            {totalDesigns} designs, rooted in tradition.
           </h2>
+          <p className="mt-2 text-xs" style={{ color: "var(--text-muted)" }}>
+            All stickers are 3 inches. For custom sizes,{" "}
+            <a
+              href="mailto:desertfathersstudio@gmail.com"
+              className="underline underline-offset-2 transition-opacity hover:opacity-70"
+            >
+              contact us
+            </a>
+            .
+          </p>
         </div>
 
         {/* Filter pills */}
@@ -102,6 +112,8 @@ export function CatalogSection({
             {packGroup && <PackRow items={packGroup.items} />}
             <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} />
           </div>
+        ) : active === "individuals" ? (
+          <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} />
         ) : (
           <div>
             {active === "packs" && packGroup ? (

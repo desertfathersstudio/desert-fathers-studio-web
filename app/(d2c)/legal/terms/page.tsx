@@ -38,7 +38,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="7. Governing Law">
-            <p>These Terms are governed by the laws of the State of Illinois, USA, without regard to conflict of law principles. Any disputes shall be resolved in the courts of Cook County, Illinois.</p>
+            <p>These Terms are governed by the laws of the State of North Carolina, USA, without regard to conflict of law principles. Any disputes shall be resolved in the courts of North Carolina.</p>
           </Section>
 
           <Section title="8. Changes to These Terms">

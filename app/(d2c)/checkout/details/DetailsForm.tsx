@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -49,18 +49,20 @@ function labelEl(text: string, required?: boolean) {
 
 function Field({
   id, label, type = "text", value, onChange, onBlur,
-  placeholder, required, hint, error, autoComplete, maxLength,
+  placeholder, required, hint, error, autoComplete, maxLength, inputRef,
 }: {
   id: string; label: string; type?: string; value: string;
   onChange: (v: string) => void; onBlur?: () => void;
   placeholder?: string; required?: boolean; hint?: string;
   error?: string; autoComplete?: string; maxLength?: number;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
 }) {
   const hasError = Boolean(error);
   return (
     <div>
       {labelEl(label, required)}
       <input
+        ref={inputRef as React.RefObject<HTMLInputElement>}
         id={id} type={type}
         autoComplete={autoComplete ?? id}
         value={value}
@@ -164,6 +166,8 @@ export function DetailsForm() {
   const [addrState, setAddrState] = useState("");
   const [addrZip,   setAddrZip]   = useState("");
 
+  const addrLine1Ref = useRef<HTMLInputElement>(null);
+
   const [notes,         setNotes]         = useState("");
   const [showNotes,     setShowNotes]     = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -173,6 +177,54 @@ export function DetailsForm() {
   const [submitError,  setSubmitError]  = useState<string | null>(null);
 
   const touch = (f: string) => setTouched((p) => new Set(p).add(f));
+
+  // Google Places address autocomplete
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+    if (!apiKey || !addrLine1Ref.current) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = (window as any).google;
+
+    const attach = (input: HTMLInputElement) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ac = new (window as any).google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: "us" },
+        types: ["address"],
+        fields: ["address_components"],
+      });
+      ac.addListener("place_changed", () => {
+        const place = ac.getPlace();
+        if (!place.address_components) return;
+        let streetNum = "", route = "", city = "", state = "", zip = "";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const comp of place.address_components as any[]) {
+          const t = comp.types[0];
+          if (t === "street_number") streetNum = comp.long_name;
+          if (t === "route")         route     = comp.short_name;
+          if (t === "locality")      city      = comp.long_name;
+          if (t === "administrative_area_level_1") state = comp.short_name;
+          if (t === "postal_code")   zip       = comp.long_name;
+        }
+        setAddrLine1(`${streetNum} ${route}`.trim());
+        setAddrCity(city);
+        setAddrState(state);
+        setAddrZip(zip);
+      });
+    };
+
+    if (g?.maps?.places) {
+      attach(addrLine1Ref.current);
+    } else {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      const inputEl = addrLine1Ref.current;
+      script.onload = () => attach(inputEl!);
+      document.head.appendChild(script);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Restore saved fields from sessionStorage
   useEffect(() => {
@@ -381,7 +433,7 @@ export function DetailsForm() {
 
             <Field id="addrLine1" label="Address" required autoComplete="address-line1"
               value={addrLine1} onChange={setAddrLine1} onBlur={() => touch("addrLine1")}
-              placeholder="123 Main St" error={line1Error} />
+              placeholder="123 Main St" error={line1Error} inputRef={addrLine1Ref} />
 
             <Field id="addrLine2" label="Apartment, suite, etc." autoComplete="address-line2"
               value={addrLine2} onChange={setAddrLine2} placeholder="Apt 4B (optional)" />

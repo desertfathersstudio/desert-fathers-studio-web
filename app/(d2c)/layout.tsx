@@ -6,7 +6,7 @@ import { StickerLightbox } from "@/components/shared/StickerLightbox";
 
 export const metadata: Metadata = {
   title: "Desert Fathers Studio",
-  description: "Coptic Orthodox icon stickers — sacred art for everyday life.",
+  description: "Coptic Orthodox icon stickers rooted in tradition. Timeless iconography for everyday life.",
 };
 
 export default function D2CLayout({ children }: { children: React.ReactNode }) {

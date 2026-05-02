@@ -1,29 +1,41 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/shared/Logo";
 import { useCart } from "@/lib/cart";
-import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/catalog";
 
-const NAV_LINKS = [
-  { href: "/shop", label: "Shop" },
-  { href: "/shop?category=packs", label: "Packs" },
-  { href: "/suggestions", label: "Suggestions" },
+const SHOP_LINKS = [
+  { href: "/shop",                      label: "All Designs"  },
+  { href: "/shop?category=packs",       label: "Packs"        },
+  { href: "/shop?category=individuals", label: "Individuals"  },
 ];
 
 export function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled,     setScrolled]     = useState(false);
+  const [mobileOpen,   setMobileOpen]   = useState(false);
   const [stickersOpen, setStickersOpen] = useState(false);
+  const [shopDropdown, setShopDropdown] = useState(false);
+  const shopRef = useRef<HTMLDivElement>(null);
   const { count, openCart } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 48);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (shopRef.current && !shopRef.current.contains(e.target as Node)) {
+        setShopDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const closeMobile = () => {
@@ -50,16 +62,71 @@ export function Nav() {
             className="hidden md:flex items-center gap-8"
             aria-label="Primary navigation"
           >
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="text-sm font-medium transition-opacity hover:opacity-55"
-                style={{ color: "var(--text)" }}
+            {/* Shop dropdown */}
+            <div
+              ref={shopRef}
+              className="relative"
+              onMouseEnter={() => setShopDropdown(true)}
+              onMouseLeave={() => setShopDropdown(false)}
+            >
+              <button
+                onClick={() => setShopDropdown((v) => !v)}
+                className="flex items-center gap-1 text-sm font-medium transition-opacity hover:opacity-55"
+                style={{ color: "var(--text)", background: "none", border: "none", cursor: "pointer" }}
+                aria-haspopup="true"
+                aria-expanded={shopDropdown}
               >
-                {label}
-              </Link>
-            ))}
+                Shop
+                <ChevronDown
+                  size={13}
+                  className="transition-transform duration-200"
+                  style={{ transform: shopDropdown ? "rotate(180deg)" : "none", opacity: 0.6 }}
+                />
+              </button>
+
+              <AnimatePresence>
+                {shopDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 pt-2 z-50"
+                    style={{ minWidth: 148 }}
+                  >
+                    <div
+                      className="flex flex-col py-1.5"
+                      style={{
+                        background: "var(--bg)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "var(--radius-card)",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                      }}
+                    >
+                      {SHOP_LINKS.map(({ href, label }) => (
+                        <Link
+                          key={href}
+                          href={href}
+                          onClick={() => setShopDropdown(false)}
+                          className="px-4 py-2 text-sm transition-opacity hover:opacity-60"
+                          style={{ color: "var(--text)" }}
+                        >
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <Link
+              href="/suggestions"
+              className="text-sm font-medium transition-opacity hover:opacity-55"
+              style={{ color: "var(--text)" }}
+            >
+              Suggestions
+            </Link>
           </nav>
 
           {/* Right controls */}
@@ -150,7 +217,7 @@ export function Nav() {
               role="navigation"
               aria-label="Mobile navigation"
             >
-              {/* Stickers accordion */}
+              {/* Shop accordion — 3 clean options */}
               <div style={{ borderBottom: "1px solid var(--border)" }}>
                 <button
                   onClick={() => setStickersOpen((v) => !v)}
@@ -158,7 +225,7 @@ export function Nav() {
                   style={{ color: "var(--text)", background: "none", border: "none", cursor: "pointer" }}
                   aria-expanded={stickersOpen}
                 >
-                  Stickers
+                  Shop
                   <span
                     className="transition-transform duration-200"
                     style={{
@@ -179,19 +246,24 @@ export function Nav() {
                       className="py-2 pl-4 text-sm transition-opacity hover:opacity-60"
                       style={{ color: "var(--text-muted)" }}
                     >
-                      All designs
+                      All Stickers
                     </Link>
-                    {CATEGORY_ORDER.map((key) => (
-                      <Link
-                        key={key}
-                        href={`/shop?category=${key}`}
-                        onClick={closeMobile}
-                        className="py-2 pl-4 text-sm transition-opacity hover:opacity-60"
-                        style={{ color: "var(--text-muted)" }}
-                      >
-                        {CATEGORY_LABELS[key]}
-                      </Link>
-                    ))}
+                    <Link
+                      href="/shop?category=packs"
+                      onClick={closeMobile}
+                      className="py-2 pl-4 text-sm transition-opacity hover:opacity-60"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Packs
+                    </Link>
+                    <Link
+                      href="/shop?category=individuals"
+                      onClick={closeMobile}
+                      className="py-2 pl-4 text-sm transition-opacity hover:opacity-60"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Individuals
+                    </Link>
                   </div>
                 )}
               </div>
