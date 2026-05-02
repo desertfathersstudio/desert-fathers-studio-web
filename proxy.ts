@@ -3,7 +3,37 @@ import { NextRequest, NextResponse } from "next/server";
 
 const WHITELISTED_EMAILS = ["desertfathersstudio@gmail.com"];
 
+const ALLOWED_ORIGINS = [
+  "https://desertfathersstudio.com",
+  "https://www.desertfathersstudio.com",
+  "https://desert-fathers-studio-web.vercel.app",
+];
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const origin = request.headers.get("origin") ?? "";
+  const isDev  = process.env.NODE_ENV === "development";
+
+  // ── CORS on API routes ────────────────────────────────────────────────
+  if (pathname.startsWith("/api/")) {
+    if (pathname === "/api/webhooks/stripe") {
+      return NextResponse.next();
+    }
+    const originOk = !origin || isDev || ALLOWED_ORIGINS.includes(origin);
+    if (!originOk) {
+      console.warn("[SECURITY] Blocked CORS request from:", origin, "to", pathname);
+      return new NextResponse(null, { status: 403 });
+    }
+    const res = NextResponse.next();
+    if (origin && (isDev || ALLOWED_ORIGINS.includes(origin))) {
+      res.headers.set("Access-Control-Allow-Origin", origin);
+      res.headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+      res.headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization,x-admin-key");
+      res.headers.set("Vary", "Origin");
+    }
+    return res;
+  }
+
   const host    = request.headers.get("host") ?? "";
   const url     = request.nextUrl.clone();
   const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
