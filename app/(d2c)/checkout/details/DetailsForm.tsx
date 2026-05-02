@@ -195,6 +195,7 @@ export function DetailsForm() {
   const [suggestions,     setSuggestions]     = useState<GmPrediction[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [placesStatus,    setPlacesStatus]    = useState<string | null>(null);
+  const [placesReady,     setPlacesReady]     = useState<"no-key"|"loading"|"ready"|"timeout">("loading");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [touched,     setTouched]     = useState<Set<string>>(new Set());
@@ -203,15 +204,25 @@ export function DetailsForm() {
 
   const touch = (f: string) => setTouched((p) => new Set(p).add(f));
 
-  // Load Google Maps Places script once
+  // Load Google Maps Places script once, then poll until ready
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-    if (!key || document.getElementById("gm-places-script")) return;
-    const s = document.createElement("script");
-    s.id = "gm-places-script";
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
-    s.async = true;
-    document.head.appendChild(s);
+    if (!key) { setPlacesReady("no-key"); return; }
+    if (!document.getElementById("gm-places-script")) {
+      const s = document.createElement("script");
+      s.id = "gm-places-script";
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    let attempts = 0;
+    const iv = setInterval(() => {
+      attempts++;
+      const gm = (window as unknown as { google?: Gm }).google;
+      if (gm?.maps?.places) { setPlacesReady("ready"); clearInterval(iv); }
+      else if (attempts >= 20) { setPlacesReady("timeout"); clearInterval(iv); }
+    }, 500);
+    return () => clearInterval(iv);
   }, []);
 
   // Debounced suggestions fetch
@@ -478,11 +489,13 @@ export function DetailsForm() {
                 value={addrLine1} onChange={setAddrLine1}
                 onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); touch("addrLine1"); }}
                 placeholder="123 Main St" error={line1Error} />
-              {placesStatus && placesStatus !== "ZERO_RESULTS" && (
-                <p className="text-[11px] mt-1" style={{ color: "#c0392b" }}>
-                  Address suggestions unavailable ({placesStatus})
-                </p>
-              )}
+              <p className="text-[11px] mt-1" style={{ color: placesReady === "ready" ? "var(--text-muted)" : "#c0392b" }}>
+                {placesReady === "no-key"  && "Places: no API key"}
+                {placesReady === "loading" && "Places: loading…"}
+                {placesReady === "timeout" && "Places: script failed to load (check CSP or key)"}
+                {placesReady === "ready"   && "Places: ready"}
+                {placesReady === "ready" && placesStatus && placesStatus !== "ZERO_RESULTS" && ` · API error: ${placesStatus}`}
+              </p>
               {showSuggestions && suggestions.length > 0 && (
                 <ul
                   className="absolute z-50 w-full mt-1 overflow-hidden"
