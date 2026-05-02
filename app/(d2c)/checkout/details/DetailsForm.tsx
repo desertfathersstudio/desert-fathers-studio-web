@@ -194,6 +194,7 @@ export function DetailsForm() {
 
   const [suggestions,     setSuggestions]     = useState<GmPrediction[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [placesStatus,    setPlacesStatus]    = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [touched,     setTouched]     = useState<Set<string>>(new Set());
@@ -219,7 +220,8 @@ export function DetailsForm() {
     if (addrLine1.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
     debounceRef.current = setTimeout(() => {
       const gm = (window as unknown as { google?: Gm }).google;
-      if (!gm?.maps?.places) return;
+      if (!gm?.maps?.places) { setPlacesStatus("script-not-loaded"); return; }
+      setPlacesStatus(null);
       const svc = new gm.maps.places.AutocompleteService();
       svc.getPlacePredictions(
         { input: addrLine1, componentRestrictions: { country: "us" }, types: ["address"] },
@@ -227,9 +229,11 @@ export function DetailsForm() {
           if (status === "OK" && predictions) {
             setSuggestions(predictions);
             setShowSuggestions(true);
+            setPlacesStatus(null);
           } else {
             setSuggestions([]);
             setShowSuggestions(false);
+            setPlacesStatus(status);
           }
         }
       );
@@ -474,6 +478,11 @@ export function DetailsForm() {
                 value={addrLine1} onChange={setAddrLine1}
                 onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); touch("addrLine1"); }}
                 placeholder="123 Main St" error={line1Error} />
+              {placesStatus && placesStatus !== "ZERO_RESULTS" && (
+                <p className="text-[11px] mt-1" style={{ color: "#c0392b" }}>
+                  Address suggestions unavailable ({placesStatus})
+                </p>
+              )}
               {showSuggestions && suggestions.length > 0 && (
                 <ul
                   className="absolute z-50 w-full mt-1 overflow-hidden"
