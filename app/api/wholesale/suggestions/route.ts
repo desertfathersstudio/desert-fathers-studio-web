@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
+import { getSessionAccountId } from "@/lib/wholesale/validate-session";
 
 export async function POST(req: NextRequest) {
+  const sessionAccountId = getSessionAccountId(req);
+  if (!sessionAccountId || !ALL_ACCOUNT_IDS.has(sessionAccountId)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: {
-    accountId: string;
     type: string;
     priority: string;
     relatedDesign: string;
@@ -16,10 +21,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const { accountId, type, priority, relatedDesign, message } = body;
-  if (!accountId || !ALL_ACCOUNT_IDS.has(accountId)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { type, priority, relatedDesign, message } = body;
+  const accountId = sessionAccountId; // SECURITY: session-derived
   if (!message?.trim()) {
     return NextResponse.json({ error: "Message is required" }, { status: 400 });
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
+import { getSessionAccountId } from "@/lib/wholesale/validate-session";
 import {
   getPackType,
   isStandalonePackDesign,
@@ -11,8 +12,13 @@ import {
 import type { WholesaleProduct } from "@/types/wholesale";
 
 export async function GET(req: NextRequest) {
-  const accountId = req.nextUrl.searchParams.get("accountId");
-  if (!accountId || !ALL_ACCOUNT_IDS.has(accountId)) {
+  // SECURITY: validate server-side session cookie
+  const sessionAccountId = getSessionAccountId(req);
+  if (!sessionAccountId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const accountId = sessionAccountId; // use session, not client-supplied param
+  if (!ALL_ACCOUNT_IDS.has(accountId)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
+import { getSessionAccountId } from "@/lib/wholesale/validate-session";
 import type { OrderStage } from "@/types/wholesale";
 
 type Params = { params: Promise<{ orderId: string }> };
@@ -10,14 +11,16 @@ const ADMIN_EMAIL = "desertfathersstudio@gmail.com";
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { orderId } = await params;
 
-  // Two auth paths: wholesale user (accountId) or admin (adminKey header)
-  const accountId = req.nextUrl.searchParams.get("accountId");
+  // Two auth paths: wholesale session cookie, or admin key header
   const adminKey = req.headers.get("x-admin-key");
   const isAdmin = adminKey && adminKey === process.env.ADMIN_SECRET_KEY;
 
-  if (!isAdmin && (!accountId || !ALL_ACCOUNT_IDS.has(accountId))) {
+  const sessionAccountId = isAdmin ? null : getSessionAccountId(req);
+
+  if (!isAdmin && (!sessionAccountId || !ALL_ACCOUNT_IDS.has(sessionAccountId))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const accountId = sessionAccountId ?? "admin";
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch {

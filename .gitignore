@@ -8,9 +8,12 @@ out/
 # Production
 build/
 
-# Env
+# Env — never commit any of these
+.env
 .env.local
 .env.*.local
+.env.production
+.env.staging
 
 # Debug
 npm-debug.log*
