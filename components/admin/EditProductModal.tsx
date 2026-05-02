@@ -3,7 +3,6 @@
 import { useState, useRef, useTransition } from "react";
 import { X, Upload, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { adminUpdateProduct, adminArchiveProduct } from "@/app/admin/inventory/actions";
 import type { InventoryStatus, ProductWithInventory, ReviewStatus } from "@/lib/admin/types";
 
@@ -24,7 +23,6 @@ export function EditProductModal({
   onUpdated: (p: ProductWithInventory) => void;
   onDeleted: (id: string) => void;
 }) {
-  const sb = createSupabaseBrowser();
   const fileRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -41,15 +39,13 @@ export function EditProductModal({
   async function handleImageUpload(file: File) {
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() ?? "png";
-      const path = `${product.sku.toLowerCase()}-${Date.now()}.${ext}`;
-      const { error: upErr } = await sb.storage
-        .from("products")
-        .upload(path, file, { upsert: true, contentType: file.type });
-      if (upErr) throw upErr;
-
-      const { data } = sb.storage.from("products").getPublicUrl(path);
-      setImageUrl(data.publicUrl);
+      const form = new FormData();
+      form.append("file", file);
+      form.append("sku", product.sku);
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Upload failed");
+      setImageUrl(json.url);
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Upload failed");
     } finally {

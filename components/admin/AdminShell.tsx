@@ -221,7 +221,6 @@ export function AdminShell({
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          marginLeft: 0,
           minWidth: 0,
         }}
         className="md:ml-[248px]"

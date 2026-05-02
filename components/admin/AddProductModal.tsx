@@ -50,14 +50,13 @@ export function AddProductModal({
     }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() ?? "png";
-      const path = `${sku.toLowerCase()}-${Date.now()}.${ext}`;
-      const { error: upErr } = await sb.storage
-        .from("products")
-        .upload(path, file, { upsert: true, contentType: file.type });
-      if (upErr) throw upErr;
-      const { data } = sb.storage.from("products").getPublicUrl(path);
-      setImageUrl(data.publicUrl);
+      const form = new FormData();
+      form.append("file", file);
+      form.append("sku", sku.trim());
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Upload failed");
+      setImageUrl(json.url);
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Upload failed");
     } finally {
