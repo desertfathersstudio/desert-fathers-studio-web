@@ -4,19 +4,7 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { Trash2, Plus, Minus } from "lucide-react";
 import type { WholesaleProduct, WholesaleCartLine } from "@/types/wholesale";
-import {
-  unitPriceForSku,
-  WS_PRICE_HWP_PACK,
-  WS_PRICE_RP_PACK,
-  WS_PRICE_SINGLE,
-} from "@/lib/wholesale/pricing";
-
-const ABBEY_NAMES = [
-  "Fr. Arsanios Abba Moses",
-  "Fr. Karas Abba Moses",
-  "Fr. Zosima Abba Moses",
-  "Br. Abanob Abba Moses",
-];
+import { unitPriceForSku } from "@/lib/wholesale/pricing";
 
 const QTY_OPTIONS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
@@ -24,13 +12,15 @@ interface Props {
   products: WholesaleProduct[];
   cart: WholesaleCartLine[];
   onCartChange: (lines: WholesaleCartLine[]) => void;
-  session: { accountId: string; displayName: string; notifyEmail: string };
+  session: { accountId: string; displayName: string; notifyEmail: string; contactNames: string[]; priceSingle: number; priceRpPack: number; priceHwpPack: number };
   onOrderSubmitted: () => void;
 }
 
 type AddMode = "single" | "bulk";
 
 export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitted }: Props) {
+  const { priceSingle, priceRpPack, priceHwpPack, contactNames } = session;
+
   const [mode, setMode] = useState<AddMode>("single");
   const [selectedSku, setSelectedSku] = useState("");
   const [qty, setQty] = useState(25);
@@ -68,8 +58,8 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   // Virtual pack items — not DB rows, handled separately
   const VIRTUAL_PACKS = [
-    { sku: "RP_PACK", name: "Resurrection Pack", category: "Resurrection Pack", size: '2"', packType: "RP" as const, unitPrice: WS_PRICE_RP_PACK, imageUrl: "/stickers/Resurrection Pack BACK.png" },
-    { sku: "HWP_PACK", name: "Holy Week Pack", category: "Holy Week Pack", size: '2"', packType: "HWP" as const, unitPrice: WS_PRICE_HWP_PACK, imageUrl: "/stickers/Holy Week Pack BACK.png" },
+    { sku: "RP_PACK", name: "Resurrection Pack", category: "Resurrection Pack", size: '2"', packType: "RP" as const, unitPrice: priceRpPack, imageUrl: "/stickers/Resurrection Pack BACK.png" },
+    { sku: "HWP_PACK", name: "Holy Week Pack", category: "Holy Week Pack", size: '2"', packType: "HWP" as const, unitPrice: priceHwpPack, imageUrl: "/stickers/Holy Week Pack BACK.png" },
   ];
 
   const selectedProduct = useMemo(
@@ -130,12 +120,12 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
     // Virtual pack items — may not exist as DB rows
     if (selectedSku === "RP_PACK") {
-      addToCart({ productId: "RP_PACK", designName: "Resurrection Pack", category: "Resurrection Pack", size: '2"', imageUrl: "/stickers/Resurrection Pack BACK.png", qty, unitPrice: WS_PRICE_RP_PACK, asap });
+      addToCart({ productId: "RP_PACK", designName: "Resurrection Pack", category: "Resurrection Pack", size: '2"', imageUrl: "/stickers/Resurrection Pack BACK.png", qty, unitPrice: priceRpPack, asap });
       toast.success("Resurrection Pack added");
       return;
     }
     if (selectedSku === "HWP_PACK") {
-      addToCart({ productId: "HWP_PACK", designName: "Holy Week Pack", category: "Holy Week Pack", size: '2"', imageUrl: "/stickers/Holy Week Pack BACK.png", qty, unitPrice: WS_PRICE_HWP_PACK, asap });
+      addToCart({ productId: "HWP_PACK", designName: "Holy Week Pack", category: "Holy Week Pack", size: '2"', imageUrl: "/stickers/Holy Week Pack BACK.png", qty, unitPrice: priceHwpPack, asap });
       toast.success("Holy Week Pack added");
       return;
     }
@@ -149,7 +139,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
       size: p.size,
       imageUrl: p.imageUrl,
       qty,
-      unitPrice: unitPriceForSku(p.sku),
+      unitPrice: priceSingle,
       asap,
     });
     toast.success(`${p.name} added`);
@@ -174,7 +164,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
         size: p.size,
         imageUrl: p.imageUrl,
         qty: bulkQty,
-        unitPrice: unitPriceForSku(p.sku),
+        unitPrice: priceSingle,
         asap: false,
       });
     }
@@ -228,9 +218,8 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     .filter((l) => l.productId === "HWP_PACK" || l.productId === "RP_PACK")
     .reduce((s, l) => s + l.qty, 0);
 
-  const defaultName = session.displayName;
   const defaultEmail = session.notifyEmail;
-  const [nameChoice, setNameChoice] = useState<string>(ABBEY_NAMES[0]);
+  const [nameChoice, setNameChoice] = useState<string>(contactNames[0] ?? "");
   const [customName, setCustomName] = useState("");
   const [emailChoice, setEmailChoice] = useState<"default" | "other">("default");
   const [customEmail, setCustomEmail] = useState("");
@@ -336,7 +325,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
             onChange={(e) => setNameChoice(e.target.value)}
             style={{ ...inputStyle, width: "100%" }}
           >
-            {ABBEY_NAMES.map((n) => <option key={n} value={n}>{n}</option>)}
+            {contactNames.map((n) => <option key={n} value={n}>{n}</option>)}
             <option value="other">Other…</option>
           </select>
           {nameChoice === "other" && (
@@ -428,8 +417,8 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                   style={{ ...inputStyle, width: "100%" }}
                 >
                   <option value="">— Select a design —</option>
-                  <option value="RP_PACK">Resurrection Pack — ${WS_PRICE_RP_PACK.toFixed(2)}/set</option>
-                  <option value="HWP_PACK">Holy Week Pack — ${WS_PRICE_HWP_PACK.toFixed(2)}/set</option>
+                  <option value="RP_PACK">Resurrection Pack — ${priceRpPack.toFixed(2)}/set</option>
+                  <option value="HWP_PACK">Holy Week Pack — ${priceHwpPack.toFixed(2)}/set</option>
                   <option value="" disabled>──────────</option>
                   {orderableProducts
                     .filter((p) => !p.isPackProduct)
@@ -467,7 +456,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
             {/* Price note */}
             <p style={{ fontSize: "0.77rem", color: "var(--text-muted)", margin: "0 0 0.4rem" }}>
-              ${WS_PRICE_SINGLE.toFixed(2)}/sticker &nbsp;|&nbsp; Resurrection Pack $3.00 &nbsp;|&nbsp; Holy Week Pack $7.00
+              ${priceSingle.toFixed(2)}/sticker &nbsp;|&nbsp; Resurrection Pack ${priceRpPack.toFixed(2)} &nbsp;|&nbsp; Holy Week Pack ${priceHwpPack.toFixed(2)}
             </p>
             <p style={{ fontSize: "0.77rem", color: "var(--text-muted)", margin: "0 0 0.75rem" }}>
               🔔 Reminder: Order when you have ~10 left — delivery takes ~2 weeks.

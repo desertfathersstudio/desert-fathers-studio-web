@@ -87,6 +87,10 @@ export interface WholesaleSession {
   notifyEmail: string;
   hasPendingTab: boolean;
   canEditFulfillment: boolean;
+  contactNames: string[];
+  priceSingle: number;
+  priceRpPack: number;
+  priceHwpPack: number;
 }
 
 export const SESSION_KEY = "ws_session";

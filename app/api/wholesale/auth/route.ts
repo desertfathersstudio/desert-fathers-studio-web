@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccountByPin } from "@/lib/wholesale/accounts-server";
 import { createSessionToken, sessionCookieOptions } from "@/lib/wholesale/session";
+import { WS_PRICE_SINGLE, WS_PRICE_RP_PACK, WS_PRICE_HWP_PACK } from "@/lib/wholesale/pricing";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -37,6 +38,10 @@ export async function POST(req: NextRequest) {
     notifyEmail:        account.notifyEmail,
     hasPendingTab:      account.hasPendingTab,
     canEditFulfillment: account.canEditFulfillment,
+    contactNames:       account.contactNames,
+    priceSingle:        account.priceSingle  ?? WS_PRICE_SINGLE,
+    priceRpPack:        account.priceRpPack  ?? WS_PRICE_RP_PACK,
+    priceHwpPack:       account.priceHwpPack ?? WS_PRICE_HWP_PACK,
   });
 
   res.cookies.set(sessionCookieOptions(token));
