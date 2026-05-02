@@ -7,27 +7,8 @@ import {
   Loader2, Lock, MapPin, RotateCcw, ArrowRight, ChevronDown, Truck,
 } from "lucide-react";
 
-// Minimal Google Places typings (no @types/google.maps needed)
 interface GmPrediction { place_id: string; description: string; }
 interface GmAddressComponent { types: string[]; long_name: string; short_name: string; }
-interface Gm {
-  maps: {
-    places: {
-      AutocompleteService: new() => {
-        // New Maps JS API returns a Promise (callback form is silently dropped)
-        getPlacePredictions(
-          req: { input: string; componentRestrictions: { country: string }; types: string[] }
-        ): Promise<{ predictions: GmPrediction[] }>;
-      };
-      PlacesService: new(el: HTMLElement) => {
-        getDetails(
-          req: { placeId: string; fields: string[] },
-          cb: (r: { address_components?: GmAddressComponent[] } | null, s: string) => void
-        ): void;
-      };
-    };
-  };
-}
 import { FREE_SHIPPING_THRESHOLD_DOLLARS } from "@/lib/shipping";
 import { useCart } from "@/lib/cart";
 
@@ -192,8 +173,6 @@ export function DetailsForm() {
 
   const [suggestions,     setSuggestions]     = useState<GmPrediction[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [placesStatus,    setPlacesStatus]    = useState<string | null>(null);
-  const [placesReady,     setPlacesReady]     = useState<"no-key"|"loading"|"ready"|"timeout">("loading");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [touched,     setTouched]     = useState<Set<string>>(new Set());
@@ -202,80 +181,45 @@ export function DetailsForm() {
 
   const touch = (f: string) => setTouched((p) => new Set(p).add(f));
 
-  // Load Google Maps Places script once, then poll until ready
-  useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-    if (!key) { setPlacesReady("no-key"); return; }
-    if (!document.getElementById("gm-places-script")) {
-      const s = document.createElement("script");
-      s.id = "gm-places-script";
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
-      s.async = true;
-      document.head.appendChild(s);
-    }
-    let attempts = 0;
-    const iv = setInterval(() => {
-      attempts++;
-      const gm = (window as unknown as { google?: Gm }).google;
-      if (gm?.maps?.places) { setPlacesReady("ready"); clearInterval(iv); }
-      else if (attempts >= 20) { setPlacesReady("timeout"); clearInterval(iv); }
-    }, 500);
-    return () => clearInterval(iv);
-  }, []);
-
-  // Debounced suggestions fetch
+  // Debounced suggestions via server-side REST route (no Maps JS SDK needed)
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (addrLine1.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
     debounceRef.current = setTimeout(() => {
-      const gm = (window as unknown as { google?: Gm }).google;
-      if (!gm?.maps?.places) { setPlacesStatus("script-not-loaded"); return; }
-      const svc = new gm.maps.places.AutocompleteService();
-      svc.getPlacePredictions(
-        { input: addrLine1, componentRestrictions: { country: "us" }, types: ["address"] }
-      ).then(({ predictions }) => {
-        if (predictions && predictions.length > 0) {
-          setSuggestions(predictions);
-          setShowSuggestions(true);
-          setPlacesStatus(null);
-        } else {
-          setSuggestions([]);
-          setShowSuggestions(false);
-          setPlacesStatus("ZERO_RESULTS");
-        }
-      }).catch((err: unknown) => {
-        setSuggestions([]);
-        setShowSuggestions(false);
-        setPlacesStatus("ERR:" + String(err));
-      });
+      fetch(`/api/places-autocomplete?input=${encodeURIComponent(addrLine1)}`)
+        .then((r) => r.json() as Promise<{ predictions: GmPrediction[] }>)
+        .then(({ predictions }) => {
+          setSuggestions(predictions ?? []);
+          setShowSuggestions((predictions ?? []).length > 0);
+        })
+        .catch(() => { setSuggestions([]); setShowSuggestions(false); });
     }, 300);
   }, [addrLine1]);
 
   const handleSelectSuggestion = useCallback((placeId: string) => {
     setShowSuggestions(false);
     setSuggestions([]);
-    const gm = (window as unknown as { google?: Gm }).google;
-    if (!gm?.maps?.places) return;
-    const tempDiv = document.createElement("div");
-    const svc = new gm.maps.places.PlacesService(tempDiv);
-    svc.getDetails({ placeId, fields: ["address_components"] }, (place, status) => {
-      if (status !== "OK" || !place?.address_components) return;
-      let streetNum = "", route = "", city = "", state = "", zip = "";
-      for (const c of place.address_components) {
-        if (c.types.includes("street_number")) streetNum = c.long_name;
-        else if (c.types.includes("route"))    route = c.long_name;
-        else if (c.types.includes("locality")) city = c.long_name;
-        else if (c.types.includes("sublocality_level_1") && !city) city = c.long_name;
-        else if (c.types.includes("administrative_area_level_1")) state = c.short_name;
-        else if (c.types.includes("postal_code")) zip = c.long_name;
-      }
-      const street = [streetNum, route].filter(Boolean).join(" ");
-      if (street) setAddrLine1(street);
-      if (city)  setAddrCity(city);
-      if (state) setAddrState(state);
-      if (zip)   setAddrZip(zip);
-      touch("addrLine1"); touch("addrCity"); touch("addrState"); touch("addrZip");
-    });
+    fetch(`/api/places-details?place_id=${encodeURIComponent(placeId)}`)
+      .then((r) => r.json() as Promise<{ result: { address_components?: GmAddressComponent[] } | null }>)
+      .then(({ result }) => {
+        if (!result?.address_components) return;
+        let streetNum = "", route = "", city = "", state = "", zip = "";
+        for (const c of result.address_components) {
+          if (c.types.includes("street_number")) streetNum = c.long_name;
+          else if (c.types.includes("route"))    route = c.long_name;
+          else if (c.types.includes("locality")) city = c.long_name;
+          else if (c.types.includes("sublocality_level_1") && !city) city = c.long_name;
+          else if (c.types.includes("administrative_area_level_1")) state = c.short_name;
+          else if (c.types.includes("postal_code")) zip = c.long_name;
+        }
+        const street = [streetNum, route].filter(Boolean).join(" ");
+        if (street) setAddrLine1(street);
+        if (city)   setAddrCity(city);
+        if (state)  setAddrState(state);
+        if (zip)    setAddrZip(zip);
+        touch("addrLine1"); touch("addrCity"); touch("addrState"); touch("addrZip");
+      })
+      .catch(() => {/* ignore */});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Restore saved fields from sessionStorage
@@ -489,12 +433,6 @@ export function DetailsForm() {
                 value={addrLine1} onChange={setAddrLine1}
                 onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); touch("addrLine1"); }}
                 placeholder="123 Main St" error={line1Error} />
-              <p className="text-[11px] mt-1" style={{ color: "#c0392b" }}>
-                {placesReady === "no-key"  && "Places: no API key"}
-                {placesReady === "loading" && "Places: loading…"}
-                {placesReady === "timeout" && "Places: script failed to load"}
-                {placesReady === "ready"   && `Places: ready · len=${addrLine1.length} status=${placesStatus ?? "none"} sug=${suggestions.length} show=${showSuggestions}`}
-              </p>
               {showSuggestions && suggestions.length > 0 && (
                 <ul
                   className="absolute z-50 w-full mt-1 overflow-hidden"
