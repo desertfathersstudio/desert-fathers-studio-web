@@ -429,7 +429,7 @@ export function DetailsForm() {
 
             {/* Address with Places autocomplete dropdown */}
             <div className="relative">
-              <Field id="addrLine1" label="Address" required autoComplete="off"
+              <Field id="addrLine1" label="Address" required autoComplete="new-password"
                 value={addrLine1} onChange={setAddrLine1}
                 onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); touch("addrLine1"); }}
                 placeholder="123 Main St" error={line1Error} />
