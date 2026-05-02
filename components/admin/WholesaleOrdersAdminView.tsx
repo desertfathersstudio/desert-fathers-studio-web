@@ -16,7 +16,7 @@ import {
 const PORTAL_CONFIG: Record<string, { label: string; short: string; color: string; bg: string; border: string; badge: string; badgeText: string }> = {
   abbey: {
     label: "St. Moses Abbey",
-    short: "Abbey",
+    short: "TX Abbey",
     color: "#6B1F2A",
     bg: "#fdf2f4",
     border: "#e8b4bc",
@@ -25,7 +25,7 @@ const PORTAL_CONFIG: Record<string, { label: string; short: string; color: strin
   },
   demiana: {
     label: "St. Demiana Convent",
-    short: "Demiana",
+    short: "GA Convent",
     color: "#1e40af",
     bg: "#eff6ff",
     border: "#93c5fd",
