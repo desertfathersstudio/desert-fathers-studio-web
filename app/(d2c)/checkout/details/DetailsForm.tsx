@@ -49,15 +49,19 @@ function labelEl(text: string, required?: boolean) {
 
 function Field({
   id, label, type = "text", value, onChange, onBlur,
-  placeholder, required, hint, error, autoComplete, maxLength, inputRef,
+  placeholder, required, hint, error, autoComplete, maxLength, inputRef, uncontrolled,
 }: {
   id: string; label: string; type?: string; value: string;
   onChange: (v: string) => void; onBlur?: () => void;
   placeholder?: string; required?: boolean; hint?: string;
   error?: string; autoComplete?: string; maxLength?: number;
   inputRef?: React.RefObject<HTMLInputElement | null>;
+  uncontrolled?: boolean;
 }) {
   const hasError = Boolean(error);
+  // uncontrolled=true: omit value prop so third-party libraries (Google Places) can own
+  // the DOM value. State is synced via onChange + imperative ref writes by the parent.
+  const valueProps = uncontrolled ? {} : { value };
   return (
     <div>
       {labelEl(label, required)}
@@ -65,7 +69,7 @@ function Field({
         ref={inputRef as React.RefObject<HTMLInputElement>}
         id={id} type={type}
         autoComplete={autoComplete ?? id}
-        value={value}
+        {...valueProps}
         maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
         onBlur={(e) => {
@@ -167,6 +171,14 @@ export function DetailsForm() {
   const [addrZip,   setAddrZip]   = useState("");
 
   const addrLine1Ref = useRef<HTMLInputElement>(null);
+
+  // Push state into the uncontrolled addrLine1 DOM node when it changes externally
+  // (sessionStorage restore or Places selection). User typing updates state via onChange
+  // and already has the correct DOM value — this guards the other direction only.
+  useEffect(() => {
+    const el = addrLine1Ref.current;
+    if (el && el.value !== addrLine1) el.value = addrLine1;
+  }, [addrLine1]);
 
   const [notes,         setNotes]         = useState("");
   const [showNotes,     setShowNotes]     = useState(false);
@@ -432,7 +444,7 @@ export function DetailsForm() {
 
             <Field id="addrLine1" label="Address" required autoComplete="address-line1"
               value={addrLine1} onChange={setAddrLine1} onBlur={() => touch("addrLine1")}
-              placeholder="123 Main St" error={line1Error} inputRef={addrLine1Ref} />
+              placeholder="123 Main St" error={line1Error} inputRef={addrLine1Ref} uncontrolled />
 
             <Field id="addrLine2" label="Apartment, suite, etc." autoComplete="address-line2"
               value={addrLine2} onChange={setAddrLine2} placeholder="Apt 4B (optional)" />
