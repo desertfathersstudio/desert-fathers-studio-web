@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   url.searchParams.set("key", key);
 
   const res = await fetch(url.toString());
-  const data = await res.json() as { predictions?: { place_id: string; description: string }[] };
+  const data = await res.json() as { predictions?: { place_id: string; description: string }[]; status?: string; error_message?: string };
 
-  return NextResponse.json({ predictions: data.predictions ?? [] });
+  return NextResponse.json({ predictions: data.predictions ?? [], status: data.status, error_message: data.error_message });
 }
