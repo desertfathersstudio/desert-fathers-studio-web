@@ -489,12 +489,11 @@ export function DetailsForm() {
                 value={addrLine1} onChange={setAddrLine1}
                 onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); touch("addrLine1"); }}
                 placeholder="123 Main St" error={line1Error} />
-              <p className="text-[11px] mt-1" style={{ color: placesReady === "ready" ? "var(--text-muted)" : "#c0392b" }}>
+              <p className="text-[11px] mt-1" style={{ color: "#c0392b" }}>
                 {placesReady === "no-key"  && "Places: no API key"}
                 {placesReady === "loading" && "Places: loading…"}
-                {placesReady === "timeout" && "Places: script failed to load (check CSP or key)"}
-                {placesReady === "ready"   && "Places: ready"}
-                {placesReady === "ready" && placesStatus && placesStatus !== "ZERO_RESULTS" && ` · API error: ${placesStatus}`}
+                {placesReady === "timeout" && "Places: script failed to load"}
+                {placesReady === "ready"   && `Places: ready · last status: ${placesStatus ?? "none yet"}`}
               </p>
               {showSuggestions && suggestions.length > 0 && (
                 <ul
