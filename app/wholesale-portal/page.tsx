@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ACCOUNT_MAPPING } from "@/config/wholesale-accounts";
+// SECURITY: ACCOUNT_MAPPING removed — PIN verification now happens server-side
+// via /api/wholesale/auth (which sets an httpOnly session cookie).
 import { SESSION_KEY } from "@/types/wholesale";
 import type { WholesaleSession } from "@/types/wholesale";
 
@@ -13,6 +14,7 @@ export default function WholesalePinPage() {
   const [shake, setShake] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [debouncing, setDebouncing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,47 +35,70 @@ export default function WholesalePinPage() {
   }, []);
 
   const handleSubmit = useCallback(
-    (candidate: string) => {
-      if (debouncing) return;
+    async (candidate: string) => {
+      if (debouncing || loading) return;
+      setLoading(true);
 
-      const account = ACCOUNT_MAPPING[candidate];
-      if (!account) {
-        setError("Incorrect PIN. Please try again.");
-        setPin("");
-        triggerShake();
+      try {
+        const res = await fetch("/api/wholesale/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin: candidate }),
+        });
 
-        const newAttempts = attempts + 1;
-        setAttempts(newAttempts);
-        if (newAttempts >= 3) {
-          setDebouncing(true);
-          debounceTimer.current = setTimeout(() => {
-            setDebouncing(false);
-          }, 1000);
+        if (res.status === 429) {
+          setError("Too many attempts. Please wait a few minutes.");
+          setPin("");
+          triggerShake();
+          setLoading(false);
+          return;
         }
 
-        setTimeout(() => inputRef.current?.focus(), 50);
-        return;
+        if (!res.ok) {
+          setError("Incorrect PIN. Please try again.");
+          setPin("");
+          triggerShake();
+
+          const newAttempts = attempts + 1;
+          setAttempts(newAttempts);
+          if (newAttempts >= 3) {
+            setDebouncing(true);
+            debounceTimer.current = setTimeout(() => {
+              setDebouncing(false);
+            }, 1000);
+          }
+
+          setTimeout(() => inputRef.current?.focus(), 50);
+          setLoading(false);
+          return;
+        }
+
+        const account = await res.json();
+        const session: WholesaleSession = {
+          accountId:          account.accountId,
+          displayName:        account.displayName,
+          notifyEmail:        account.notifyEmail,
+          hasPendingTab:      account.hasPendingTab,
+          canEditFulfillment: account.canEditFulfillment,
+        };
+        try {
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        } catch {}
+
+        router.replace("/wholesale-portal/dashboard");
+      } catch {
+        setError("Connection error. Please try again.");
+        setPin("");
+        triggerShake();
+        setLoading(false);
       }
-
-      const session: WholesaleSession = {
-        accountId: account.accountId,
-        displayName: account.displayName,
-        notifyEmail: account.notifyEmail,
-        hasPendingTab: account.hasPendingTab,
-        canEditFulfillment: account.canEditFulfillment,
-      };
-      try {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-      } catch {}
-
-      router.replace("/wholesale-portal/dashboard");
     },
-    [attempts, debouncing, router, triggerShake]
+    [attempts, debouncing, loading, router, triggerShake]
   );
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (debouncing) return;
+      if (debouncing || loading) return;
       const val = e.target.value.replace(/\D/g, "").slice(0, 4);
       setPin(val);
       setError("");
@@ -81,7 +106,7 @@ export default function WholesalePinPage() {
         handleSubmit(val);
       }
     },
-    [debouncing, handleSubmit]
+    [debouncing, loading, handleSubmit]
   );
 
   const handleKeyDown = useCallback(
@@ -93,7 +118,7 @@ export default function WholesalePinPage() {
     [pin, handleSubmit]
   );
 
-  const pinReady = pin.length === 4 && !debouncing;
+  const pinReady = pin.length === 4 && !debouncing && !loading;
 
   return (
     <div
@@ -253,7 +278,7 @@ export default function WholesalePinPage() {
               fontFamily: "monospace",
               boxSizing: "border-box",
             }}
-            disabled={debouncing}
+            disabled={debouncing || loading}
           />
         </div>
 
@@ -272,7 +297,7 @@ export default function WholesalePinPage() {
           </p>
         )}
 
-        {debouncing && (
+        {(debouncing || loading) && !error && (
           <p
             style={{
               fontSize: "0.74rem",
@@ -282,7 +307,7 @@ export default function WholesalePinPage() {
               fontFamily: "var(--font-inter)",
             }}
           >
-            Please wait a moment…
+            {loading ? "Verifying…" : "Please wait a moment…"}
           </p>
         )}
 

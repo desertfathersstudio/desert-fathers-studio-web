@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { getAccountById } from "@/config/wholesale-accounts";
+import { getSessionAccountId } from "@/lib/wholesale/validate-session";
 
 export async function GET(req: NextRequest) {
   const productId = req.nextUrl.searchParams.get("productId");
-  const accountId = req.nextUrl.searchParams.get("accountId");
-
-  const account = getAccountById(accountId ?? "");
+  const sessionAccountId = getSessionAccountId(req);
+  if (!sessionAccountId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const account = getAccountById(sessionAccountId);
   if (!account || !account.hasPendingTab) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

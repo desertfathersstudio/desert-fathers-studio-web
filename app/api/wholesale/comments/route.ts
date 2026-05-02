@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { getAccountById } from "@/config/wholesale-accounts";
+import { getSessionAccountId } from "@/lib/wholesale/validate-session";
 
 export async function POST(req: NextRequest) {
-  let body: { accountId: string; productId: string; comment: string };
+  const sessionAccountId = getSessionAccountId(req);
+  if (!sessionAccountId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: { productId: string; comment: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const { accountId, productId, comment } = body;
-  const account = getAccountById(accountId);
+  const { productId, comment } = body;
+  const account = getAccountById(sessionAccountId); // SECURITY: session, not body
   if (!account || !account.hasPendingTab) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

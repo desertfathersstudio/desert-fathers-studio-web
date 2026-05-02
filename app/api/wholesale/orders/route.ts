@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
+import { getSessionAccountId } from "@/lib/wholesale/validate-session";
 import { generateOrderPdf } from "@/lib/wholesale/generate-order-pdf";
 import type { WholesaleOrder, WholesaleOrderItem, OrderStage } from "@/types/wholesale";
 
@@ -34,8 +35,13 @@ async function nextOrderNumber(sb: ReturnType<typeof createSupabaseService>): Pr
 
 
 export async function GET(req: NextRequest) {
-  const accountId = req.nextUrl.searchParams.get("accountId");
-  if (!accountId || !ALL_ACCOUNT_IDS.has(accountId)) {
+  // SECURITY: validate server-side session cookie
+  const sessionAccountId = getSessionAccountId(req);
+  if (!sessionAccountId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const accountId = sessionAccountId;
+  if (!ALL_ACCOUNT_IDS.has(accountId)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -76,22 +82,31 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // SECURITY: validate server-side session cookie
+  const sessionAccountId = getSessionAccountId(req);
+  if (!sessionAccountId || !ALL_ACCOUNT_IDS.has(sessionAccountId)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: unknown;
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { accountId, customerName, customerEmail, items, grandTotal, asap, notes } = body as {
-    accountId: string; customerName: string; customerEmail: string;
+  const { customerName, customerEmail, items, asap, notes } = body as {
+    customerName: string; customerEmail: string;
     items: WholesaleOrderItem[]; grandTotal: number; asap: boolean; notes?: string | null;
   };
+  // SECURITY: use session-derived accountId, ignore any client-supplied one
+  const accountId = sessionAccountId;
 
-  if (!accountId || !ALL_ACCOUNT_IDS.has(accountId)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
   if (!items?.length) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
+  // SECURITY: recalculate grandTotal server-side — never trust client total
+  const grandTotal = Math.round(
+    items.reduce((sum, i) => sum + (Number(i.qty) * Number(i.unitPrice)), 0) * 100
+  ) / 100;
 
   try {
     const sb = createSupabaseService();

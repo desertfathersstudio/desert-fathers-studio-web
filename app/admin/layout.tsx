@@ -20,6 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <>
       {children}
+      {/* XSS-safe: static literal string, no user input */}
       <script
         dangerouslySetInnerHTML={{
           __html: `if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.update())); navigator.serviceWorker.register('/sw.js'); }`,
