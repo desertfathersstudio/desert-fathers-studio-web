@@ -13,6 +13,39 @@ import {
   adminDeleteWholesaleOrder,
 } from "@/app/admin/wholesale/actions";
 
+const PORTAL_CONFIG: Record<string, { label: string; short: string; color: string; bg: string; border: string; badge: string; badgeText: string }> = {
+  abbey: {
+    label: "St. Moses Abbey",
+    short: "Abbey",
+    color: "#6B1F2A",
+    bg: "#fdf2f4",
+    border: "#e8b4bc",
+    badge: "#fdf2f4",
+    badgeText: "#6B1F2A",
+  },
+  demiana: {
+    label: "St. Demiana Convent",
+    short: "Demiana",
+    color: "#1e40af",
+    bg: "#eff6ff",
+    border: "#93c5fd",
+    badge: "#eff6ff",
+    badgeText: "#1e40af",
+  },
+};
+
+function portalConfig(accountId: string) {
+  return PORTAL_CONFIG[accountId] ?? {
+    label: accountId,
+    short: accountId,
+    color: "#6b7280",
+    bg: "#f9fafb",
+    border: "#d1d5db",
+    badge: "#f3f4f6",
+    badgeText: "#374151",
+  };
+}
+
 const STAGE_COLOR: Record<OrderStage, { bg: string; text: string; dot: string }> = {
   Pending:    { bg: "#f1f5f9", text: "#475569", dot: "#94a3b8" },
   Processing: { bg: "#dbeafe", text: "#1e40af", dot: "#3b82f6" },
@@ -29,6 +62,7 @@ export function WholesaleOrdersAdminView() {
   const [fetchError, setFetchError] = useState("");
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<OrderStage | "All">("All");
+  const [portalFilter, setPortalFilter] = useState<string>("All");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -52,7 +86,8 @@ export function WholesaleOrdersAdminView() {
       o.customerEmail.toLowerCase().includes(q) ||
       (o.trackingNumber ?? "").toLowerCase().includes(q);
     const matchStage = stageFilter === "All" || o.orderStage === stageFilter;
-    return matchSearch && matchStage;
+    const matchPortal = portalFilter === "All" || o.accountId === portalFilter;
+    return matchSearch && matchStage && matchPortal;
   });
 
   const pendingPayment = orders.filter((o) => o.paymentSent && !o.paymentReceived).length;
@@ -87,6 +122,29 @@ export function WholesaleOrdersAdminView() {
           onChange={(e) => setSearch(e.target.value)}
           style={{ flex: 1, minWidth: 200, padding: "0.5rem 1rem", border: "1.5px solid var(--border, #e4d8c8)", borderRadius: "999px", fontSize: "0.82rem", outline: "none" }}
         />
+        {/* Portal filter */}
+        <div style={{ display: "flex", gap: "0.3rem" }}>
+          {["All", "abbey", "demiana"].map((p) => {
+            const active = portalFilter === p;
+            const cfg = p === "All" ? null : portalConfig(p);
+            return (
+              <button
+                key={p}
+                onClick={() => setPortalFilter(p)}
+                style={{
+                  padding: "0.25rem 0.65rem", borderRadius: "999px", border: "1.5px solid",
+                  borderColor: active ? (cfg?.color ?? "var(--brand, #6B1F2A)") : "var(--border, #e4d8c8)",
+                  background: active ? (cfg?.color ?? "var(--brand, #6B1F2A)") : "white",
+                  color: active ? "#fff" : (cfg?.color ?? "inherit"),
+                  fontSize: "0.72rem", fontWeight: active ? 600 : 400, cursor: "pointer",
+                }}
+              >
+                {p === "All" ? "All Portals" : cfg!.short}
+              </button>
+            );
+          })}
+        </div>
+        {/* Stage filter */}
         <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
           {(["All", ...ORDER_STAGES_WITH_CANCEL] as (OrderStage | "All")[]).map((s) => (
             <button
@@ -146,6 +204,7 @@ function AdminOrderCard({
 
   const isCancelled = order.orderStage === "Cancelled";
   const stageColors = STAGE_COLOR[order.orderStage] ?? { bg: "#e0e0e0", text: "#555" };
+  const portal = portalConfig(order.accountId);
   const formattedDate = (() => {
     try {
       return new Date(order.createdAt).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
@@ -208,7 +267,7 @@ function AdminOrderCard({
   return (
     <div style={{
       background: "white", borderRadius: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.07)",
-      borderLeft: `4px solid ${isCancelled ? "#dc2626" : order.asap ? "#e65100" : order.paymentSent && !order.paymentReceived ? "#ffc107" : "var(--brand, #6B1F2A)"}`,
+      borderLeft: `4px solid ${isCancelled ? "#dc2626" : order.asap ? "#e65100" : order.paymentSent && !order.paymentReceived ? "#ffc107" : portal.color}`,
       overflow: "hidden", opacity: isCancelled ? 0.75 : 1,
     }}>
       <button
@@ -217,6 +276,7 @@ function AdminOrderCard({
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap", flex: 1, minWidth: 0 }}>
           <span style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: 700 }}>{order.orderId}</span>
+          <span style={{ fontSize: "0.68rem", fontWeight: 700, padding: "1px 7px", borderRadius: "999px", background: portal.badge, color: portal.badgeText, border: `1px solid ${portal.border}` }}>{portal.short}</span>
           <span style={{ fontSize: "0.74rem", color: "var(--text-muted, #7a6a5a)" }}>{order.customerName}</span>
           <span style={{ fontSize: "0.72rem", color: "var(--text-muted, #7a6a5a)" }}>{formattedDate}</span>
           <span style={{ fontSize: "0.72rem", color: "var(--text-muted, #7a6a5a)" }}>{order.items.length} item{order.items.length !== 1 ? "s" : ""} — ${order.grandTotal.toFixed(2)}</span>
