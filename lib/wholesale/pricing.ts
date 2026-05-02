@@ -168,14 +168,14 @@ export function driveThumbUrl(fileId: string, sz: string, cacheBust?: string): s
   return `https://drive.google.com/thumbnail?id=${fileId}&sz=${sz}&v=${v}`;
 }
 
-/** Returns a usable image URL for a product (Supabase Storage or Drive thumbnail). */
+/** Returns a usable image URL for a product (static path, Supabase Storage, or Drive thumbnail). */
 export function productImageUrl(
   imageUrl: string | null,
   driveLink: string | null,
   sz: string,
   cacheBust?: string
 ): string {
-  if (imageUrl && imageUrl.startsWith("http")) return imageUrl;
+  if (imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("/"))) return imageUrl;
   const fid = extractDriveFileId(driveLink ?? "");
   if (fid) return driveThumbUrl(fid, sz, cacheBust);
   return "";
