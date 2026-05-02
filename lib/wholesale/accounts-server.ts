@@ -5,7 +5,7 @@
 import type { WholesaleAccountConfig } from "@/config/wholesale-accounts";
 
 const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
-  "4438": {
+  "1001": {
     accountId: "abbey",
     displayName: "St. Mary and St. Moses Abbey",
     notifyEmail: "st.mosesbookstore@gmail.com",
