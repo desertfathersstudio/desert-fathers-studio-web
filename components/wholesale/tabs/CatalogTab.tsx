@@ -5,10 +5,6 @@ import { toast } from "sonner";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { WholesaleProduct, WholesaleCartLine } from "@/types/wholesale";
 import {
-  unitPriceForSku,
-  priceLabelForProduct,
-  WS_PRICE_HWP_PACK,
-  WS_PRICE_RP_PACK,
   productImageUrl,
   extractDriveFileId,
   driveThumbUrl,
@@ -32,9 +28,12 @@ interface Props {
   accountId: string;
   hasPendingTab: boolean;
   onProductUnapproved: (id: string) => void;
+  priceSingle: number;
+  priceRpPack: number;
+  priceHwpPack: number;
 }
 
-export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved }: Props) {
+export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved, priceSingle, priceRpPack, priceHwpPack }: Props) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [sort, setSort] = useState<SortKey>("sku");
@@ -238,6 +237,9 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
               onCancelConfirm={() => setConfirmUnapproveId(null)}
               onUnapprove={() => handleUnapprove(p)}
               unapproving={unapproving === p.id}
+              priceSingle={priceSingle}
+              priceRpPack={priceRpPack}
+              priceHwpPack={priceHwpPack}
             />
           ))}
         </div>
@@ -251,6 +253,9 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
           onNavigate={setLightboxIdx}
           onClose={closeLightbox}
           onAddToCart={onAddToCart}
+          priceSingle={priceSingle}
+          priceRpPack={priceRpPack}
+          priceHwpPack={priceHwpPack}
         />
       )}
     </div>
@@ -270,6 +275,9 @@ function CatalogCard({
   onCancelConfirm,
   onUnapprove,
   unapproving,
+  priceSingle,
+  priceRpPack,
+  priceHwpPack,
 }: {
   product: WholesaleProduct;
   idx: number;
@@ -281,12 +289,16 @@ function CatalogCard({
   onCancelConfirm: () => void;
   onUnapprove: () => void;
   unapproving: boolean;
+  priceSingle: number;
+  priceRpPack: number;
+  priceHwpPack: number;
 }) {
-  const priceLabel = priceLabelForProduct({
-    sku: p.sku,
-    packType: p.packType,
-    packOnly: p.packOnly,
-  });
+  const pid = p.sku.toUpperCase();
+  const priceLabel =
+    pid === "RP_PACK"  ? `$${priceRpPack.toFixed(2)}/set` :
+    pid === "HWP_PACK" ? `$${priceHwpPack.toFixed(2)}/set` :
+    p.packOnly         ? `${p.packType === "HWP" ? "Holy Week Pack" : "Resurrection Pack"} $${(p.packType === "HWP" ? priceHwpPack : priceRpPack).toFixed(2)}/set` :
+                         `$${priceSingle.toFixed(2)}/sticker`;
 
   return (
     <article
@@ -471,12 +483,18 @@ function CatalogLightbox({
   onNavigate,
   onClose,
   onAddToCart,
+  priceSingle,
+  priceRpPack,
+  priceHwpPack,
 }: {
   products: WholesaleProduct[];
   index: number;
   onNavigate: (i: number) => void;
   onClose: () => void;
   onAddToCart: (l: WholesaleCartLine) => void;
+  priceSingle: number;
+  priceRpPack: number;
+  priceHwpPack: number;
 }) {
   const p = products[index];
   const [qty, setQty] = useState(25);
@@ -496,12 +514,12 @@ function CatalogLightbox({
 
   const touchX = useRef<number | null>(null);
 
-  const packPrice = p.packType === "HWP" ? WS_PRICE_HWP_PACK : WS_PRICE_RP_PACK;
+  const packPrice = p.packType === "HWP" ? priceHwpPack : priceRpPack;
   const packId    = p.packType === "HWP" ? "HWP_PACK" : "RP_PACK";
   const packName  = p.packType === "HWP" ? "Holy Week Pack" : "Resurrection Pack";
   const packSize  = p.packType === "HWP" ? "Set of 23" : "Set of 10";
 
-  const unitPrice = orderMode === "pack" ? packPrice : unitPriceForSku(p.sku);
+  const unitPrice = orderMode === "pack" ? packPrice : priceSingle;
   const lineTotal = (unitPrice * qty).toFixed(2);
 
   function handleAdd() {
@@ -525,7 +543,7 @@ function CatalogLightbox({
         size: p.size,
         imageUrl: p.imageUrl,
         qty,
-        unitPrice: unitPriceForSku(p.sku),
+        unitPrice: priceSingle,
         asap: false,
       });
       toast.success(`${p.name} added to cart`);
@@ -713,7 +731,7 @@ function CatalogLightbox({
                   style={inputSm}
                 >
                   {showSingleOption && (
-                    <option value="single">This sticker — ${unitPriceForSku(p.sku).toFixed(2)}/ea</option>
+                    <option value="single">This sticker — ${priceSingle.toFixed(2)}/ea</option>
                   )}
                   <option value="pack">Full {packName} — ${packPrice.toFixed(2)}/set</option>
                 </select>

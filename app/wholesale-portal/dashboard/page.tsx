@@ -173,6 +173,9 @@ export default function WholesaleDashboard() {
               accountId={session.accountId}
               hasPendingTab={session.hasPendingTab}
               onProductUnapproved={handleProductUnapproved}
+              priceSingle={session.priceSingle}
+              priceRpPack={session.priceRpPack}
+              priceHwpPack={session.priceHwpPack}
             />
           )
         )}
