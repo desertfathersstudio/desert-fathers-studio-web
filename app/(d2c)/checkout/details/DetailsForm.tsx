@@ -181,6 +181,8 @@ export function DetailsForm() {
 
   const touch = (f: string) => setTouched((p) => new Set(p).add(f));
 
+  const [placesDebug, setPlacesDebug] = useState<string>("");
+
   // Debounced suggestions via server-side REST route (no Maps JS SDK needed)
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -188,11 +190,17 @@ export function DetailsForm() {
     debounceRef.current = setTimeout(() => {
       fetch(`/api/places-autocomplete?input=${encodeURIComponent(addrLine1)}`)
         .then((r) => r.json() as Promise<{ predictions: GmPrediction[] }>)
-        .then(({ predictions }) => {
-          setSuggestions(predictions ?? []);
-          setShowSuggestions((predictions ?? []).length > 0);
+        .then((data) => {
+          setPlacesDebug(JSON.stringify(data).slice(0, 200));
+          const predictions = data.predictions ?? [];
+          setSuggestions(predictions);
+          setShowSuggestions(predictions.length > 0);
         })
-        .catch(() => { setSuggestions([]); setShowSuggestions(false); });
+        .catch((e: unknown) => {
+          setPlacesDebug("fetch-error:" + String(e));
+          setSuggestions([]);
+          setShowSuggestions(false);
+        });
     }, 300);
   }, [addrLine1]);
 
@@ -433,6 +441,9 @@ export function DetailsForm() {
                 value={addrLine1} onChange={setAddrLine1}
                 onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); touch("addrLine1"); }}
                 placeholder="123 Main St" error={line1Error} />
+              {placesDebug && (
+                <p className="text-[11px] mt-1 break-all" style={{ color: "#c0392b" }}>{placesDebug}</p>
+              )}
               {showSuggestions && suggestions.length > 0 && (
                 <ul
                   className="absolute z-50 w-full mt-1 overflow-hidden"
