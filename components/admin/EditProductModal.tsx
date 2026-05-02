@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useTransition } from "react";
 import { X, Upload, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { adminUpdateProduct, adminArchiveProduct } from "@/app/admin/inventory/actions";
 import type { InventoryStatus, ProductWithInventory, ReviewStatus } from "@/lib/admin/types";
 
 const REVIEW_OPTIONS: { value: ReviewStatus; label: string }[] = [
@@ -25,6 +26,7 @@ export function EditProductModal({
 }) {
   const sb = createSupabaseBrowser();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [isPending, startTransition] = useTransition();
 
   const [name, setName]                   = useState(product.name);
   const [reviewStatus, setReviewStatus]   = useState<ReviewStatus>(product.review_status);
@@ -34,7 +36,6 @@ export function EditProductModal({
   const [threshold, setThreshold]         = useState(product.inventory?.low_stock_threshold ?? 10);
   const [imageUrl, setImageUrl]           = useState(product.image_url ?? "");
   const [uploading, setUploading]         = useState(false);
-  const [saving, setSaving]               = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function handleImageUpload(file: File) {
@@ -56,87 +57,56 @@ export function EditProductModal({
     }
   }
 
-  async function handleSave() {
-    setSaving(true);
-    try {
-      // Update product
-      const { error: pErr } = await sb
-        .from("products")
-        .update({
+  function handleSave() {
+    startTransition(async () => {
+      try {
+        const newStatus: InventoryStatus =
+          onHand === 0 ? "sold_out" : onHand <= threshold ? "low" : "in_stock";
+
+        await adminUpdateProduct(product.id, {
+          name,
+          reviewStatus,
+          reviewComments: reviewComments || null,
+          imageUrl: imageUrl || null,
+          onHand,
+          incoming,
+          threshold,
+          hasInventory: !!product.inventory,
+        });
+
+        const updated: ProductWithInventory = {
+          ...product,
           name,
           review_status: reviewStatus,
           review_comments: reviewComments || null,
           image_url: imageUrl || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", product.id);
-      if (pErr) throw pErr;
-
-      // Compute new inventory status
-      const newStatus =
-        onHand === 0 ? "sold_out" : onHand <= threshold ? "low" : "in_stock";
-
-      if (product.inventory) {
-        const { error: iErr } = await sb
-          .from("inventory")
-          .update({
+          inventory: {
+            ...(product.inventory ?? { id: "", product_id: product.id, last_updated: null }),
             on_hand: onHand,
             incoming,
             low_stock_threshold: threshold,
             status: newStatus,
-            last_updated: new Date().toISOString(),
-          })
-          .eq("product_id", product.id);
-        if (iErr) throw iErr;
-      } else {
-        const { error: iErr } = await sb
-          .from("inventory")
-          .insert({
-            product_id: product.id,
-            on_hand: onHand,
-            incoming,
-            low_stock_threshold: threshold,
-            status: newStatus,
-          });
-        if (iErr) throw iErr;
+          },
+        };
+
+        toast.success("Saved");
+        onUpdated(updated);
+      } catch (err: unknown) {
+        toast.error((err as Error).message ?? "Save failed");
       }
-
-      const updated: ProductWithInventory = {
-        ...product,
-        name,
-        review_status: reviewStatus,
-        review_comments: reviewComments || null,
-        image_url: imageUrl || null,
-        inventory: {
-          ...(product.inventory ?? { id: "", product_id: product.id, last_updated: null }),
-          on_hand: onHand,
-          incoming,
-          low_stock_threshold: threshold,
-          status: newStatus as InventoryStatus,
-        },
-      };
-
-      toast.success("Saved");
-      onUpdated(updated);
-    } catch (err: unknown) {
-      toast.error((err as Error).message ?? "Save failed");
-    } finally {
-      setSaving(false);
-    }
+    });
   }
 
-  async function handleDelete() {
-    setSaving(true);
-    try {
-      const { error } = await sb.from("products").update({ active: false }).eq("id", product.id);
-      if (error) throw error;
-      toast.success("Design archived");
-      onDeleted(product.id);
-    } catch (err: unknown) {
-      toast.error((err as Error).message ?? "Delete failed");
-    } finally {
-      setSaving(false);
-    }
+  function handleDelete() {
+    startTransition(async () => {
+      try {
+        await adminArchiveProduct(product.id);
+        toast.success("Design archived");
+        onDeleted(product.id);
+      } catch (err: unknown) {
+        toast.error((err as Error).message ?? "Delete failed");
+      }
+    });
   }
 
   return (
@@ -271,7 +241,7 @@ export function EditProductModal({
               <span style={{ fontSize: "0.8rem", color: "#dc2626", fontFamily: "Inter, system-ui, sans-serif" }}>
                 Archive this design?
               </span>
-              <button onClick={handleDelete} disabled={saving} style={{ ...primaryBtn, background: "#dc2626", marginLeft: 4 }}>
+              <button onClick={handleDelete} disabled={isPending} style={{ ...primaryBtn, background: "#dc2626", marginLeft: 4 }}>
                 Yes, archive
               </button>
               <button onClick={() => setConfirmDelete(false)} style={outlineBtn}>
@@ -288,8 +258,8 @@ export function EditProductModal({
                 Archive
               </button>
               <button onClick={onClose} style={outlineBtn}>Cancel</button>
-              <button onClick={handleSave} disabled={saving} style={primaryBtn}>
-                {saving ? "Saving…" : "Save changes"}
+              <button onClick={handleSave} disabled={isPending} style={primaryBtn}>
+                {isPending ? "Saving…" : "Save changes"}
               </button>
             </>
           )}

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 import { X, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { adminAddProduct } from "@/app/admin/inventory/actions";
 import type { Category, ProductWithInventory, ReviewStatus } from "@/lib/admin/types";
 
 const REVIEW_OPTIONS: { value: ReviewStatus; label: string }[] = [
@@ -21,6 +22,7 @@ export function AddProductModal({
 }) {
   const sb = createSupabaseBrowser();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [isPending, startTransition] = useTransition();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [sku, setSku]               = useState("");
@@ -33,7 +35,6 @@ export function AddProductModal({
   const [retailPrice, setRetailPrice] = useState(1.5);
   const [imageUrl, setImageUrl]     = useState("");
   const [uploading, setUploading]   = useState(false);
-  const [saving, setSaving]         = useState(false);
 
   useEffect(() => {
     sb.from("categories").select("id, name").order("name").then(({ data }) => {
@@ -64,52 +65,30 @@ export function AddProductModal({
     }
   }
 
-  async function handleAdd() {
+  function handleAdd() {
     if (!sku.trim() || !name.trim()) {
       toast.error("SKU and name are required.");
       return;
     }
-    setSaving(true);
-    try {
-      const newStatus =
-        onHand === 0 ? "sold_out" : onHand <= threshold ? "low" : "in_stock";
-
-      const { data: prod, error: pErr } = await sb
-        .from("products")
-        .insert({
-          sku: sku.trim().toUpperCase(),
-          name: name.trim(),
-          category_id: categoryId || null,
-          review_status: reviewStatus,
-          retail_price: retailPrice,
-          image_url: imageUrl || null,
-          active: true,
-          can_buy_individually: true,
-        })
-        .select("*, categories(name)")
-        .single();
-      if (pErr) throw pErr;
-
-      const { data: inv, error: iErr } = await sb
-        .from("inventory")
-        .insert({
-          product_id: prod.id,
-          on_hand: onHand,
+    startTransition(async () => {
+      try {
+        const product = await adminAddProduct({
+          sku,
+          name,
+          categoryId: categoryId || null,
+          reviewStatus,
+          retailPrice,
+          imageUrl: imageUrl || null,
+          onHand,
           incoming,
-          low_stock_threshold: threshold,
-          status: newStatus,
-        })
-        .select()
-        .single();
-      if (iErr) throw iErr;
-
-      toast.success("Design added");
-      onAdded({ ...prod, inventory: inv } as ProductWithInventory);
-    } catch (err: unknown) {
-      toast.error((err as Error).message ?? "Failed to add design");
-    } finally {
-      setSaving(false);
-    }
+          threshold,
+        });
+        toast.success("Design added");
+        onAdded(product);
+      } catch (err: unknown) {
+        toast.error((err as Error).message ?? "Failed to add design");
+      }
+    });
   }
 
   return (
@@ -253,8 +232,8 @@ export function AddProductModal({
         {/* Footer */}
         <div style={footerStyle}>
           <button onClick={onClose} style={outlineBtn}>Cancel</button>
-          <button onClick={handleAdd} disabled={saving || uploading} style={primaryBtn}>
-            {saving ? "Adding…" : "Add Design"}
+          <button onClick={handleAdd} disabled={isPending || uploading} style={primaryBtn}>
+            {isPending ? "Adding…" : "Add Design"}
           </button>
         </div>
       </div>
