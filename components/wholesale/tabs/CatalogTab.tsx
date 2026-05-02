@@ -37,7 +37,7 @@ interface Props {
 export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved }: Props) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [sort, setSort] = useState<SortKey>("newest");
+  const [sort, setSort] = useState<SortKey>("sku");
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [unapproving, setUnapproving] = useState<string | null>(null);
   const [confirmUnapproveId, setConfirmUnapproveId] = useState<string | null>(null);
