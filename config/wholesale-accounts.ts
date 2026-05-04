@@ -64,6 +64,17 @@ const KNOWN_ACCOUNTS: WholesaleAccountConfig[] = [
     priceRpPack:  5.00,
     priceHwpPack: 10.00,
   },
+  {
+    accountId:          "katherine",
+    displayName:        "Saint Katherine of Alexandria & Saint Verena Coptic Orthodox Convent",
+    notifyEmail:        "st.mosesbookstore@gmail.com",
+    hasPendingTab:      false,
+    canEditFulfillment: false,
+    contactNames:       [],
+    priceSingle:  0.90,
+    priceRpPack:  5.00,
+    priceHwpPack: 10.00,
+  },
 ];
 
 export function getAccountById(accountId: string): WholesaleAccountConfig | null {

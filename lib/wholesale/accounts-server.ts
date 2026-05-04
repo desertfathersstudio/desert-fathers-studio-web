@@ -51,6 +51,17 @@ const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
     priceRpPack:  5.00,
     priceHwpPack: 10.00,
   },
+  "2612": {
+    accountId:          "katherine",
+    displayName:        "Saint Katherine of Alexandria & Saint Verena Coptic Orthodox Convent",
+    notifyEmail:        "st.mosesbookstore@gmail.com",
+    hasPendingTab:      false,
+    canEditFulfillment: false,
+    contactNames:       [],
+    priceSingle:  0.90,
+    priceRpPack:  5.00,
+    priceHwpPack: 10.00,
+  },
 };
 
 export function getAccountByPin(pin: string): WholesaleAccountConfig | null {

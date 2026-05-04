@@ -50,6 +50,15 @@ const PORTAL_CONFIG: Record<string, { label: string; short: string; color: strin
     badge: "#faf5ff",
     badgeText: "#6b21a8",
   },
+  katherine: {
+    label: "St. Katherine Convent",
+    short: "St. Katherine",
+    color: "#b45309",
+    bg: "#fffbeb",
+    border: "#fcd34d",
+    badge: "#fffbeb",
+    badgeText: "#b45309",
+  },
 };
 
 function portalConfig(accountId: string) {
@@ -142,7 +151,7 @@ export function WholesaleOrdersAdminView() {
         />
         {/* Portal filter */}
         <div style={{ display: "flex", gap: "0.3rem" }}>
-          {["All", "abbey", "demiana", "antony", "paul"].map((p) => {
+          {["All", "abbey", "demiana", "antony", "paul", "katherine"].map((p) => {
             const active = portalFilter === p;
             const cfg = p === "All" ? null : portalConfig(p);
             return (
