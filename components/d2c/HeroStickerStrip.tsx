@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CATALOG, type Sticker } from "@/lib/catalog";
+import { CATALOG, stickerImageUrl, type Sticker } from "@/lib/catalog";
 
 const ITEM_W = 108;  // px
 const ITEM_GAP = 16; // px — right margin on every item (no flex gap, so math is exact)
@@ -81,7 +81,7 @@ export function HeroStickerStrip() {
               }}
             >
               <Image
-                src={`/stickers/${sticker.filename}`}
+                src={stickerImageUrl(sticker.filename)}
                 alt={sticker.name}
                 fill
                 className="object-contain p-2"

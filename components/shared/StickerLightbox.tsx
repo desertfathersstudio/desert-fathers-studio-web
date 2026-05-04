@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useLightbox } from "@/lib/lightbox";
 import { useCart } from "@/lib/cart";
-import { CATALOG, CATEGORY_LABELS } from "@/lib/catalog";
+import { CATALOG, CATEGORY_LABELS, stickerImageUrl } from "@/lib/catalog";
 
 function getPackForSticker(category: string) {
   if (category === "holy-week") return CATALOG.find((s) => s.id === "holy-week-pack") ?? null;
@@ -248,7 +248,7 @@ export function StickerLightbox() {
                         }}
                       >
                         <Image
-                          src={`/stickers/${sticker.filename}`}
+                          src={stickerImageUrl(sticker.filename)}
                           alt={sticker.name}
                           fill
                           className="object-contain p-5"

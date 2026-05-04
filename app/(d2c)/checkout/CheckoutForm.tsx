@@ -21,6 +21,7 @@ import {
 import { FREE_SHIPPING_THRESHOLD_DOLLARS } from "@/lib/shipping";
 import { useCart } from "@/lib/cart";
 import type { CartItem } from "@/lib/cart";
+import { stickerImageUrl } from "@/lib/catalog";
 
 interface AddressRequest {
   line1: string;
@@ -348,7 +349,7 @@ export function CheckoutForm({ paymentIntentId }: { paymentIntentId: string }) {
                   }}
                 >
                   <Image
-                    src={`/stickers/${item.sticker.filename}`}
+                    src={stickerImageUrl(item.sticker.filename)}
                     alt={item.sticker.name}
                     fill
                     className="object-contain p-1.5"

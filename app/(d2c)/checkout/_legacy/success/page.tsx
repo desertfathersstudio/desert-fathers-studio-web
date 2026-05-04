@@ -6,7 +6,7 @@ import Image from "next/image";
 import { CheckCircle, Package, Truck, ArrowRight, XCircle } from "lucide-react";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { stripe } from "@/lib/stripe";
-import { CATALOG } from "@/lib/catalog";
+import { CATALOG, stickerImageUrl } from "@/lib/catalog";
 import { CartClearer } from "./CartClearer";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ function SuccessView({ order }: { order: OrderData }) {
                       }}
                     >
                       <Image
-                        src={`/stickers/${item.filename}`}
+                        src={stickerImageUrl(item.filename)}
                         alt={item.productName}
                         fill
                         className="object-contain p-1"

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { CATALOG } from "@/lib/catalog";
+import { CATALOG, stickerImageUrl } from "@/lib/catalog";
 import { calculateShipping } from "@/lib/shipping";
 
 export interface CheckoutSessionRequest {
@@ -96,9 +96,6 @@ export async function POST(req: Request) {
     console.log("[create-checkout-session] success_url:", successUrl);
     console.log("[create-checkout-session] cancel_url:", cancelUrl);
 
-    // Stripe requires absolute HTTPS URLs for product images; skip on localhost
-    const imageBase = baseUrl.startsWith("https://") ? baseUrl : null;
-
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -107,16 +104,13 @@ export async function POST(req: Request) {
       shipping_address_collection: { allowed_countries: ["US"] },
 
       line_items: resolvedItems.map((item) => {
-        const imageUrl = imageBase
-          ? `${imageBase}/stickers/${encodeURIComponent(item.filename)}`
-          : null;
-        console.log("[create-checkout-session] image:", imageUrl ?? "(skipped — not HTTPS)");
+        const imageUrl = stickerImageUrl(item.filename);
         return {
           price_data: {
             currency: "usd",
             product_data: {
               name:   item.product_name,
-              ...(imageUrl ? { images: [imageUrl] } : {}),
+              images: [imageUrl],
             },
             unit_amount: item.unit_price_cents,
           },

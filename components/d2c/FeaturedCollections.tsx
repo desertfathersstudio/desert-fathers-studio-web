@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
+import { stickerImageUrl } from "@/lib/catalog";
 
 const COLLECTIONS = [
   {
@@ -14,7 +15,7 @@ const COLLECTIONS = [
     description:
       "The complete story of Holy Week, from the Raising of Lazarus to the Resurrection.",
     href: "/shop/holy-week-pack",
-    image: "/stickers/Holy Week Pack BACK.png",
+    image: stickerImageUrl("Holy Week Pack BACK.png"),
     accentColor: "var(--brand)",
   },
   {
@@ -25,7 +26,7 @@ const COLLECTIONS = [
     description:
       "Ten Resurrection appearances — from the Empty Tomb to Pentecost.",
     href: "/shop/resurrection-pack",
-    image: "/stickers/Resurrection Pack BACK.png",
+    image: stickerImageUrl("Resurrection Pack BACK.png"),
     accentColor: "var(--gold)",
   },
   {
@@ -36,10 +37,10 @@ const COLLECTIONS = [
     description:
       "Saints, angels, prophets, Christ, Our Lady, and more — browse 80+ designs.",
     href: "/shop",
-    image: "/stickers/Pantokrator.png",
+    image: stickerImageUrl("Pantokrator.png"),
     accentColor: "var(--navy)",
   },
-] as const;
+];
 
 export function FeaturedCollections() {
   const ref = useRef<HTMLElement>(null);

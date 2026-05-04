@@ -10,6 +10,7 @@ import {
   type CategoryKey,
   type Sticker,
 } from "@/lib/catalog";
+import { stickerImageUrl } from "@/lib/catalog";
 import { StickerCard, type StickerProduct } from "@/components/shared/StickerCard";
 import { useCart } from "@/lib/cart";
 import { useLightbox } from "@/lib/lightbox";
@@ -19,7 +20,7 @@ function toCardProduct(s: Sticker): StickerProduct {
     id: s.id,
     name: s.name,
     price: s.price,
-    imageUrl: `/stickers/${s.filename}`,
+    imageUrl: stickerImageUrl(s.filename),
     category: s.category,
     isNew: s.isNew,
     isPack: s.isPack,
@@ -182,7 +183,7 @@ function PackRow({ items }: { items: Sticker[] }) {
               style={{ background: "#fff" }}
             >
               <Image
-                src={`/stickers/${pack.filename}`}
+                src={stickerImageUrl(pack.filename)}
                 alt={pack.name}
                 fill
                 className="object-contain p-12 transition-transform duration-300 ease-out group-hover:scale-[1.04]"

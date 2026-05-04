@@ -33,13 +33,23 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "pub-e59824bedb894365891e449422d22d40.r2.dev",
+        pathname: "/**",
+      },
+    ],
+  },
+
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: securityHeaders,
       },
-      // Cache control for sticker images — 7-day CDN cache
+      // Keep /stickers/ cache headers while static files still exist in the repo
       {
         source: "/stickers/(.*)",
         headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }],

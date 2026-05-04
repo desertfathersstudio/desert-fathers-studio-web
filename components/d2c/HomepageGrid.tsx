@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { CATALOG } from "@/lib/catalog";
+import { CATALOG, stickerImageUrl } from "@/lib/catalog";
 import { StickerCard } from "@/components/shared/StickerCard";
 import { useCart } from "@/lib/cart";
 import { useLightbox } from "@/lib/lightbox";
@@ -96,7 +96,7 @@ export function HomepageGrid() {
                   id: sticker.id,
                   name: sticker.name,
                   price: sticker.price,
-                  imageUrl: `/stickers/${sticker.filename}`,
+                  imageUrl: stickerImageUrl(sticker.filename),
                   category: sticker.category,
                   isNew: sticker.isNew,
                 }}

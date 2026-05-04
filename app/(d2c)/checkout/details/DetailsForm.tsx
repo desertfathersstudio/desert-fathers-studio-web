@@ -11,6 +11,7 @@ interface GmPrediction { place_id: string; description: string; }
 interface GmAddressComponent { types: string[]; long_name: string; short_name: string; }
 import { FREE_SHIPPING_THRESHOLD_DOLLARS } from "@/lib/shipping";
 import { useCart } from "@/lib/cart";
+import { stickerImageUrl } from "@/lib/catalog";
 
 // ── US states ──────────────────────────────────────────────────────────
 const US_STATES: [string, string][] = [
@@ -357,7 +358,7 @@ export function DetailsForm() {
                   style={{ width: 56, height: 56, border: "1px solid var(--border)", background: "#fff" }}
                 >
                   <Image
-                    src={`/stickers/${item.sticker.filename}`}
+                    src={stickerImageUrl(item.sticker.filename)}
                     alt={item.sticker.name}
                     fill className="object-contain p-1" sizes="56px"
                   />

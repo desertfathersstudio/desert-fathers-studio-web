@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { FREE_SHIPPING_THRESHOLD_DOLLARS } from "@/lib/shipping";
 import { useCart } from "@/lib/cart";
+import { stickerImageUrl } from "@/lib/catalog";
 
 // ── Types ──────────────────────────────────────────────────────────────
 interface AddressRequest {
@@ -490,7 +491,7 @@ export function DetailsForm({ paymentIntentId }: { paymentIntentId: string }) {
                   className="relative shrink-0 rounded-lg overflow-hidden"
                   style={{ width: 56, height: 56, border: "1px solid var(--border)", background: "#fff" }}
                 >
-                  <Image src={`/stickers/${item.sticker.filename}`} alt={item.sticker.name} fill className="object-contain p-1" sizes="56px" />
+                  <Image src={stickerImageUrl(item.sticker.filename)} alt={item.sticker.name} fill className="object-contain p-1" sizes="56px" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium leading-snug truncate" style={{ color: "var(--text)" }}>{item.sticker.name}</p>

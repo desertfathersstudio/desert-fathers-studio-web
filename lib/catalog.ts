@@ -1,5 +1,12 @@
 import { D2C_PRICE, HWP_PACK_PRICE, RP_PACK_PRICE } from "./pricing";
 
+const R2_BASE = "https://pub-e59824bedb894365891e449422d22d40.r2.dev";
+
+export function stickerImageUrl(filename: string): string {
+  const base = filename.replace(/\.[^.]+$/, "");
+  return `${R2_BASE}/${encodeURIComponent(`${base}.webp`)}`;
+}
+
 export type CategoryKey =
   | "all"
   | "individuals"

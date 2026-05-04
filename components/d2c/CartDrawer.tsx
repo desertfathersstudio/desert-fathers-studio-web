@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
+import { stickerImageUrl } from "@/lib/catalog";
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, remove, setQty, count, total } = useCart();
@@ -125,7 +126,7 @@ export function CartDrawer() {
                         }}
                       >
                         <Image
-                          src={`/stickers/${sticker.filename}`}
+                          src={stickerImageUrl(sticker.filename)}
                           alt={sticker.name}
                           width={52}
                           height={52}

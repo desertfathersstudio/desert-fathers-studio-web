@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Trash2, Plus, Minus } from "lucide-react";
 import type { WholesaleProduct, WholesaleCartLine } from "@/types/wholesale";
 import { unitPriceForSku } from "@/lib/wholesale/pricing";
+import { stickerImageUrl } from "@/lib/catalog";
 
 const QTY_OPTIONS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
@@ -58,8 +59,8 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   // Virtual pack items — not DB rows, handled separately
   const VIRTUAL_PACKS = [
-    { sku: "RP_PACK", name: "Resurrection Pack", category: "Resurrection Pack", size: '2"', packType: "RP" as const, unitPrice: priceRpPack, imageUrl: "/stickers/Resurrection Pack BACK.png" },
-    { sku: "HWP_PACK", name: "Holy Week Pack", category: "Holy Week Pack", size: '2"', packType: "HWP" as const, unitPrice: priceHwpPack, imageUrl: "/stickers/Holy Week Pack BACK.png" },
+    { sku: "RP_PACK", name: "Resurrection Pack", category: "Resurrection Pack", size: '2"', packType: "RP" as const, unitPrice: priceRpPack, imageUrl: stickerImageUrl("Resurrection Pack BACK.png") },
+    { sku: "HWP_PACK", name: "Holy Week Pack", category: "Holy Week Pack", size: '2"', packType: "HWP" as const, unitPrice: priceHwpPack, imageUrl: stickerImageUrl("Holy Week Pack BACK.png") },
   ];
 
   const selectedProduct = useMemo(
@@ -120,12 +121,12 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
     // Virtual pack items — may not exist as DB rows
     if (selectedSku === "RP_PACK") {
-      addToCart({ productId: "RP_PACK", designName: "Resurrection Pack", category: "Resurrection Pack", size: '2"', imageUrl: "/stickers/Resurrection Pack BACK.png", qty, unitPrice: priceRpPack, asap });
+      addToCart({ productId: "RP_PACK", designName: "Resurrection Pack", category: "Resurrection Pack", size: '2"', imageUrl: stickerImageUrl("Resurrection Pack BACK.png"), qty, unitPrice: priceRpPack, asap });
       toast.success("Resurrection Pack added");
       return;
     }
     if (selectedSku === "HWP_PACK") {
-      addToCart({ productId: "HWP_PACK", designName: "Holy Week Pack", category: "Holy Week Pack", size: '2"', imageUrl: "/stickers/Holy Week Pack BACK.png", qty, unitPrice: priceHwpPack, asap });
+      addToCart({ productId: "HWP_PACK", designName: "Holy Week Pack", category: "Holy Week Pack", size: '2"', imageUrl: stickerImageUrl("Holy Week Pack BACK.png"), qty, unitPrice: priceHwpPack, asap });
       toast.success("Holy Week Pack added");
       return;
     }

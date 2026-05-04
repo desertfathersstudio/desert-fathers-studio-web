@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Minus, Plus, Trash2, Truck } from "lucide-react";
 import { useCart } from "@/lib/cart";
+import { stickerImageUrl } from "@/lib/catalog";
 import { FREE_SHIPPING_THRESHOLD_DOLLARS } from "@/lib/shipping";
 import type { CartItem } from "@/lib/cart";
 
@@ -61,7 +62,7 @@ function LineItem({
         style={{ width: 80, height: 80, border: "1px solid var(--border)", background: "#fff" }}
       >
         <Image
-          src={`/stickers/${item.sticker.filename}`}
+          src={stickerImageUrl(item.sticker.filename)}
           alt={item.sticker.name}
           fill
           className="object-contain p-1.5"

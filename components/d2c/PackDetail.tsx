@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CATALOG, type Sticker } from "@/lib/catalog";
+import { CATALOG, stickerImageUrl, type Sticker } from "@/lib/catalog";
 import { HWP_PACK_PRICE, RP_PACK_PRICE } from "@/lib/pricing";
 
 interface PackConfig {
@@ -73,7 +73,7 @@ export function PackDetail({ slug }: { slug: string }) {
             }}
           >
             <Image
-              src={`/stickers/${pack.backCover}`}
+              src={stickerImageUrl(pack.backCover)}
               alt={`${pack.name} — all included designs`}
               fill
               className="object-contain p-6"
@@ -207,7 +207,7 @@ export function PackDetail({ slug }: { slug: string }) {
                 }}
               >
                 <Image
-                  src={`/stickers/${sticker.filename}`}
+                  src={stickerImageUrl(sticker.filename)}
                   alt={sticker.name}
                   fill
                   className="object-contain p-4 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
