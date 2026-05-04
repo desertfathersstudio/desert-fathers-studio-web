@@ -29,6 +29,28 @@ const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
     priceRpPack:  5.00,
     priceHwpPack: 10.00,
   },
+  "4372": {
+    accountId:          "antony",
+    displayName:        "Saint Antony Coptic Orthodox Monastery",
+    notifyEmail:        "st.mosesbookstore@gmail.com",
+    hasPendingTab:      false,
+    canEditFulfillment: false,
+    contactNames:       [],
+    priceSingle:  0.90,
+    priceRpPack:  5.00,
+    priceHwpPack: 10.00,
+  },
+  "3874": {
+    accountId:          "paul",
+    displayName:        "Saint Paul Coptic Orthodox Monastery",
+    notifyEmail:        "st.mosesbookstore@gmail.com",
+    hasPendingTab:      false,
+    canEditFulfillment: false,
+    contactNames:       [],
+    priceSingle:  0.90,
+    priceRpPack:  5.00,
+    priceHwpPack: 10.00,
+  },
 };
 
 export function getAccountByPin(pin: string): WholesaleAccountConfig | null {

@@ -32,6 +32,24 @@ const PORTAL_CONFIG: Record<string, { label: string; short: string; color: strin
     badge: "#eff6ff",
     badgeText: "#1e40af",
   },
+  antony: {
+    label: "St. Antony Monastery",
+    short: "St. Antony",
+    color: "#065f46",
+    bg: "#ecfdf5",
+    border: "#6ee7b7",
+    badge: "#ecfdf5",
+    badgeText: "#065f46",
+  },
+  paul: {
+    label: "St. Paul Monastery",
+    short: "St. Paul",
+    color: "#6b21a8",
+    bg: "#faf5ff",
+    border: "#c4b5fd",
+    badge: "#faf5ff",
+    badgeText: "#6b21a8",
+  },
 };
 
 function portalConfig(accountId: string) {
@@ -124,7 +142,7 @@ export function WholesaleOrdersAdminView() {
         />
         {/* Portal filter */}
         <div style={{ display: "flex", gap: "0.3rem" }}>
-          {["All", "abbey", "demiana"].map((p) => {
+          {["All", "abbey", "demiana", "antony", "paul"].map((p) => {
             const active = portalFilter === p;
             const cfg = p === "All" ? null : portalConfig(p);
             return (

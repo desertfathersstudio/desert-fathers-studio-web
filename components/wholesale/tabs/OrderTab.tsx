@@ -219,10 +219,11 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     .filter((l) => l.productId === "HWP_PACK" || l.productId === "RP_PACK")
     .reduce((s, l) => s + l.qty, 0);
 
+  const hasPresetNames = contactNames.length > 0;
   const defaultEmail = session.notifyEmail;
-  const [nameChoice, setNameChoice] = useState<string>(contactNames[0] ?? "");
+  const [nameChoice, setNameChoice] = useState<string>(hasPresetNames ? contactNames[0] : "");
   const [customName, setCustomName] = useState("");
-  const [emailChoice, setEmailChoice] = useState<"default" | "other">("default");
+  const [emailChoice, setEmailChoice] = useState<"default" | "other">(hasPresetNames ? "default" : "other");
   const [customEmail, setCustomEmail] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -321,36 +322,60 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
         {/* Name */}
         <div>
           <label style={fieldLabel}>Name</label>
-          <select
-            value={nameChoice}
-            onChange={(e) => setNameChoice(e.target.value)}
-            style={{ ...inputStyle, width: "100%" }}
-          >
-            {contactNames.map((n) => <option key={n} value={n}>{n}</option>)}
-            <option value="other">Other…</option>
-          </select>
-          {nameChoice === "other" && (
+          {hasPresetNames ? (
+            <>
+              <select
+                value={nameChoice}
+                onChange={(e) => setNameChoice(e.target.value)}
+                style={{ ...inputStyle, width: "100%" }}
+              >
+                {contactNames.map((n) => <option key={n} value={n}>{n}</option>)}
+                <option value="other">Other…</option>
+              </select>
+              {nameChoice === "other" && (
+                <input
+                  type="text"
+                  placeholder="Enter name"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  style={{ ...inputStyle, width: "100%", marginTop: "0.4rem" }}
+                />
+              )}
+            </>
+          ) : (
             <input
               type="text"
               placeholder="Enter name"
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
-              style={{ ...inputStyle, width: "100%", marginTop: "0.4rem" }}
+              value={nameChoice}
+              onChange={(e) => setNameChoice(e.target.value)}
+              style={{ ...inputStyle, width: "100%" }}
             />
           )}
         </div>
         {/* Email */}
         <div>
           <label style={fieldLabel}>Email</label>
-          <select
-            value={emailChoice}
-            onChange={(e) => setEmailChoice(e.target.value as "default" | "other")}
-            style={{ ...inputStyle, width: "100%" }}
-          >
-            <option value="default">{defaultEmail}</option>
-            <option value="other">Other…</option>
-          </select>
-          {emailChoice === "other" && (
+          {hasPresetNames ? (
+            <>
+              <select
+                value={emailChoice}
+                onChange={(e) => setEmailChoice(e.target.value as "default" | "other")}
+                style={{ ...inputStyle, width: "100%" }}
+              >
+                <option value="default">{defaultEmail}</option>
+                <option value="other">Other…</option>
+              </select>
+              {emailChoice === "other" && (
+                <input
+                  type="email"
+                  placeholder="Enter email"
+                  value={customEmail}
+                  onChange={(e) => setCustomEmail(e.target.value)}
+                  style={{ ...inputStyle, width: "100%", marginTop: "0.4rem" }}
+                />
+              )}
+            </>
+          ) : (
             <input
               type="email"
               placeholder="Enter email"

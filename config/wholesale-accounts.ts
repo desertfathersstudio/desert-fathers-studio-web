@@ -42,6 +42,28 @@ const KNOWN_ACCOUNTS: WholesaleAccountConfig[] = [
     priceRpPack:  5.00,
     priceHwpPack: 10.00,
   },
+  {
+    accountId:          "antony",
+    displayName:        "Saint Antony Coptic Orthodox Monastery",
+    notifyEmail:        "st.mosesbookstore@gmail.com",
+    hasPendingTab:      false,
+    canEditFulfillment: false,
+    contactNames:       [],
+    priceSingle:  0.90,
+    priceRpPack:  5.00,
+    priceHwpPack: 10.00,
+  },
+  {
+    accountId:          "paul",
+    displayName:        "Saint Paul Coptic Orthodox Monastery",
+    notifyEmail:        "st.mosesbookstore@gmail.com",
+    hasPendingTab:      false,
+    canEditFulfillment: false,
+    contactNames:       [],
+    priceSingle:  0.90,
+    priceRpPack:  5.00,
+    priceHwpPack: 10.00,
+  },
 ];
 
 export function getAccountById(accountId: string): WholesaleAccountConfig | null {
