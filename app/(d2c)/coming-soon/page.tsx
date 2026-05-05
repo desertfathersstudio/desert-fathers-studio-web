@@ -63,8 +63,8 @@ export default async function ComingSoonPage() {
               className="max-w-lg text-sm leading-relaxed"
               style={{ color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}
             >
-              These designs have been approved and are in production. Sign up
-              below to be notified the moment each one becomes available.
+              These designs are in production. Sign up below to be notified
+              the moment each one becomes available.
             </p>
           </div>
         </div>
