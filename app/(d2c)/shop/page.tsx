@@ -1,8 +1,23 @@
 import { Nav } from "@/components/d2c/Nav";
 import { CatalogSection } from "@/components/d2c/CatalogSection";
 import { Footer } from "@/components/d2c/Footer";
-import { type CategoryKey } from "@/lib/catalog";
+import { CATALOG, type CategoryKey } from "@/lib/catalog";
 import { createSupabaseServer } from "@/lib/supabase/server";
+
+// Extract the base filename from an R2 URL (reverse of stickerImageUrl)
+function r2UrlToFilenameBase(url: string): string {
+  try {
+    const encoded = new URL(url).pathname.split("/").pop() ?? "";
+    return decodeURIComponent(encoded).replace(/\.[^.]+$/, "");
+  } catch {
+    return "";
+  }
+}
+
+// Map catalog entries by filename base so we can look them up by R2 URL
+const CATALOG_BY_FILENAME_BASE = new Map(
+  CATALOG.map((s) => [s.filename.replace(/\.[^.]+$/, ""), s.name])
+);
 
 const VALID_CATEGORIES: CategoryKey[] = [
   "individuals", "packs", "christ", "our-lady", "angels", "saints",
@@ -31,7 +46,7 @@ export default async function ShopPage({
         .eq("coming_soon", false),
       sb
         .from("products")
-        .select("name")
+        .select("image_url")
         .eq("active", true)
         .eq("coming_soon", true),
     ]);
@@ -41,7 +56,14 @@ export default async function ShopPage({
         return inv !== undefined && inv.on_hand === 0;
       })
       .map((p: { name: string }) => p.name);
-    comingSoonNames = (comingSoonRes.data ?? []).map((p: { name: string }) => p.name);
+
+    // Match coming-soon products to catalog entries by filename (R2 URL → base → catalog name)
+    comingSoonNames = (comingSoonRes.data ?? [])
+      .map((p: { image_url: string | null }) => {
+        const base = r2UrlToFilenameBase(p.image_url ?? "");
+        return CATALOG_BY_FILENAME_BASE.get(base) ?? null;
+      })
+      .filter((n): n is string => n !== null);
   } catch {
     // gracefully degrade if DB is unavailable
   }
