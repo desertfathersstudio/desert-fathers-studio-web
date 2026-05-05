@@ -43,6 +43,7 @@ export function EditProductModal({
       const form = new FormData();
       form.append("file", file);
       form.append("sku", product.sku);
+      form.append("name", product.name);
       const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Upload failed");
