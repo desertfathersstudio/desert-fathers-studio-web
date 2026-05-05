@@ -8,6 +8,7 @@ interface ComingSoonProduct {
   id: string;
   name: string;
   image_url: string | null;
+  sku: string;
 }
 
 async function getComingSoonProducts(): Promise<ComingSoonProduct[]> {
@@ -18,9 +19,12 @@ async function getComingSoonProducts(): Promise<ComingSoonProduct[]> {
       .select("id, name, image_url, sku")
       .eq("coming_soon", true)
       .eq("active", true)
-      .eq("review_status", "approved")
-      .order("sku", { ascending: true });
-    return (data ?? []) as ComingSoonProduct[];
+      .eq("review_status", "approved");
+    return ((data ?? []) as ComingSoonProduct[]).sort((a, b) => {
+      const numA = parseInt(a.sku.replace(/[^0-9]/g, ""), 10) || 0;
+      const numB = parseInt(b.sku.replace(/[^0-9]/g, ""), 10) || 0;
+      return numA - numB;
+    });
   } catch {
     return [];
   }
