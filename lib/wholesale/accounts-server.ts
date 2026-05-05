@@ -62,6 +62,18 @@ const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
     priceRpPack:  5.00,
     priceHwpPack: 10.00,
   },
+  "8419": {
+    accountId:          "shenouda",
+    displayName:        "Saint Shenouda Monastery",
+    notifyEmail:        "st.mosesbookstore@gmail.com",
+    hasPendingTab:      false,
+    canEditFulfillment: false,
+    contactNames:       [],
+    priceSingle:  1.40,
+    priceRpPack:  8.00,
+    priceHwpPack: 16.00,
+    currencySymbol: "A$",
+  },
 };
 
 export function getAccountByPin(pin: string): WholesaleAccountConfig | null {

@@ -59,6 +59,15 @@ const PORTAL_CONFIG: Record<string, { label: string; short: string; color: strin
     badge: "#fffbeb",
     badgeText: "#b45309",
   },
+  shenouda: {
+    label: "St. Shenouda Monastery",
+    short: "AU Monastery",
+    color: "#0e7490",
+    bg: "#ecfeff",
+    border: "#67e8f9",
+    badge: "#ecfeff",
+    badgeText: "#0e7490",
+  },
 };
 
 function portalConfig(accountId: string) {

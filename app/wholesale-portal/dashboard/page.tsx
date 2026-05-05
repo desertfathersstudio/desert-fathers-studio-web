@@ -176,6 +176,7 @@ export default function WholesaleDashboard() {
               priceSingle={session.priceSingle}
               priceRpPack={session.priceRpPack}
               priceHwpPack={session.priceHwpPack}
+              currencySymbol={session.currencySymbol}
             />
           )
         )}

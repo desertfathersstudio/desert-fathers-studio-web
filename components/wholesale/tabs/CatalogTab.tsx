@@ -31,9 +31,10 @@ interface Props {
   priceSingle: number;
   priceRpPack: number;
   priceHwpPack: number;
+  currencySymbol: string;
 }
 
-export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved, priceSingle, priceRpPack, priceHwpPack }: Props) {
+export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved, priceSingle, priceRpPack, priceHwpPack, currencySymbol }: Props) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [sort, setSort] = useState<SortKey>("sku");
@@ -240,6 +241,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
               priceSingle={priceSingle}
               priceRpPack={priceRpPack}
               priceHwpPack={priceHwpPack}
+              currencySymbol={currencySymbol}
             />
           ))}
         </div>
@@ -256,6 +258,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
           priceSingle={priceSingle}
           priceRpPack={priceRpPack}
           priceHwpPack={priceHwpPack}
+          currencySymbol={currencySymbol}
         />
       )}
     </div>
@@ -278,6 +281,7 @@ function CatalogCard({
   priceSingle,
   priceRpPack,
   priceHwpPack,
+  currencySymbol,
 }: {
   product: WholesaleProduct;
   idx: number;
@@ -292,13 +296,14 @@ function CatalogCard({
   priceSingle: number;
   priceRpPack: number;
   priceHwpPack: number;
+  currencySymbol: string;
 }) {
   const pid = p.sku.toUpperCase();
   const priceLabel =
-    pid === "RP_PACK"  ? `$${priceRpPack.toFixed(2)}/set` :
-    pid === "HWP_PACK" ? `$${priceHwpPack.toFixed(2)}/set` :
-    p.packOnly         ? `${p.packType === "HWP" ? "Holy Week Pack" : "Resurrection Pack"} $${(p.packType === "HWP" ? priceHwpPack : priceRpPack).toFixed(2)}/set` :
-                         `$${priceSingle.toFixed(2)}/sticker`;
+    pid === "RP_PACK"  ? `${currencySymbol}${priceRpPack.toFixed(2)}/set` :
+    pid === "HWP_PACK" ? `${currencySymbol}${priceHwpPack.toFixed(2)}/set` :
+    p.packOnly         ? `${p.packType === "HWP" ? "Holy Week Pack" : "Resurrection Pack"} ${currencySymbol}${(p.packType === "HWP" ? priceHwpPack : priceRpPack).toFixed(2)}/set` :
+                         `${currencySymbol}${priceSingle.toFixed(2)}/sticker`;
 
   return (
     <article
@@ -486,6 +491,7 @@ function CatalogLightbox({
   priceSingle,
   priceRpPack,
   priceHwpPack,
+  currencySymbol,
 }: {
   products: WholesaleProduct[];
   index: number;
@@ -495,6 +501,7 @@ function CatalogLightbox({
   priceSingle: number;
   priceRpPack: number;
   priceHwpPack: number;
+  currencySymbol: string;
 }) {
   const p = products[index];
   const [qty, setQty] = useState(25);
@@ -731,9 +738,9 @@ function CatalogLightbox({
                   style={inputSm}
                 >
                   {showSingleOption && (
-                    <option value="single">This sticker — ${priceSingle.toFixed(2)}/ea</option>
+                    <option value="single">This sticker — {currencySymbol}{priceSingle.toFixed(2)}/ea</option>
                   )}
-                  <option value="pack">Full {packName} — ${packPrice.toFixed(2)}/set</option>
+                  <option value="pack">Full {packName} — {currencySymbol}{packPrice.toFixed(2)}/set</option>
                 </select>
               </div>
             )}
@@ -749,7 +756,7 @@ function CatalogLightbox({
             {/* Total */}
             <div style={{ fontSize: "0.84rem", color: "var(--text)", fontFamily: "var(--font-inter)" }}>
               <span style={{ color: "var(--text-muted)" }}>Total: </span>
-              <strong style={{ color: "var(--gold)" }}>${lineTotal}</strong>
+              <strong style={{ color: "var(--gold)" }}>{currencySymbol}{lineTotal}</strong>
               {orderMode === "pack" && <span style={{ color: "var(--text-muted)", fontSize: "0.76rem" }}> (full pack)</span>}
             </div>
 

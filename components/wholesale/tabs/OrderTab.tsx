@@ -13,14 +13,14 @@ interface Props {
   products: WholesaleProduct[];
   cart: WholesaleCartLine[];
   onCartChange: (lines: WholesaleCartLine[]) => void;
-  session: { accountId: string; displayName: string; notifyEmail: string; contactNames: string[]; priceSingle: number; priceRpPack: number; priceHwpPack: number };
+  session: { accountId: string; displayName: string; notifyEmail: string; contactNames: string[]; priceSingle: number; priceRpPack: number; priceHwpPack: number; currencySymbol: string };
   onOrderSubmitted: () => void;
 }
 
 type AddMode = "single" | "bulk";
 
 export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitted }: Props) {
-  const { priceSingle, priceRpPack, priceHwpPack, contactNames } = session;
+  const { priceSingle, priceRpPack, priceHwpPack, contactNames, currencySymbol } = session;
 
   const [mode, setMode] = useState<AddMode>("single");
   const [selectedSku, setSelectedSku] = useState("");
@@ -443,8 +443,8 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                   style={{ ...inputStyle, width: "100%" }}
                 >
                   <option value="">— Select a design —</option>
-                  <option value="RP_PACK">Resurrection Pack — ${priceRpPack.toFixed(2)}/set</option>
-                  <option value="HWP_PACK">Holy Week Pack — ${priceHwpPack.toFixed(2)}/set</option>
+                  <option value="RP_PACK">Resurrection Pack — {currencySymbol}{priceRpPack.toFixed(2)}/set</option>
+                  <option value="HWP_PACK">Holy Week Pack — {currencySymbol}{priceHwpPack.toFixed(2)}/set</option>
                   <option value="" disabled>──────────</option>
                   {orderableProducts
                     .filter((p) => !p.isPackProduct)
@@ -482,7 +482,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
             {/* Price note */}
             <p style={{ fontSize: "0.77rem", color: "var(--text-muted)", margin: "0 0 0.4rem" }}>
-              ${priceSingle.toFixed(2)}/sticker &nbsp;|&nbsp; Resurrection Pack ${priceRpPack.toFixed(2)} &nbsp;|&nbsp; Holy Week Pack ${priceHwpPack.toFixed(2)}
+              {currencySymbol}{priceSingle.toFixed(2)}/sticker &nbsp;|&nbsp; Resurrection Pack {currencySymbol}{priceRpPack.toFixed(2)} &nbsp;|&nbsp; Holy Week Pack {currencySymbol}{priceHwpPack.toFixed(2)}
             </p>
             <p style={{ fontSize: "0.77rem", color: "var(--text-muted)", margin: "0 0 0.75rem" }}>
               🔔 Reminder: Order when you have ~10 left — delivery takes ~2 weeks.
@@ -603,7 +603,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                     <span style={{ flex: 1 }}>
                       {p.name}
                       <small style={{ color: "var(--text-muted)", marginLeft: "0.4rem" }}>
-                        ({p.sku}){"unitPrice" in p && p.isVirtualPack ? ` — $${(p as { unitPrice: number }).unitPrice.toFixed(2)}/set` : ""}
+                        ({p.sku}){"unitPrice" in p && p.isVirtualPack ? ` — ${currencySymbol}${(p as { unitPrice: number }).unitPrice.toFixed(2)}/set` : ""}
                       </small>
                     </span>
                   </label>
@@ -647,7 +647,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                     {line.designName}
                   </p>
                   <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                    {line.productId} — ${line.unitPrice.toFixed(2)}/ea
+                    {line.productId} — {currencySymbol}{line.unitPrice.toFixed(2)}/ea
                   </p>
                 </div>
 
@@ -709,7 +709,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                   {hasPackInCart ? ` · ${packSetCount} pack set${packSetCount !== 1 ? "s" : ""}` : ""}
                 </p>
                 <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>
-                  Grand Total: <span style={{ color: "var(--brand)", fontVariantNumeric: "tabular-nums" }}>${grandTotal.toFixed(2)}</span>
+                  Grand Total: <span style={{ color: "var(--brand)", fontVariantNumeric: "tabular-nums" }}>{currencySymbol}{grandTotal.toFixed(2)}</span>
                 </p>
               </div>
             </div>
@@ -746,15 +746,15 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                     <td style={{ padding: "6px 8px" }}>{l.designName}</td>
                     <td style={{ padding: "6px 8px", textAlign: "center", fontFamily: "monospace", fontSize: "0.76rem" }}>{l.productId}</td>
                     <td style={{ padding: "6px 8px", textAlign: "center" }}>{l.qty}</td>
-                    <td style={{ padding: "6px 8px", textAlign: "center", fontVariantNumeric: "tabular-nums" }}>${l.unitPrice.toFixed(2)}</td>
-                    <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "var(--brand)", fontVariantNumeric: "tabular-nums" }}>${(l.unitPrice * l.qty).toFixed(2)}</td>
+                    <td style={{ padding: "6px 8px", textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{currencySymbol}{l.unitPrice.toFixed(2)}</td>
+                    <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "var(--brand)", fontVariantNumeric: "tabular-nums" }}>{currencySymbol}{(l.unitPrice * l.qty).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <p style={{ textAlign: "right", fontWeight: 700, fontSize: "1rem", margin: "0 0 1rem" }}>
-            Grand Total: <span style={{ color: "var(--brand)" }}>${grandTotal.toFixed(2)}</span>
+            Grand Total: <span style={{ color: "var(--brand)" }}>{currencySymbol}{grandTotal.toFixed(2)}</span>
           </p>
           <button
             onClick={handleSubmit}

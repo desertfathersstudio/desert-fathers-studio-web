@@ -14,6 +14,8 @@ export interface WholesaleAccountConfig {
   priceSingle?: number;
   priceRpPack?: number;
   priceHwpPack?: number;
+  /** Currency symbol shown in the portal UI (default "$") */
+  currencySymbol?: string;
 }
 
 // Client-safe: accountIds only, no PINs.
@@ -74,6 +76,18 @@ const KNOWN_ACCOUNTS: WholesaleAccountConfig[] = [
     priceSingle:  0.90,
     priceRpPack:  5.00,
     priceHwpPack: 10.00,
+  },
+  {
+    accountId:          "shenouda",
+    displayName:        "Saint Shenouda Monastery",
+    notifyEmail:        "st.mosesbookstore@gmail.com",
+    hasPendingTab:      false,
+    canEditFulfillment: false,
+    contactNames:       [],
+    priceSingle:  1.40,
+    priceRpPack:  8.00,
+    priceHwpPack: 16.00,
+    currencySymbol: "A$",
   },
 ];
 
