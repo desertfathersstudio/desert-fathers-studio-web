@@ -39,9 +39,10 @@ export async function POST(req: NextRequest) {
     hasPendingTab:      account.hasPendingTab,
     canEditFulfillment: account.canEditFulfillment,
     contactNames:       account.contactNames,
-    priceSingle:        account.priceSingle  ?? WS_PRICE_SINGLE,
-    priceRpPack:        account.priceRpPack  ?? WS_PRICE_RP_PACK,
-    priceHwpPack:       account.priceHwpPack ?? WS_PRICE_HWP_PACK,
+    priceSingle:        account.priceSingle    ?? WS_PRICE_SINGLE,
+    priceRpPack:        account.priceRpPack    ?? WS_PRICE_RP_PACK,
+    priceHwpPack:       account.priceHwpPack   ?? WS_PRICE_HWP_PACK,
+    currencySymbol:     account.currencySymbol ?? "$",
   });
 
   res.cookies.set(sessionCookieOptions(token));
