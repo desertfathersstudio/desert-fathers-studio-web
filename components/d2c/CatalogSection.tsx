@@ -15,7 +15,7 @@ import { StickerCard, type StickerProduct } from "@/components/shared/StickerCar
 import { useCart } from "@/lib/cart";
 import { useLightbox } from "@/lib/lightbox";
 
-function toCardProduct(s: Sticker): StickerProduct {
+function toCardProduct(s: Sticker, soldOut: boolean): StickerProduct {
   return {
     id: s.id,
     name: s.name,
@@ -26,17 +26,21 @@ function toCardProduct(s: Sticker): StickerProduct {
     isPack: s.isPack,
     packSize: s.packSize,
     packOnly: s.packOnly,
+    soldOut,
   };
 }
 
 export function CatalogSection({
   initialCategory,
+  soldOutNames = [],
 }: {
   initialCategory?: CategoryKey;
+  soldOutNames?: string[];
 }) {
   const [active, setActive] = useState<CategoryKey>(initialCategory ?? "all");
   const { add } = useCart();
   const { open: openLightbox } = useLightbox();
+  const soldOutSet = useMemo(() => new Set(soldOutNames), [soldOutNames]);
 
   // Sync active filter when initialCategory changes via URL navigation
   useEffect(() => {
@@ -116,10 +120,10 @@ export function CatalogSection({
         {active === "all" ? (
           <div className="space-y-12">
             {packGroup && <PackRow items={packGroup.items} />}
-            <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} />
+            <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} />
           </div>
         ) : active === "individuals" ? (
-          <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} />
+          <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} />
         ) : (
           <div>
             {active === "packs" && packGroup ? (
@@ -129,6 +133,7 @@ export function CatalogSection({
                 items={grouped.find((g) => g.key === active)?.items ?? []}
                 onAdd={add}
                 onOpenLightbox={openLightbox}
+                soldOutSet={soldOutSet}
               />
             )}
           </div>
@@ -228,21 +233,26 @@ function StickerGrid({
   items,
   onAdd,
   onOpenLightbox,
+  soldOutSet,
 }: {
   items: Sticker[];
   onAdd: (s: Sticker) => void;
   onOpenLightbox: (items: Sticker[], index: number) => void;
+  soldOutSet: Set<string>;
 }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
-      {items.map((sticker, i) => (
-        <StickerCard
-          key={sticker.id}
-          product={toCardProduct(sticker)}
-          onAddToCart={sticker.packOnly ? undefined : () => onAdd(sticker)}
-          onOpen={() => onOpenLightbox(items, i)}
-        />
-      ))}
+      {items.map((sticker, i) => {
+        const soldOut = soldOutSet.has(sticker.name);
+        return (
+          <StickerCard
+            key={sticker.id}
+            product={toCardProduct(sticker, soldOut)}
+            onAddToCart={sticker.packOnly || soldOut ? undefined : () => onAdd(sticker)}
+            onOpen={() => onOpenLightbox(items, i)}
+          />
+        );
+      })}
     </div>
   );
 }

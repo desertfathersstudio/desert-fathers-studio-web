@@ -2,6 +2,7 @@ import { Nav } from "@/components/d2c/Nav";
 import { CatalogSection } from "@/components/d2c/CatalogSection";
 import { Footer } from "@/components/d2c/Footer";
 import { type CategoryKey } from "@/lib/catalog";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
 const VALID_CATEGORIES: CategoryKey[] = [
   "individuals", "packs", "christ", "our-lady", "angels", "saints",
@@ -17,6 +18,25 @@ export default async function ShopPage({
   const category = VALID_CATEGORIES.includes(categoryParam as CategoryKey)
     ? (categoryParam as CategoryKey)
     : undefined;
+
+  // Fetch sold-out product names from inventory
+  let soldOutNames: string[] = [];
+  try {
+    const sb = await createSupabaseServer();
+    const { data } = await sb
+      .from("products")
+      .select("name, inventory(on_hand)")
+      .eq("active", true)
+      .eq("coming_soon", false);
+    soldOutNames = (data ?? [])
+      .filter((p: { name: string; inventory: { on_hand: number }[] }) => {
+        const inv = p.inventory?.[0];
+        return inv !== undefined && inv.on_hand === 0;
+      })
+      .map((p: { name: string }) => p.name);
+  } catch {
+    // If DB is unavailable or column doesn't exist yet, gracefully show no sold-out items
+  }
 
   return (
     <>
@@ -53,7 +73,7 @@ export default async function ShopPage({
           </div>
         </div>
 
-        <CatalogSection initialCategory={category} />
+        <CatalogSection initialCategory={category} soldOutNames={soldOutNames} />
       </main>
       <Footer />
     </>

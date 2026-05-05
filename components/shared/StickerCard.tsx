@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { NotifyMeButton } from "@/components/d2c/NotifyMeButton";
 
 export interface StickerProduct {
   id: string;
@@ -14,6 +15,7 @@ export interface StickerProduct {
   isPack?: boolean;
   packSize?: number;
   packOnly?: boolean;
+  soldOut?: boolean;
 }
 
 interface StickerCardProps {
@@ -115,7 +117,7 @@ export function StickerCard({
             </span>
           )}
 
-          {product.packOnly && (
+          {product.packOnly && !product.soldOut && (
             <span
               className="absolute top-2 right-2 text-[9px] font-medium uppercase tracking-wide px-2 py-0.5"
               style={{
@@ -128,10 +130,23 @@ export function StickerCard({
               Pack only
             </span>
           )}
+
+          {product.soldOut && (
+            <span
+              className="absolute top-2 right-2 text-[9px] font-semibold uppercase tracking-wide px-2 py-0.5"
+              style={{
+                background: "rgba(180,60,60,0.85)",
+                color: "#fff",
+                borderRadius: 3,
+              }}
+            >
+              Sold Out
+            </span>
+          )}
         </div>
 
-        {/* Add to cart — slides up from below the image, never covers it */}
-        {onAddToCart && (
+        {/* Add to cart — slides up on hover; hidden when sold out */}
+        {onAddToCart && !product.soldOut && (
           <div
             className="translate-y-full group-hover:translate-y-0 transition-transform duration-200"
           >
@@ -165,7 +180,17 @@ export function StickerCard({
         >
           {product.name}
         </h3>
-        {product.packOnly ? (
+        {product.soldOut ? (
+          <div className="mt-1">
+            <p
+              className="text-xs mb-1.5"
+              style={{ color: "rgba(180,60,60,0.7)", fontFamily: "var(--font-sans)" }}
+            >
+              Restocking soon
+            </p>
+            <NotifyMeButton productName={product.name} variant="compact" />
+          </div>
+        ) : product.packOnly ? (
           <p
             className="mt-0.5 text-xs"
             style={{ color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}

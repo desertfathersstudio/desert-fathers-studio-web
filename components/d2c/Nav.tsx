@@ -121,6 +121,14 @@ export function Nav() {
             </div>
 
             <Link
+              href="/coming-soon"
+              className="text-sm font-medium transition-opacity hover:opacity-55"
+              style={{ color: "var(--text)" }}
+            >
+              Coming Soon
+            </Link>
+
+            <Link
               href="/suggestions"
               className="text-sm font-medium transition-opacity hover:opacity-55"
               style={{ color: "var(--text)" }}
@@ -266,6 +274,17 @@ export function Nav() {
                     </Link>
                   </div>
                 )}
+              </div>
+
+              <div style={{ borderBottom: "1px solid var(--border)" }}>
+                <Link
+                  href="/coming-soon"
+                  onClick={closeMobile}
+                  className="flex items-center w-full py-4 text-sm font-medium transition-opacity hover:opacity-60"
+                  style={{ color: "var(--text)" }}
+                >
+                  Coming Soon
+                </Link>
               </div>
 
               <div style={{ borderBottom: "1px solid var(--border)" }}>

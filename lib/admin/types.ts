@@ -54,6 +54,7 @@ export interface Product {
   retail_price: number;
   review_status: ReviewStatus;
   review_comments: string | null;
+  coming_soon: boolean;
   active: boolean;
   created_at: string;
   updated_at: string;

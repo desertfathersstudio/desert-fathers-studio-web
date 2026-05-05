@@ -33,6 +33,7 @@ export function EditProductModal({
   const [incoming, setIncoming]           = useState(product.inventory?.incoming ?? 0);
   const [threshold, setThreshold]         = useState(product.inventory?.low_stock_threshold ?? 10);
   const [imageUrl, setImageUrl]           = useState(product.image_url ?? "");
+  const [comingSoon, setComingSoon]       = useState(product.coming_soon ?? false);
   const [uploading, setUploading]         = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -68,6 +69,7 @@ export function EditProductModal({
           incoming,
           threshold,
           hasInventory: !!product.inventory,
+          comingSoon,
         });
 
         const updated: ProductWithInventory = {
@@ -76,6 +78,7 @@ export function EditProductModal({
           review_status: reviewStatus,
           review_comments: reviewComments || null,
           image_url: imageUrl || null,
+          coming_soon: comingSoon,
           inventory: {
             ...(product.inventory ?? { id: "", product_id: product.id, last_updated: null }),
             on_hand: onHand,
@@ -173,6 +176,60 @@ export function EditProductModal({
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>
+          </div>
+
+          {/* Coming Soon toggle */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0.625rem 0.75rem",
+              background: comingSoon ? "#fef9ec" : "#f9f5f0",
+              borderRadius: 8,
+              border: `1px solid ${comingSoon ? "#f0d080" : "#e8ddd5"}`,
+            }}
+          >
+            <div>
+              <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 600, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif" }}>
+                Coming Soon
+              </p>
+              <p style={{ margin: "2px 0 0", fontSize: "0.68rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+                {comingSoon
+                  ? "Hidden from shop — shown in Coming Soon tab. Turning off will notify subscribers."
+                  : "Product is visible in the shop."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setComingSoon((v) => !v)}
+              style={{
+                width: 38,
+                height: 22,
+                borderRadius: 11,
+                border: "none",
+                background: comingSoon ? "#c4a35a" : "#d4c4b8",
+                cursor: "pointer",
+                position: "relative",
+                flexShrink: 0,
+                transition: "background 0.2s",
+              }}
+              aria-label={comingSoon ? "Disable coming soon" : "Enable coming soon"}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: 3,
+                  left: comingSoon ? 18 : 3,
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  background: "#fff",
+                  transition: "left 0.2s",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                }}
+              />
+            </button>
           </div>
 
           {/* Review comments */}
