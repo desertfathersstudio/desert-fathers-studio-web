@@ -19,23 +19,31 @@ export default async function ShopPage({
     ? (categoryParam as CategoryKey)
     : undefined;
 
-  // Fetch sold-out product names from inventory
   let soldOutNames: string[] = [];
+  let comingSoonNames: string[] = [];
   try {
     const sb = await createSupabaseServer();
-    const { data } = await sb
-      .from("products")
-      .select("name, inventory(on_hand)")
-      .eq("active", true)
-      .eq("coming_soon", false);
-    soldOutNames = (data ?? [])
+    const [productsRes, comingSoonRes] = await Promise.all([
+      sb
+        .from("products")
+        .select("name, inventory(on_hand)")
+        .eq("active", true)
+        .eq("coming_soon", false),
+      sb
+        .from("products")
+        .select("name")
+        .eq("active", true)
+        .eq("coming_soon", true),
+    ]);
+    soldOutNames = (productsRes.data ?? [])
       .filter((p: { name: string; inventory: { on_hand: number }[] }) => {
         const inv = p.inventory?.[0];
         return inv !== undefined && inv.on_hand === 0;
       })
       .map((p: { name: string }) => p.name);
+    comingSoonNames = (comingSoonRes.data ?? []).map((p: { name: string }) => p.name);
   } catch {
-    // If DB is unavailable or column doesn't exist yet, gracefully show no sold-out items
+    // gracefully degrade if DB is unavailable
   }
 
   return (
@@ -73,7 +81,7 @@ export default async function ShopPage({
           </div>
         </div>
 
-        <CatalogSection initialCategory={category} soldOutNames={soldOutNames} />
+        <CatalogSection initialCategory={category} soldOutNames={soldOutNames} comingSoonNames={comingSoonNames} />
       </main>
       <Footer />
     </>

@@ -33,27 +33,35 @@ function toCardProduct(s: Sticker, soldOut: boolean): StickerProduct {
 export function CatalogSection({
   initialCategory,
   soldOutNames = [],
+  comingSoonNames = [],
 }: {
   initialCategory?: CategoryKey;
   soldOutNames?: string[];
+  comingSoonNames?: string[];
 }) {
   const [active, setActive] = useState<CategoryKey>(initialCategory ?? "all");
   const { add } = useCart();
   const { open: openLightbox } = useLightbox();
-  const soldOutSet = useMemo(() => new Set(soldOutNames), [soldOutNames]);
+  const soldOutSet    = useMemo(() => new Set(soldOutNames),    [soldOutNames]);
+  const comingSoonSet = useMemo(() => new Set(comingSoonNames), [comingSoonNames]);
 
   // Sync active filter when initialCategory changes via URL navigation
   useEffect(() => {
     setActive(initialCategory ?? "all");
   }, [initialCategory]);
 
+  const visibleCatalog = useMemo(
+    () => CATALOG.filter((s) => !comingSoonSet.has(s.name)),
+    [comingSoonSet]
+  );
+
   const grouped = useMemo(() => {
     return CATEGORY_ORDER.map((key) => ({
       key,
       label: CATEGORY_LABELS[key],
-      items: CATALOG.filter((s) => s.category === key),
+      items: visibleCatalog.filter((s) => s.category === key),
     })).filter((g) => g.items.length > 0);
-  }, []);
+  }, [visibleCatalog]);
 
   const packGroup = useMemo(
     () => grouped.find((g) => g.key === "packs"),
@@ -63,12 +71,12 @@ export function CatalogSection({
   const flatStickers = useMemo(
     () =>
       CATEGORY_ORDER.filter((k) => k !== "packs").flatMap((key) =>
-        CATALOG.filter((s) => s.category === key && !s.isPack)
+        visibleCatalog.filter((s) => s.category === key && !s.isPack)
       ),
-    []
+    [visibleCatalog]
   );
 
-  const totalDesigns = CATALOG.length;
+  const totalDesigns = visibleCatalog.length;
 
   return (
     <section id="catalog" style={{ background: "var(--bg)" }}>
