@@ -17,6 +17,7 @@ const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
       "Fr. Zosima Abba Moses",
       "Br. Abanob Abba Moses",
     ],
+    minQty: 25,
   },
   "5095": {
     accountId:          "demiana",

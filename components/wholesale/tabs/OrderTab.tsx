@@ -20,7 +20,8 @@ interface Props {
 type AddMode = "single" | "bulk";
 
 export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitted }: Props) {
-  const { priceSingle, priceRpPack, priceHwpPack, contactNames, currencySymbol, minQty } = session;
+  const { priceSingle, priceRpPack, priceHwpPack, contactNames, currencySymbol } = session;
+  const minQty = session.minQty ?? 25;
 
   const [mode, setMode] = useState<AddMode>("single");
   const [selectedSku, setSelectedSku] = useState("");
