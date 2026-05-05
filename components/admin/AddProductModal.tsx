@@ -32,7 +32,7 @@ export function AddProductModal({
   const [onHand, setOnHand]         = useState(0);
   const [incoming, setIncoming]     = useState(0);
   const [threshold, setThreshold]   = useState(10);
-  const [retailPrice, setRetailPrice] = useState(1.5);
+  const [retailPrice, setRetailPrice] = useState(2);
   const [imageUrl, setImageUrl]     = useState("");
   const [uploading, setUploading]   = useState(false);
 
@@ -43,16 +43,33 @@ export function AddProductModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleImageUpload(file: File) {
-    if (!sku.trim()) {
-      toast.error("Enter a SKU first so the image can be named correctly.");
-      return;
-    }
+  async function fetchNextSku(): Promise<string> {
+    const { data } = await sb.from("products").select("sku").ilike("sku", "STK-%");
+    const nums = (data ?? [])
+      .map((p: { sku: string }) => parseInt(p.sku.replace(/^STK-/i, ""), 10))
+      .filter((n: number) => !isNaN(n));
+    const next = nums.length ? Math.max(...nums) + 1 : 1;
+    return `STK-${String(next).padStart(3, "0")}`;
+  }
+
+  async function handleFileSelect(file: File) {
+    // Auto-fill name from filename
+    const cleanName = file.name
+      .replace(/\.[^.]+$/, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    setName(cleanName);
+
+    // Fetch next SKU
+    const nextSku = await fetchNextSku();
+    setSku(nextSku);
+
+    // Upload image using the resolved SKU
     setUploading(true);
     try {
       const form = new FormData();
       form.append("file", file);
-      form.append("sku", sku.trim());
+      form.append("sku", nextSku);
       const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Upload failed");
@@ -119,7 +136,7 @@ export function AddProductModal({
                 style={{ display: "none" }}
                 onChange={(e) => {
                   const f = e.target.files?.[0];
-                  if (f) handleImageUpload(f);
+                  if (f) handleFileSelect(f);
                 }}
               />
               <button onClick={() => fileRef.current?.click()} disabled={uploading} style={outlineBtn}>
