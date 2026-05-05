@@ -40,7 +40,7 @@ export function CatalogSection({
   comingSoonNames?: string[];
 }) {
   const [active, setActive] = useState<CategoryKey>(initialCategory ?? "all");
-  const { add } = useCart();
+  const { add, openCart } = useCart();
   const { open: openLightbox } = useLightbox();
   const soldOutSet    = useMemo(() => new Set(soldOutNames),    [soldOutNames]);
   const comingSoonSet = useMemo(() => new Set(comingSoonNames), [comingSoonNames]);
@@ -51,7 +51,7 @@ export function CatalogSection({
   }, [initialCategory]);
 
   const visibleCatalog = useMemo(
-    () => CATALOG.filter((s) => !comingSoonSet.has(s.name)),
+    () => CATALOG.filter((s) => s.isPack || !comingSoonSet.has(s.name)),
     [comingSoonSet]
   );
 
@@ -127,7 +127,7 @@ export function CatalogSection({
         {/* Content */}
         {active === "all" ? (
           <div className="space-y-12">
-            {packGroup && <PackRow items={packGroup.items} />}
+            {packGroup && <PackRow items={packGroup.items} comingSoonSet={comingSoonSet} onAdd={(s) => { add(s); openCart(); }} />}
             <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} />
           </div>
         ) : active === "individuals" ? (
@@ -135,7 +135,7 @@ export function CatalogSection({
         ) : (
           <div>
             {active === "packs" && packGroup ? (
-              <PackRow items={packGroup.items} />
+              <PackRow items={packGroup.items} comingSoonSet={comingSoonSet} onAdd={(s) => { add(s); openCart(); }} />
             ) : (
               <StickerGrid
                 items={grouped.find((g) => g.key === active)?.items ?? []}
@@ -178,31 +178,57 @@ function Pill({
   );
 }
 
-function PackRow({ items }: { items: Sticker[] }) {
+function PackRow({
+  items,
+  comingSoonSet,
+  onAdd,
+}: {
+  items: Sticker[];
+  comingSoonSet: Set<string>;
+  onAdd: (s: Sticker) => void;
+}) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
-      {items.map((pack) => (
-        <Link key={pack.id} href={`/shop/${pack.id}`} className="group block">
+      {items.map((pack) => {
+        const isComingSoon = comingSoonSet.has(pack.name);
+        return (
           <article
+            key={pack.id}
             style={{
               borderRadius: "var(--radius-card)",
               overflow: "hidden",
               border: "1px solid var(--border)",
             }}
           >
-            {/* White image frame */}
-            <div
-              className="relative aspect-square overflow-hidden"
-              style={{ background: "#fff" }}
-            >
-              <Image
-                src={stickerImageUrl(pack.filename)}
-                alt={pack.name}
-                fill
-                className="object-contain p-12 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
-                sizes="(max-width: 640px) 100vw, 50vw"
-              />
-            </div>
+            {/* Image — click navigates to pack detail */}
+            <Link href={`/shop/${pack.id}`} className="group block">
+              <div
+                className="relative aspect-square overflow-hidden"
+                style={{ background: "#fff" }}
+              >
+                <Image
+                  src={stickerImageUrl(pack.filename)}
+                  alt={pack.name}
+                  fill
+                  className="object-contain p-12 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                />
+                {isComingSoon && (
+                  <span
+                    className="absolute top-3 left-3 text-[9px] font-semibold uppercase tracking-wide px-2 py-1"
+                    style={{
+                      background: "var(--brand)",
+                      color: "#efe7d6",
+                      borderRadius: 4,
+                    }}
+                  >
+                    Coming Soon
+                  </span>
+                )}
+              </div>
+            </Link>
+
+            {/* Info + action */}
             <div
               className="px-6 py-5"
               style={{
@@ -219,20 +245,46 @@ function PackRow({ items }: { items: Sticker[] }) {
               >
                 {pack.name} — Set of {pack.packSize}
               </h3>
-              <p
-                className="mt-1.5 text-sm font-medium"
-                style={{
-                  color: "var(--brand)",
-                  fontVariantNumeric: "tabular-nums",
-                  fontFamily: "var(--font-sans)",
-                }}
-              >
-                ${pack.price.toFixed(2)}
-              </p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <p
+                  className="text-sm font-medium"
+                  style={{
+                    color: "var(--brand)",
+                    fontVariantNumeric: "tabular-nums",
+                    fontFamily: "var(--font-sans)",
+                  }}
+                >
+                  ${pack.price.toFixed(2)}
+                </p>
+                {isComingSoon ? (
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}
+                  >
+                    Available soon
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => onAdd(pack)}
+                    className="text-xs font-semibold px-4 py-2 transition-opacity hover:opacity-80"
+                    style={{
+                      background: "var(--brand)",
+                      color: "#efe7d6",
+                      borderRadius: 6,
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-sans)",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    Add to Cart
+                  </button>
+                )}
+              </div>
             </div>
           </article>
-        </Link>
-      ))}
+        );
+      })}
     </div>
   );
 }
