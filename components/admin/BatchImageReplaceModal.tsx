@@ -5,6 +5,9 @@ import { X, Upload, CheckCircle, AlertCircle, ImageIcon, HelpCircle } from "luci
 import { toast } from "sonner";
 import { adminBatchReplaceImage } from "@/app/admin/inventory/actions";
 import type { ProductWithInventory } from "@/lib/admin/types";
+import { CATALOG } from "@/lib/catalog";
+
+const CATALOG_FILENAME_BY_NAME = new Map(CATALOG.map((s) => [s.name, s.filename]));
 
 type Mode = "live" | "review";
 type UploadStatus = "queued" | "uploading" | "done" | "error";
@@ -254,6 +257,8 @@ export function BatchImageReplaceModal({
         const form = new FormData();
         form.append("file", file);
         form.append("sku", product.sku.toLowerCase());
+        const catalogFilename = CATALOG_FILENAME_BY_NAME.get(product.name);
+        if (catalogFilename) form.append("catalogFilename", catalogFilename);
         const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Upload failed");

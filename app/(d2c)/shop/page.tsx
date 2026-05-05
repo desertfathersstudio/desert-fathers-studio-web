@@ -46,7 +46,7 @@ export default async function ShopPage({
         .eq("coming_soon", false),
       sb
         .from("products")
-        .select("image_url")
+        .select("image_url, name")
         .eq("active", true)
         .eq("coming_soon", true),
     ]);
@@ -57,13 +57,17 @@ export default async function ShopPage({
       })
       .map((p: { name: string }) => p.name);
 
-    // Match coming-soon products to catalog entries by filename (R2 URL → base → catalog name)
-    comingSoonNames = (comingSoonRes.data ?? [])
-      .map((p: { image_url: string | null }) => {
-        const base = r2UrlToFilenameBase(p.image_url ?? "");
-        return CATALOG_BY_FILENAME_BASE.get(base) ?? null;
-      })
-      .filter((n): n is string => n !== null);
+    const catalogNameSet = new Set(CATALOG.map((s) => s.name));
+    const resolved = new Set<string>();
+    for (const p of (comingSoonRes.data ?? []) as { image_url: string | null; name: string }[]) {
+      // Primary: direct name match against catalog
+      if (catalogNameSet.has(p.name)) { resolved.add(p.name); continue; }
+      // Fallback: R2 URL → filename base → catalog name
+      const base = r2UrlToFilenameBase(p.image_url ?? "");
+      const byFilename = CATALOG_BY_FILENAME_BASE.get(base);
+      if (byFilename) resolved.add(byFilename);
+    }
+    comingSoonNames = [...resolved];
   } catch {
     // gracefully degrade if DB is unavailable
   }
