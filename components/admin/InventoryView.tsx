@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Search, ArrowUpDown } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Upload } from "lucide-react";
 import type { AdminStats, ProductWithInventory } from "@/lib/admin/types";
 import { StatCard } from "./StatCard";
 import { InventoryCharts } from "./InventoryCharts";
@@ -9,6 +9,7 @@ import { InventoryCard } from "./InventoryCard";
 import { AddProductModal } from "./AddProductModal";
 import { EditProductModal } from "./EditProductModal";
 import { ProductDetailDrawer } from "./ProductDetailDrawer";
+import { BatchImageReplaceModal } from "./BatchImageReplaceModal";
 
 type Filter = "all" | "low" | "sold_out" | "reorder" | "under_review";
 type SortBy = "name_asc" | "name_desc" | "sku" | "stock_high" | "stock_low" | "status";
@@ -33,6 +34,7 @@ export function InventoryView({
   const [filter, setFilter] = useState<Filter>("all");
   const [sortBy, setSortBy] = useState<SortBy>("sku");
   const [addOpen, setAddOpen] = useState(false);
+  const [batchReplaceOpen, setBatchReplaceOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<ProductWithInventory | null>(null);
   const [detailProduct, setDetailProduct] = useState<ProductWithInventory | null>(null);
 
@@ -86,6 +88,20 @@ export function InventoryView({
   function handleProductDeleted(id: string) {
     setProducts((prev) => prev.filter((p) => p.id !== id));
     setEditProduct(null);
+  }
+
+  function handleBatchUpdated(updates: { id: string; imageUrl: string; reviewStatus?: string }[]) {
+    setProducts((prev) =>
+      prev.map((p) => {
+        const u = updates.find((x) => x.id === p.id);
+        if (!u) return p;
+        return {
+          ...p,
+          image_url: u.imageUrl,
+          ...(u.reviewStatus ? { review_status: u.reviewStatus as import("@/lib/admin/types").ReviewStatus } : {}),
+        };
+      })
+    );
   }
 
   return (
@@ -209,6 +225,29 @@ export function InventoryView({
           </select>
         </div>
 
+        {/* Replace Images button */}
+        <button
+          onClick={() => setBatchReplaceOpen(true)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 14px",
+            borderRadius: 8,
+            background: "transparent",
+            color: "#6b4050",
+            border: "1px solid #e8ddd5",
+            fontSize: "0.82rem",
+            fontWeight: 500,
+            cursor: "pointer",
+            fontFamily: "Inter, system-ui, sans-serif",
+            flexShrink: 0,
+          }}
+        >
+          <Upload size={14} />
+          Replace Images
+        </button>
+
         {/* Add button */}
         <button
           onClick={() => setAddOpen(true)}
@@ -282,6 +321,13 @@ export function InventoryView({
         <AddProductModal
           onClose={() => setAddOpen(false)}
           onAdded={handleProductAdded}
+        />
+      )}
+      {batchReplaceOpen && (
+        <BatchImageReplaceModal
+          products={products}
+          onClose={() => setBatchReplaceOpen(false)}
+          onBatchUpdated={handleBatchUpdated}
         />
       )}
       {editProduct && (

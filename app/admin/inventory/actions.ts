@@ -150,6 +150,23 @@ export async function adminUpdateProduct(
   }
 }
 
+export async function adminBatchReplaceImage(
+  productId: string,
+  imageUrl: string,
+  mode: "live" | "review"
+): Promise<void> {
+  const sb = createSupabaseService();
+  const payload: Record<string, unknown> = {
+    image_url: imageUrl,
+    updated_at: new Date().toISOString(),
+  };
+  if (mode === "review") {
+    payload.review_status = "under_review";
+  }
+  const { error } = await sb.from("products").update(payload).eq("id", productId);
+  if (error) throw new Error(error.message);
+}
+
 export async function adminArchiveProduct(productId: string): Promise<void> {
   const sb = createSupabaseService();
   const { error } = await sb
