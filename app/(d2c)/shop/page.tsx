@@ -36,9 +36,10 @@ export default async function ShopPage({
 
   let soldOutNames: string[] = [];
   let comingSoonNames: string[] = [];
+  let imageOverrides: Record<string, string> = {};
   try {
     const sb = await createSupabaseServer();
-    const [productsRes, comingSoonRes] = await Promise.all([
+    const [productsRes, comingSoonRes, imageOverridesRes] = await Promise.all([
       sb
         .from("products")
         .select("name, inventory(on_hand)")
@@ -49,6 +50,11 @@ export default async function ShopPage({
         .select("image_url, name")
         .eq("active", true)
         .eq("coming_soon", true),
+      sb
+        .from("products")
+        .select("name, image_url")
+        .eq("active", true)
+        .not("image_url", "is", null),
     ]);
     soldOutNames = (productsRes.data ?? [])
       .filter((p: { name: string; inventory: { on_hand: number }[] }) => {
@@ -68,6 +74,10 @@ export default async function ShopPage({
       if (byFilename) resolved.add(byFilename);
     }
     comingSoonNames = [...resolved];
+
+    for (const p of (imageOverridesRes.data ?? []) as { name: string; image_url: string }[]) {
+      if (p.image_url) imageOverrides[p.name] = p.image_url;
+    }
   } catch {
     // gracefully degrade if DB is unavailable
   }
@@ -107,7 +117,7 @@ export default async function ShopPage({
           </div>
         </div>
 
-        <CatalogSection initialCategory={category} soldOutNames={soldOutNames} comingSoonNames={comingSoonNames} />
+        <CatalogSection initialCategory={category} soldOutNames={soldOutNames} comingSoonNames={comingSoonNames} imageOverrides={imageOverrides} />
       </main>
       <Footer />
     </>

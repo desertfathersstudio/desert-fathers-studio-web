@@ -24,6 +24,7 @@ export interface Sticker {
   id: string;
   name: string;
   filename: string;
+  imageUrl?: string; // runtime override from Supabase image_url (takes precedence over stickerImageUrl)
   price: number;
   category: Exclude<CategoryKey, "all">;
   isPack?: boolean;

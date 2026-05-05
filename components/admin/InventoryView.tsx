@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Search, ArrowUpDown, Upload, RefreshCw } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Upload } from "lucide-react";
 import type { AdminStats, ProductWithInventory } from "@/lib/admin/types";
 import { StatCard } from "./StatCard";
 import { InventoryCharts } from "./InventoryCharts";
@@ -35,7 +35,6 @@ export function InventoryView({
   const [sortBy, setSortBy] = useState<SortBy>("sku");
   const [addOpen, setAddOpen] = useState(false);
   const [batchReplaceOpen, setBatchReplaceOpen] = useState(false);
-  const [syncingImages, setSyncingImages] = useState(false);
   const [editProduct, setEditProduct] = useState<ProductWithInventory | null>(null);
   const [detailProduct, setDetailProduct] = useState<ProductWithInventory | null>(null);
 
@@ -103,34 +102,6 @@ export function InventoryView({
         };
       })
     );
-  }
-
-  async function handleSyncImages() {
-    if (syncingImages) return;
-    setSyncingImages(true);
-    try {
-      const res = await fetch("/api/admin/fix-image-urls", { method: "POST" });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Sync failed");
-      const { fixed, errors } = json as { fixed: string[]; skipped: number; errors: string[] };
-      if (errors.length > 0) {
-        (await import("sonner")).toast.error(`${errors.length} failed — check console`);
-        console.error("Image sync errors:", errors);
-      }
-      if (fixed.length > 0) {
-        (await import("sonner")).toast.success(`Synced ${fixed.length} image${fixed.length !== 1 ? "s" : ""} to canonical R2 keys`);
-        setProducts((prev) => prev.map((p) => {
-          if (!fixed.includes(p.name)) return p;
-          return p;
-        }));
-      } else {
-        (await import("sonner")).toast.success("All images already on canonical R2 keys");
-      }
-    } catch (err: unknown) {
-      (await import("sonner")).toast.error(String(err));
-    } finally {
-      setSyncingImages(false);
-    }
   }
 
   return (
@@ -253,32 +224,6 @@ export function InventoryView({
             <option value="status">Status</option>
           </select>
         </div>
-
-        {/* Sync Images button */}
-        <button
-          onClick={handleSyncImages}
-          disabled={syncingImages}
-          title="Re-upload all catalog images to their canonical R2 keys so D2C and wholesale show the same image"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "7px 14px",
-            borderRadius: 8,
-            background: "transparent",
-            color: "#6b4050",
-            border: "1px solid #e8ddd5",
-            fontSize: "0.82rem",
-            fontWeight: 500,
-            cursor: syncingImages ? "not-allowed" : "pointer",
-            fontFamily: "Inter, system-ui, sans-serif",
-            flexShrink: 0,
-            opacity: syncingImages ? 0.6 : 1,
-          }}
-        >
-          <RefreshCw size={14} className={syncingImages ? "animate-spin" : ""} />
-          {syncingImages ? "Syncing…" : "Sync Images"}
-        </button>
 
         {/* Replace Images button */}
         <button

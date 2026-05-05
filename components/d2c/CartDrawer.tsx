@@ -126,7 +126,7 @@ export function CartDrawer() {
                         }}
                       >
                         <Image
-                          src={stickerImageUrl(sticker.filename)}
+                          src={sticker.imageUrl ?? stickerImageUrl(sticker.filename)}
                           alt={sticker.name}
                           width={52}
                           height={52}

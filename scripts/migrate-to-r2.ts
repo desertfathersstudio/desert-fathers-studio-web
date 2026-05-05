@@ -113,6 +113,7 @@ async function buildJobs(): Promise<Job[]> {
   if (fs.existsSync(STATIC_DIR)) {
     for (const f of fs.readdirSync(STATIC_DIR).filter(n => !n.startsWith("."))) {
       const full = path.join(STATIC_DIR, f);
+      if (!fs.statSync(full).isFile()) continue;
       jobs.push({ name: f, size: fs.statSync(full).size, source: "local",
         getBuffer: async () => fs.readFileSync(full) });
       seen.add(f);

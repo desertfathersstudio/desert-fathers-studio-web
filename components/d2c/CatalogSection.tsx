@@ -15,12 +15,16 @@ import { StickerCard, type StickerProduct } from "@/components/shared/StickerCar
 import { useCart } from "@/lib/cart";
 import { useLightbox } from "@/lib/lightbox";
 
-function toCardProduct(s: Sticker, soldOut: boolean): StickerProduct {
+function resolveImageUrl(s: Sticker, imageOverrides?: Record<string, string>): string {
+  return s.imageUrl ?? imageOverrides?.[s.name] ?? stickerImageUrl(s.filename);
+}
+
+function toCardProduct(s: Sticker, soldOut: boolean, imageOverrides?: Record<string, string>): StickerProduct {
   return {
     id: s.id,
     name: s.name,
     price: s.price,
-    imageUrl: stickerImageUrl(s.filename),
+    imageUrl: resolveImageUrl(s, imageOverrides),
     category: s.category,
     isNew: s.isNew,
     isPack: s.isPack,
@@ -34,10 +38,12 @@ export function CatalogSection({
   initialCategory,
   soldOutNames = [],
   comingSoonNames = [],
+  imageOverrides = {},
 }: {
   initialCategory?: CategoryKey;
   soldOutNames?: string[];
   comingSoonNames?: string[];
+  imageOverrides?: Record<string, string>;
 }) {
   const [active, setActive] = useState<CategoryKey>(initialCategory ?? "all");
   const { add, openCart } = useCart();
@@ -127,21 +133,22 @@ export function CatalogSection({
         {/* Content */}
         {active === "all" ? (
           <div className="space-y-12">
-            {packGroup && <PackRow items={packGroup.items} comingSoonSet={comingSoonSet} onAdd={(s) => { add(s); openCart(); }} />}
-            <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} />
+            {packGroup && <PackRow items={packGroup.items} comingSoonSet={comingSoonSet} imageOverrides={imageOverrides} onAdd={(s) => { add(s); openCart(); }} />}
+            <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} imageOverrides={imageOverrides} />
           </div>
         ) : active === "individuals" ? (
-          <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} />
+          <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} imageOverrides={imageOverrides} />
         ) : (
           <div>
             {active === "packs" && packGroup ? (
-              <PackRow items={packGroup.items} comingSoonSet={comingSoonSet} onAdd={(s) => { add(s); openCart(); }} />
+              <PackRow items={packGroup.items} comingSoonSet={comingSoonSet} imageOverrides={imageOverrides} onAdd={(s) => { add(s); openCart(); }} />
             ) : (
               <StickerGrid
                 items={grouped.find((g) => g.key === active)?.items ?? []}
                 onAdd={add}
                 onOpenLightbox={openLightbox}
                 soldOutSet={soldOutSet}
+                imageOverrides={imageOverrides}
               />
             )}
           </div>
@@ -181,10 +188,12 @@ function Pill({
 function PackRow({
   items,
   comingSoonSet,
+  imageOverrides,
   onAdd,
 }: {
   items: Sticker[];
   comingSoonSet: Set<string>;
+  imageOverrides?: Record<string, string>;
   onAdd: (s: Sticker) => void;
 }) {
   return (
@@ -207,7 +216,7 @@ function PackRow({
                 style={{ background: "#fff" }}
               >
                 <Image
-                  src={stickerImageUrl(pack.filename)}
+                  src={resolveImageUrl(pack, imageOverrides)}
                   alt={pack.name}
                   fill
                   className="object-contain p-12 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
@@ -294,22 +303,30 @@ function StickerGrid({
   onAdd,
   onOpenLightbox,
   soldOutSet,
+  imageOverrides,
 }: {
   items: Sticker[];
   onAdd: (s: Sticker) => void;
   onOpenLightbox: (items: Sticker[], index: number) => void;
   soldOutSet: Set<string>;
+  imageOverrides?: Record<string, string>;
 }) {
+  // Build items with imageUrl pre-resolved so lightbox also uses the correct URL
+  const resolvedItems = useMemo(
+    () => items.map((s) => ({ ...s, imageUrl: resolveImageUrl(s, imageOverrides) })),
+    [items, imageOverrides]
+  );
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
-      {items.map((sticker, i) => {
+      {resolvedItems.map((sticker, i) => {
         const soldOut = soldOutSet.has(sticker.name);
         return (
           <StickerCard
             key={sticker.id}
             product={toCardProduct(sticker, soldOut)}
             onAddToCart={sticker.packOnly || soldOut ? undefined : () => onAdd(sticker)}
-            onOpen={() => onOpenLightbox(items, i)}
+            onOpen={() => onOpenLightbox(resolvedItems, i)}
           />
         );
       })}

@@ -248,7 +248,7 @@ export function StickerLightbox() {
                         }}
                       >
                         <Image
-                          src={stickerImageUrl(sticker.filename)}
+                          src={sticker.imageUrl ?? stickerImageUrl(sticker.filename)}
                           alt={sticker.name}
                           fill
                           className="object-contain p-5"
