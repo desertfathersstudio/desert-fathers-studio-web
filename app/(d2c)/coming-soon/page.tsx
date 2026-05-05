@@ -15,10 +15,11 @@ async function getComingSoonProducts(): Promise<ComingSoonProduct[]> {
     const sb = await createSupabaseServer();
     const { data } = await sb
       .from("products")
-      .select("id, name, image_url")
+      .select("id, name, image_url, sku")
       .eq("coming_soon", true)
       .eq("active", true)
-      .order("created_at", { ascending: true });
+      .eq("review_status", "approved")
+      .order("sku", { ascending: true });
     return (data ?? []) as ComingSoonProduct[];
   } catch {
     return [];
