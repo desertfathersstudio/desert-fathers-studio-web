@@ -32,9 +32,10 @@ interface Props {
   priceRpPack: number;
   priceHwpPack: number;
   currencySymbol: string;
+  minQty: number;
 }
 
-export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved, priceSingle, priceRpPack, priceHwpPack, currencySymbol }: Props) {
+export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved, priceSingle, priceRpPack, priceHwpPack, currencySymbol, minQty }: Props) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [sort, setSort] = useState<SortKey>("sku");
@@ -259,6 +260,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
           priceRpPack={priceRpPack}
           priceHwpPack={priceHwpPack}
           currencySymbol={currencySymbol}
+          minQty={minQty}
         />
       )}
     </div>
@@ -492,6 +494,7 @@ function CatalogLightbox({
   priceRpPack,
   priceHwpPack,
   currencySymbol,
+  minQty,
 }: {
   products: WholesaleProduct[];
   index: number;
@@ -502,9 +505,10 @@ function CatalogLightbox({
   priceRpPack: number;
   priceHwpPack: number;
   currencySymbol: string;
+  minQty: number;
 }) {
   const p = products[index];
-  const [qty, setQty] = useState(25);
+  const [qty, setQty] = useState(minQty);
   const [orderMode, setOrderMode] = useState<"single" | "pack">("single");
 
   const largeImageUrl = useMemo(() => {
@@ -749,7 +753,7 @@ function CatalogLightbox({
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <label style={smallLabel}>Quantity</label>
               <select value={qty} onChange={(e) => setQty(Number(e.target.value))} style={inputSm}>
-                {QTY_OPTIONS.map((q) => <option key={q} value={q}>{q}</option>)}
+                {QTY_OPTIONS.filter((q) => q >= minQty).map((q) => <option key={q} value={q}>{q}</option>)}
               </select>
             </div>
 

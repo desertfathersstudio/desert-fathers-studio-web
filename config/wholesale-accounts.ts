@@ -16,6 +16,8 @@ export interface WholesaleAccountConfig {
   priceHwpPack?: number;
   /** Currency symbol shown in the portal UI (default "$") */
   currencySymbol?: string;
+  /** Minimum sticker quantity per line item (default 50; abbey is 25) */
+  minQty?: number;
 }
 
 // Client-safe: accountIds only, no PINs.
@@ -32,6 +34,7 @@ const KNOWN_ACCOUNTS: WholesaleAccountConfig[] = [
       "Fr. Zosima Abba Moses",
       "Br. Abanob Abba Moses",
     ],
+    minQty: 25,
   },
   {
     accountId:          "demiana",

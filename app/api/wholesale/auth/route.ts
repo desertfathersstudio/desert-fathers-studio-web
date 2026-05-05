@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
     priceRpPack:        account.priceRpPack    ?? WS_PRICE_RP_PACK,
     priceHwpPack:       account.priceHwpPack   ?? WS_PRICE_HWP_PACK,
     currencySymbol:     account.currencySymbol ?? "$",
+    minQty:             account.minQty         ?? 50,
   });
 
   res.cookies.set(sessionCookieOptions(token));

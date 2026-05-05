@@ -85,6 +85,7 @@ export default function WholesalePinPage() {
           priceRpPack:        account.priceRpPack   ?? 3.00,
           priceHwpPack:       account.priceHwpPack  ?? 7.00,
           currencySymbol:     account.currencySymbol ?? "$",
+          minQty:             account.minQty         ?? 50,
         };
         try {
           sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
