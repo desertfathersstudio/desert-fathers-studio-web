@@ -91,7 +91,7 @@ export function HomepageGrid({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
           {featured.map((product, i) => {
-            const catalogEntry = CATALOG.find((s) => s.id === product.id);
+            const catalogEntry = CATALOG.find((s) => s.name === product.name);
             return (
               <motion.div
                 key={product.id}
@@ -124,7 +124,7 @@ export function HomepageGrid({
                       const idx = featured.findIndex((p) => p.id === product.id);
                       openLightbox(
                         featured.map((p) => {
-                          const c = CATALOG.find((s) => s.id === p.id);
+                          const c = CATALOG.find((s) => s.name === p.name);
                           return c ? { ...c, imageUrl: p.imageUrl } : null;
                         }).filter((x): x is NonNullable<typeof x> => x != null),
                         idx
