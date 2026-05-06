@@ -48,16 +48,21 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
   const namesToFetch = [packName, ...packStickerNames];
 
   let imageMap: Record<string, string> = {};
+  let availableIndividually = new Set<string>();
   try {
     const sb = createSupabaseService();
-    const { data } = await sb
-      .from("products")
-      .select("name, image_url, image_updated_at")
-      .in("name", namesToFetch);
+    const [{ data: imgData }, { data: indivData }] = await Promise.all([
+      sb.from("products").select("name, image_url, image_updated_at").in("name", namesToFetch),
+      sb.from("products").select("name").eq("active", true).eq("coming_soon", false)
+        .not("name", "in", "(Holy Week Pack,Resurrection Pack)"),
+    ]);
 
-    for (const row of data ?? []) {
+    for (const row of imgData ?? []) {
       const url = withVersion(row.image_url, row.image_updated_at);
       if (url) imageMap[row.name] = url;
+    }
+    for (const row of indivData ?? []) {
+      if (row.name) availableIndividually.add(row.name as string);
     }
   } catch {
     // gracefully degrade
@@ -67,7 +72,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
     <>
       <Nav />
       <main className="pt-16">
-        <PackDetail slug={slug} imageMap={imageMap} />
+        <PackDetail slug={slug} imageMap={imageMap} availableIndividually={availableIndividually} />
       </main>
       <Footer />
     </>

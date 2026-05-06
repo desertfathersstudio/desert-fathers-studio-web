@@ -1,54 +1,32 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CATALOG, stickerImageUrl, type Sticker } from "@/lib/catalog";
-import { HWP_PACK_PRICE, RP_PACK_PRICE } from "@/lib/pricing";
-
-interface PackConfig {
-  id: string;
-  name: string;
-  backCover: string;
-  price: number;
-  packSize: number;
-  category: "holy-week" | "resurrection";
-  description: string;
-  accent: string;
-}
-
-const PACK_CONFIGS: Record<string, PackConfig> = {
-  "holy-week-pack": {
-    id: "holy-week-pack",
-    name: "Holy Week Pack",
-    backCover: "Holy Week Pack BACK.png",
-    price: HWP_PACK_PRICE,
-    packSize: 23,
-    category: "holy-week",
-    description: "23 scenes from Palm Sunday through the Resurrection — the full arc of Holy Week in Coptic iconographic style.",
-    accent: "var(--brand)",
-  },
-  "resurrection-pack": {
-    id: "resurrection-pack",
-    name: "Resurrection Pack",
-    backCover: "Resurrection Pack BACK.png",
-    price: RP_PACK_PRICE,
-    packSize: 10,
-    category: "resurrection",
-    description: "10 scenes from the Resurrection appearances through Pentecost — the fifty days of Eastertide.",
-    accent: "var(--gold)",
-  },
-};
+import { CATALOG, stickerImageUrl } from "@/lib/catalog";
+import { PACK_CONFIGS } from "@/lib/pack-configs";
+import { PackAddToCartButton } from "@/components/d2c/PackAddToCartButton";
 
 export function PackDetail({
   slug,
   imageMap = {},
+  availableIndividually = new Set(),
 }: {
   slug: string;
   imageMap?: Record<string, string>;
+  availableIndividually?: Set<string>;
 }) {
   const pack = PACK_CONFIGS[slug];
   if (!pack) return null;
 
-  const stickers: Sticker[] = CATALOG.filter((s) => s.category === pack.category);
-  const soloCount = stickers.filter((s) => !s.packOnly).length;
+  const stickers = CATALOG.filter((s) => s.category === pack.category);
+  const soloCount = stickers.filter((s) => availableIndividually.has(s.name)).length;
+  const packSticker = CATALOG.find((s) => s.id === slug) ?? {
+    id: pack.id,
+    name: pack.name,
+    filename: pack.backCover,
+    price: pack.price,
+    category: "packs" as const,
+    isPack: true as const,
+    packSize: pack.packSize,
+  };
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
@@ -56,11 +34,11 @@ export function PackDetail({
       {/* Back nav */}
       <div className="max-w-7xl mx-auto px-6 md:px-10 pt-8">
         <Link
-          href="/#catalog"
+          href="/packs"
           className="inline-flex items-center gap-1.5 text-sm transition-opacity hover:opacity-60"
           style={{ color: "var(--text-muted)" }}
         >
-          ← Back to catalog
+          ← Back to packs
         </Link>
       </div>
 
@@ -135,17 +113,7 @@ export function PackDetail({
               <span>✦ 2&quot; die-cut, weather-resistant vinyl</span>
             </div>
 
-            <Link
-              href="/shop"
-              className="inline-flex items-center gap-2 px-7 py-3.5 font-medium text-sm transition-opacity hover:opacity-85"
-              style={{
-                background: "var(--brand)",
-                color: "var(--text-inverse)",
-                borderRadius: "var(--radius-btn)",
-              }}
-            >
-              Shop all stickers
-            </Link>
+            <PackAddToCartButton pack={packSticker} />
           </div>
         </div>
       </div>
@@ -201,63 +169,74 @@ export function PackDetail({
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">
-          {stickers.map((sticker) => (
-            <div key={sticker.id} className="group flex flex-col">
-              {/* Image */}
-              <div
-                className="relative aspect-square overflow-hidden"
-                style={{
-                  background: "white",
-                  borderRadius: "var(--radius-card)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                <Image
-                  src={imageMap[sticker.name] ?? stickerImageUrl(sticker.filename)}
-                  alt={sticker.name}
-                  fill
-                  className="object-contain p-4 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                />
-                {/* Availability dot */}
+          {stickers.map((sticker) => {
+            const isIndividual = availableIndividually.has(sticker.name);
+            return (
+              <div key={sticker.id} className="group flex flex-col">
+                {/* Image */}
                 <div
+                  className="relative aspect-square overflow-hidden"
                   style={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: sticker.packOnly ? "var(--brand)" : "var(--gold)",
-                    opacity: sticker.packOnly ? 0.7 : 1,
+                    background: "white",
+                    borderRadius: "var(--radius-card)",
+                    border: "1px solid var(--border)",
                   }}
-                />
-              </div>
+                >
+                  <Image
+                    src={imageMap[sticker.name] ?? stickerImageUrl(sticker.filename)}
+                    alt={sticker.name}
+                    fill
+                    className="object-contain p-4 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  />
+                  {/* Clickable overlay for individually available stickers */}
+                  {isIndividual && (
+                    <Link
+                      href="/shop"
+                      className="absolute inset-0"
+                      aria-label={`Shop ${sticker.name} individually`}
+                    />
+                  )}
+                  {/* Availability dot */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: isIndividual ? "var(--gold)" : "var(--brand)",
+                      opacity: isIndividual ? 1 : 0.7,
+                    }}
+                  />
+                </div>
 
-              {/* Name + badge */}
-              <div className="mt-2 flex flex-col gap-0.5">
-                <p
-                  style={{
-                    fontFamily: "var(--font-serif)",
-                    fontSize: "0.9rem",
-                    color: "var(--text)",
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {sticker.name}
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.68rem",
-                    color: sticker.packOnly ? "var(--text-muted)" : "var(--gold)",
-                    fontWeight: sticker.packOnly ? 400 : 500,
-                  }}
-                >
-                  {sticker.packOnly ? "Pack only" : "Also sold individually"}
-                </p>
+                {/* Name + badge */}
+                <div className="mt-2 flex flex-col gap-0.5">
+                  <p
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "0.9rem",
+                      color: "var(--text)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {sticker.name}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "0.68rem",
+                      color: isIndividual ? "var(--gold)" : "var(--text-muted)",
+                      fontWeight: isIndividual ? 500 : 400,
+                    }}
+                  >
+                    {isIndividual ? "Also sold individually" : "Pack only"}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Footer note */}

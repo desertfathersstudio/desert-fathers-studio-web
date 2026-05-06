@@ -8,6 +8,7 @@ import type { ProductWithInventory, ReviewStatus } from "@/lib/admin/types";
 function revalidatePublicRoutes() {
   revalidatePath("/");
   revalidatePath("/shop");
+  revalidatePath("/packs");
   revalidatePath("/coming-soon");
   revalidatePath("/shop/[slug]", "page");
 }

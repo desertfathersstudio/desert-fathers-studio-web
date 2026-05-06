@@ -9,7 +9,7 @@ import { useCart } from "@/lib/cart";
 
 const SHOP_LINKS = [
   { href: "/shop",                      label: "All Designs"  },
-  { href: "/shop?category=packs",       label: "Packs"        },
+  { href: "/packs",                      label: "Packs"        },
   { href: "/shop?category=individuals", label: "Individuals"  },
 ];
 
@@ -257,7 +257,7 @@ export function Nav() {
                       All Stickers
                     </Link>
                     <Link
-                      href="/shop?category=packs"
+                      href="/packs"
                       onClick={closeMobile}
                       className="py-2 pl-4 text-sm transition-opacity hover:opacity-60"
                       style={{ color: "var(--text-muted)" }}

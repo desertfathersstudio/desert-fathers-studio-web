@@ -79,6 +79,9 @@ export default async function ShopPage({
     console.error("[shop] error fetching products:", err);
   }
 
+  // Packs have their own /packs page
+  products = products.filter((p) => !p.isPack);
+
   return (
     <>
       <Nav />

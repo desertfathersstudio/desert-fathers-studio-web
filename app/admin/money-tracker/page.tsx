@@ -1,11 +1,11 @@
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { MoneyTrackerView } from "@/components/admin/MoneyTrackerView";
 
 export const dynamic = "force-dynamic";
 
 export default async function MoneyTrackerPage() {
-  const sb = await createSupabaseServer();
+  const sb = createSupabaseService();
 
   const [mfgRes, miscRes, salesRes, wholesaleRes] = await Promise.all([
     sb.from("mfg_orders")
