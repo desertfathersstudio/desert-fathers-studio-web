@@ -37,11 +37,15 @@ export async function GET(req: NextRequest) {
     // Only designs added after this date get the "New" badge going forward
     const NEW_BADGE_CUTOFF = new Date("2026-04-30T00:00:00Z").getTime();
 
-    const products: WholesaleProduct[] = (data ?? []).map((row) => {
+    const products: WholesaleProduct[] = (data ?? []).flatMap((row) => {
       const categoriesRaw = row.categories as { name: string }[] | { name: string } | null;
       const category = Array.isArray(categoriesRaw)
         ? (categoriesRaw[0]?.name ?? "")
         : (categoriesRaw?.name ?? "");
+
+      // Pack product rows (PK-1, PK-2) are virtual items in the wholesale UI — skip them here
+      if (category === "Packs") return [];
+
       const sku = String(row.sku ?? "");
       const name = String(row.name ?? "");
       const isPackProduct =
@@ -63,7 +67,7 @@ export async function GET(req: NextRequest) {
       const dateAdded = row.created_at as string;
       const isNew = new Date(dateAdded).getTime() > NEW_BADGE_CUTOFF;
 
-      return {
+      return [{
         id: String(row.id),
         sku,
         name,
@@ -80,7 +84,7 @@ export async function GET(req: NextRequest) {
         categoryBg: categoryBgColor(category),
         categoryText: categoryTextColor(category),
         isNew,
-      };
+      }];
     });
 
     return NextResponse.json(products);

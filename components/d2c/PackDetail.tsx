@@ -3,15 +3,18 @@ import Link from "next/link";
 import { CATALOG, stickerImageUrl } from "@/lib/catalog";
 import { PACK_CONFIGS } from "@/lib/pack-configs";
 import { PackAddToCartButton } from "@/components/d2c/PackAddToCartButton";
+import { NotifyMeButton } from "@/components/d2c/NotifyMeButton";
 
 export function PackDetail({
   slug,
   imageMap = {},
   availableIndividually = new Set(),
+  comingSoon = false,
 }: {
   slug: string;
   imageMap?: Record<string, string>;
   availableIndividually?: Set<string>;
+  comingSoon?: boolean;
 }) {
   const pack = PACK_CONFIGS[slug];
   if (!pack) return null;
@@ -113,7 +116,32 @@ export function PackDetail({
               <span>✦ 2&quot; die-cut, weather-resistant vinyl</span>
             </div>
 
-            <PackAddToCartButton pack={packSticker} />
+            {comingSoon ? (
+              <div className="flex flex-col gap-3">
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "0.25rem 0.75rem",
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    textTransform: "uppercase" as const,
+                    letterSpacing: "0.12em",
+                    background: "var(--cream)",
+                    color: "var(--brand)",
+                    borderRadius: 4,
+                    border: "1px solid var(--border)",
+                    fontFamily: "var(--font-sans)",
+                    width: "fit-content",
+                  }}
+                >
+                  Coming Soon
+                </span>
+                <NotifyMeButton productName={pack.name} variant="full" />
+              </div>
+            ) : (
+              <PackAddToCartButton pack={packSticker} />
+            )}
           </div>
         </div>
       </div>

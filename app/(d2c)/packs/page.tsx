@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { Nav } from "@/components/d2c/Nav";
 import { Footer } from "@/components/d2c/Footer";
 import { PacksGrid } from "@/components/d2c/PacksGrid";
-import { SKU_TO_SLUG } from "@/lib/pack-configs";
+import { SKU_TO_SLUG, PACK_CONFIGS, PACK_CONSTITUENT_DB_CATEGORY } from "@/lib/pack-configs";
 import { CATALOG, type Sticker } from "@/lib/catalog";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { withVersion } from "@/lib/image-version";
@@ -11,22 +11,23 @@ import { D2C_PRICE } from "@/lib/pricing";
 
 export default async function PacksPage() {
   let packs: Sticker[] = [];
+  const availability: Record<string, number | null> = {};
 
   try {
     const sb = createSupabaseService();
 
-    // diagnostic: dump all non-null SKUs so we can see actual values
-    const { data: allSkus } = await sb.from("products").select("name, sku, active").not("sku", "is", null);
-    console.log("[packs] all non-null skus:", JSON.stringify(allSkus));
+    const [{ data: packRows }, { data: catRows }] = await Promise.all([
+      sb.from("products")
+        .select("name, sku, retail_price, image_url, image_updated_at")
+        .in("sku", ["PK-1", "PK-2"])
+        .eq("active", true)
+        .eq("coming_soon", false),
+      sb.from("categories")
+        .select("id, name")
+        .in("name", ["Holy Week", "Resurrection"]),
+    ]);
 
-    const { data, error } = await sb
-      .from("products")
-      .select("name, sku, retail_price, image_url, image_updated_at")
-      .in("sku", ["HWP_PACK", "RP_PACK"])
-      .eq("active", true);
-    console.log("[packs] query returned:", data?.length ?? 0, "rows, error:", error?.message ?? "none");
-
-    for (const row of data ?? []) {
+    for (const row of packRows ?? []) {
       const slug = SKU_TO_SLUG[row.sku as string];
       if (!slug) continue;
       const catalogEntry = CATALOG.find((c) => c.name === row.name);
@@ -34,7 +35,6 @@ export default async function PacksPage() {
         row.image_url as string | null,
         row.image_updated_at as string | null
       );
-
       packs.push({
         id: slug,
         name: row.name as string,
@@ -51,6 +51,34 @@ export default async function PacksPage() {
       const order = ["holy-week-pack", "resurrection-pack"];
       return order.indexOf(a.id) - order.indexOf(b.id);
     });
+
+    // Derive availability from MIN(on_hand) across each pack's constituent stickers
+    const catIdMap: Record<string, string> = {};
+    for (const cat of catRows ?? []) catIdMap[cat.name as string] = cat.id as string;
+
+    await Promise.all(
+      packs.map(async (pack) => {
+        const packConfig = PACK_CONFIGS[pack.id];
+        if (!packConfig) return;
+        const dbCatName = PACK_CONSTITUENT_DB_CATEGORY[packConfig.category];
+        const catId = dbCatName ? catIdMap[dbCatName] : undefined;
+        if (!catId) return;
+
+        const { data: products } = await sb
+          .from("products")
+          .select("inventory(on_hand)")
+          .eq("category_id", catId)
+          .eq("active", true)
+          .eq("coming_soon", false);
+
+        const onHands = (products ?? []).flatMap((p) => {
+          const inv = (p.inventory as { on_hand: number }[] | null)?.[0];
+          return inv !== undefined ? [inv.on_hand] : [];
+        });
+
+        availability[pack.id] = onHands.length > 0 ? Math.min(...onHands) : null;
+      })
+    );
   } catch (err) {
     console.error("[packs] error fetching packs:", err);
     packs = CATALOG.filter((s) => s.isPack);
@@ -95,7 +123,7 @@ export default async function PacksPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-24">
-          <PacksGrid packs={packs} />
+          <PacksGrid packs={packs} availability={availability} />
         </div>
       </main>
       <Footer />

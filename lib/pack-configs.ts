@@ -16,7 +16,7 @@ export const PACK_CONFIGS: Record<string, PackConfig> = {
   "holy-week-pack": {
     id: "holy-week-pack",
     name: "Holy Week Pack",
-    sku: "HWP_PACK",
+    sku: "PK-2",
     backCover: "Holy Week Pack BACK.png",
     price: HWP_PACK_PRICE,
     packSize: 23,
@@ -28,7 +28,7 @@ export const PACK_CONFIGS: Record<string, PackConfig> = {
   "resurrection-pack": {
     id: "resurrection-pack",
     name: "Resurrection Pack",
-    sku: "RP_PACK",
+    sku: "PK-1",
     backCover: "Resurrection Pack BACK.png",
     price: RP_PACK_PRICE,
     packSize: 10,
@@ -40,8 +40,14 @@ export const PACK_CONFIGS: Record<string, PackConfig> = {
 };
 
 export const SKU_TO_SLUG: Record<string, string> = {
-  HWP_PACK: "holy-week-pack",
-  RP_PACK: "resurrection-pack",
+  "PK-2": "holy-week-pack",
+  "PK-1": "resurrection-pack",
 };
 
 export const PACK_CONFIG_LIST = Object.values(PACK_CONFIGS);
+
+/** Maps PackConfig.category → DB category table name, for constituent sticker inventory queries. */
+export const PACK_CONSTITUENT_DB_CATEGORY: Record<string, string> = {
+  "holy-week":    "Holy Week",
+  "resurrection": "Resurrection",
+};

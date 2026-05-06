@@ -8,7 +8,13 @@ import { PACK_CONFIGS } from "@/lib/pack-configs";
 import { stickerImageUrl, type Sticker } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 
-export function PacksGrid({ packs }: { packs: Sticker[] }) {
+export function PacksGrid({
+  packs,
+  availability = {},
+}: {
+  packs: Sticker[];
+  availability?: Record<string, number | null>;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px 0px" });
   const reduced = useReducedMotion();
@@ -39,6 +45,9 @@ export function PacksGrid({ packs }: { packs: Sticker[] }) {
         const config = PACK_CONFIGS[pack.id];
         const imageUrl =
           pack.imageUrl ?? (pack.filename ? stickerImageUrl(pack.filename) : null);
+        const avail = availability[pack.id];
+        const isOutOfStock = avail === 0;
+        const isLowStock = avail !== null && avail !== undefined && avail > 0 && avail < 15;
 
         return (
           <motion.article
@@ -116,16 +125,34 @@ export function PacksGrid({ packs }: { packs: Sticker[] }) {
               )}
 
               <div className="flex items-center justify-between gap-4 flex-wrap">
-                <span
-                  className="text-xl font-medium"
-                  style={{
-                    fontFamily: "var(--font-sans)",
-                    color: "var(--brand)",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  ${pack.price.toFixed(2)}
-                </span>
+                <div className="flex flex-col gap-1">
+                  <span
+                    className="text-xl font-medium"
+                    style={{
+                      fontFamily: "var(--font-sans)",
+                      color: "var(--brand)",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    ${pack.price.toFixed(2)}
+                  </span>
+                  {isOutOfStock && (
+                    <span
+                      className="text-[10px] font-semibold uppercase tracking-wide"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Out of stock
+                    </span>
+                  )}
+                  {isLowStock && (
+                    <span
+                      className="text-[10px] font-semibold uppercase tracking-wide"
+                      style={{ color: "var(--gold)" }}
+                    >
+                      {avail} remaining
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-3">
                   <Link
                     href={`/shop/${pack.id}`}
@@ -139,21 +166,23 @@ export function PacksGrid({ packs }: { packs: Sticker[] }) {
                   >
                     See what&apos;s inside →
                   </Link>
-                  <button
-                    onClick={() => { add(pack); openCart(); }}
-                    className="text-xs font-semibold px-5 py-2 transition-opacity hover:opacity-85"
-                    style={{
-                      background: "var(--brand)",
-                      color: "#efe7d6",
-                      borderRadius: "var(--radius-btn)",
-                      border: "none",
-                      cursor: "pointer",
-                      fontFamily: "var(--font-sans)",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    Add to Cart
-                  </button>
+                  {!isOutOfStock && (
+                    <button
+                      onClick={() => { add(pack); openCart(); }}
+                      className="text-xs font-semibold px-5 py-2 transition-opacity hover:opacity-85"
+                      style={{
+                        background: "var(--brand)",
+                        color: "#efe7d6",
+                        borderRadius: "var(--radius-btn)",
+                        border: "none",
+                        cursor: "pointer",
+                        fontFamily: "var(--font-sans)",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      Add to Cart
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

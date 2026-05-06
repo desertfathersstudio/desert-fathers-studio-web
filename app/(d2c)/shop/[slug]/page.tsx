@@ -49,10 +49,11 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
 
   let imageMap: Record<string, string> = {};
   let availableIndividually = new Set<string>();
+  let packComingSoon = false;
   try {
     const sb = createSupabaseService();
     const [{ data: imgData }, { data: indivData }] = await Promise.all([
-      sb.from("products").select("name, image_url, image_updated_at").in("name", namesToFetch),
+      sb.from("products").select("name, image_url, image_updated_at, coming_soon").in("name", namesToFetch),
       sb.from("products").select("name").eq("active", true).eq("coming_soon", false)
         .not("name", "in", "(Holy Week Pack,Resurrection Pack)"),
     ]);
@@ -61,6 +62,9 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
       const url = withVersion(row.image_url, row.image_updated_at);
       if (url) imageMap[row.name] = url;
     }
+    packComingSoon =
+      (imgData?.find((r) => r.name === packName) as { coming_soon?: boolean } | undefined)
+        ?.coming_soon ?? false;
     for (const row of indivData ?? []) {
       if (row.name) availableIndividually.add(row.name as string);
     }
@@ -72,7 +76,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
     <>
       <Nav />
       <main className="pt-16">
-        <PackDetail slug={slug} imageMap={imageMap} availableIndividually={availableIndividually} />
+        <PackDetail slug={slug} imageMap={imageMap} availableIndividually={availableIndividually} comingSoon={packComingSoon} />
       </main>
       <Footer />
     </>

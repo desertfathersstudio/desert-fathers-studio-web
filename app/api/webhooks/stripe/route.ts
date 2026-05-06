@@ -3,6 +3,8 @@ import { after } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { logSalesTaxThresholdWarnings } from "@/lib/sales";
+import { CATALOG } from "@/lib/catalog";
+import { PACK_CONFIGS } from "@/lib/pack-configs";
 import { Resend } from "resend";
 import type Stripe from "stripe";
 
@@ -136,6 +138,16 @@ async function handleSessionCompleted(session: Stripe.Checkout.Session) {
     }));
     const { error: itemsErr } = await supabase.from("retail_order_items").insert(lineItems);
     if (itemsErr) console.error("[stripe-webhook] Failed to insert retail_order_items:", itemsErr);
+  }
+
+  // ── Decrement inventory ───────────────────────────────────────────
+  const decrementItems = buildDecrementList(parsedItems);
+  if (decrementItems.length > 0) {
+    const { error: invErr } = await supabase.rpc("retail_decrement_inventory", {
+      p_items: decrementItems,
+    });
+    if (invErr) console.error("[stripe-webhook] Failed to decrement inventory:", invErr);
+    else console.log("[stripe-webhook] ✓ Inventory decremented for", decrementItems.length, "products");
   }
 
   // ── Upsert customer ───────────────────────────────────────────────
@@ -334,4 +346,32 @@ async function sendEmails(payload: EmailPayload) {
   } else {
     console.log("[stripe-webhook] ✓ Admin email sent");
   }
+}
+
+// ── Inventory decrement helpers ────────────────────────────────────────
+function buildDecrementList(
+  items: Array<{ id: string; name: string; qty: number; unit: number }>
+): Array<{ name: string; qty: number }> {
+  const decrements = new Map<string, number>();
+
+  for (const item of items) {
+    const catalogEntry = CATALOG.find((s) => s.id === item.id);
+    if (!catalogEntry) continue;
+
+    if (catalogEntry.isPack) {
+      // Expand pack → constituent stickers
+      const packConfig = PACK_CONFIGS[catalogEntry.id];
+      if (!packConfig) continue;
+      const constituents = CATALOG.filter(
+        (s) => s.category === packConfig.category && !s.isPack
+      );
+      for (const sticker of constituents) {
+        decrements.set(sticker.name, (decrements.get(sticker.name) ?? 0) + item.qty);
+      }
+    } else {
+      decrements.set(catalogEntry.name, (decrements.get(catalogEntry.name) ?? 0) + item.qty);
+    }
+  }
+
+  return Array.from(decrements.entries()).map(([name, qty]) => ({ name, qty }));
 }
