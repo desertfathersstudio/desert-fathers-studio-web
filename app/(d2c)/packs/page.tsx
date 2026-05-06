@@ -14,11 +14,17 @@ export default async function PacksPage() {
 
   try {
     const sb = createSupabaseService();
-    const { data } = await sb
+
+    // diagnostic: dump all non-null SKUs so we can see actual values
+    const { data: allSkus } = await sb.from("products").select("name, sku, active").not("sku", "is", null);
+    console.log("[packs] all non-null skus:", JSON.stringify(allSkus));
+
+    const { data, error } = await sb
       .from("products")
       .select("name, sku, retail_price, image_url, image_updated_at")
       .in("sku", ["HWP_PACK", "RP_PACK"])
       .eq("active", true);
+    console.log("[packs] query returned:", data?.length ?? 0, "rows, error:", error?.message ?? "none");
 
     for (const row of data ?? []) {
       const slug = SKU_TO_SLUG[row.sku as string];
