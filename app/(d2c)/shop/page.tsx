@@ -2,7 +2,7 @@ import { Nav } from "@/components/d2c/Nav";
 import { CatalogSection } from "@/components/d2c/CatalogSection";
 import { Footer } from "@/components/d2c/Footer";
 import { CATALOG, type CategoryKey } from "@/lib/catalog";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 import { withVersion } from "@/lib/image-version";
 
 // Extract the base filename from an R2 URL (reverse of stickerImageUrl)
@@ -39,7 +39,7 @@ export default async function ShopPage({
   let activeNames: string[] = [];
   let imageOverrides: Record<string, string> = {};
   try {
-    const sb = await createSupabaseServer();
+    const sb = createSupabaseService();
     const [productsRes, imageOverridesRes] = await Promise.all([
       sb
         .from("products")

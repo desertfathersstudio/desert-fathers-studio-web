@@ -6,7 +6,7 @@ import { ProductFeatures } from "@/components/d2c/ProductFeatures";
 import { TrustSection } from "@/components/d2c/TrustSection";
 import { Footer } from "@/components/d2c/Footer";
 import { BookOpen, NotebookPen, Laptop, Droplets, Gift } from "lucide-react";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 import { withVersion } from "@/lib/image-version";
 
 export default async function HomePage() {
@@ -16,7 +16,7 @@ export default async function HomePage() {
   let featuredProducts: { id: string; name: string; imageUrl: string; price: number }[] = [];
 
   try {
-    const sb = await createSupabaseServer();
+    const sb = createSupabaseService();
     const [activeRes, featuredRes] = await Promise.all([
       sb
         .from("products")

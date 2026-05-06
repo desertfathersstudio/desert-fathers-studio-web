@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Nav } from "@/components/d2c/Nav";
 import { PackDetail } from "@/components/d2c/PackDetail";
 import { Footer } from "@/components/d2c/Footer";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 import { withVersion } from "@/lib/image-version";
 import { CATALOG } from "@/lib/catalog";
 
@@ -49,7 +49,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
 
   let imageMap: Record<string, string> = {};
   try {
-    const sb = await createSupabaseServer();
+    const sb = createSupabaseService();
     const { data } = await sb
       .from("products")
       .select("name, image_url, image_updated_at")

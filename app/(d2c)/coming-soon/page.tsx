@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Nav } from "@/components/d2c/Nav";
 import { Footer } from "@/components/d2c/Footer";
 import { NotifyMeButton } from "@/components/d2c/NotifyMeButton";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 import { withVersion } from "@/lib/image-version";
 
 interface ComingSoonProduct {
@@ -14,7 +14,7 @@ interface ComingSoonProduct {
 
 async function getComingSoonProducts(): Promise<ComingSoonProduct[]> {
   try {
-    const sb = await createSupabaseServer();
+    const sb = createSupabaseService();
     const { data } = await sb
       .from("products")
       .select("id, name, image_url, image_updated_at, sku")
