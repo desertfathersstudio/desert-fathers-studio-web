@@ -2,12 +2,23 @@ import { notFound } from "next/navigation";
 import { Nav } from "@/components/d2c/Nav";
 import { PackDetail } from "@/components/d2c/PackDetail";
 import { Footer } from "@/components/d2c/Footer";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { withVersion } from "@/lib/image-version";
+import { CATALOG } from "@/lib/catalog";
+
+export const dynamic = "force-dynamic";
 
 const VALID_SLUGS = ["holy-week-pack", "resurrection-pack"];
 
-export function generateStaticParams() {
-  return VALID_SLUGS.map((slug) => ({ slug }));
-}
+const SLUG_TO_CATEGORY: Record<string, string> = {
+  "holy-week-pack": "holy-week",
+  "resurrection-pack": "resurrection",
+};
+
+const SLUG_TO_PACK_NAME: Record<string, string> = {
+  "holy-week-pack": "Holy Week Pack",
+  "resurrection-pack": "Resurrection Pack",
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -27,11 +38,36 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   if (!VALID_SLUGS.includes(slug)) notFound();
 
+  const category = SLUG_TO_CATEGORY[slug];
+  const packName = SLUG_TO_PACK_NAME[slug];
+
+  // Collect names we need versioned images for: the pack itself + all stickers in this category
+  const packStickerNames = CATALOG
+    .filter((s) => s.category === category)
+    .map((s) => s.name);
+  const namesToFetch = [packName, ...packStickerNames];
+
+  let imageMap: Record<string, string> = {};
+  try {
+    const sb = await createSupabaseServer();
+    const { data } = await sb
+      .from("products")
+      .select("name, image_url, image_updated_at")
+      .in("name", namesToFetch);
+
+    for (const row of data ?? []) {
+      const url = withVersion(row.image_url, row.image_updated_at);
+      if (url) imageMap[row.name] = url;
+    }
+  } catch {
+    // gracefully degrade
+  }
+
   return (
     <>
       <Nav />
       <main className="pt-16">
-        <PackDetail slug={slug} />
+        <PackDetail slug={slug} imageMap={imageMap} />
       </main>
       <Footer />
     </>

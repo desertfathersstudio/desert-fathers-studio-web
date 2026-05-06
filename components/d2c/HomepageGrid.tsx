@@ -19,16 +19,34 @@ const FEATURED_IDS = [
   "transfiguration",
 ];
 
-const FEATURED = FEATURED_IDS
-  .map((id) => CATALOG.find((s) => s.id === id))
-  .filter((s): s is NonNullable<typeof s> => s != null);
+type FeaturedProduct = { id: string; name: string; imageUrl: string; price: number };
 
-export function HomepageGrid() {
+export function HomepageGrid({
+  featuredProducts = [],
+  imageMap = {},
+}: {
+  featuredProducts?: FeaturedProduct[];
+  imageMap?: Record<string, string>;
+}) {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px 0px" });
   const reduced = useReducedMotion();
   const { add } = useCart();
   const { open: openLightbox } = useLightbox();
+
+  // Use DB-provided featured list; fall back to hardcoded FEATURED_IDS from catalog
+  const featured: FeaturedProduct[] =
+    featuredProducts.length > 0
+      ? featuredProducts
+      : FEATURED_IDS
+          .map((id) => CATALOG.find((s) => s.id === id))
+          .filter((s): s is NonNullable<typeof s> => s != null)
+          .map((s) => ({
+            id: s.id,
+            name: s.name,
+            imageUrl: imageMap[s.name] ?? stickerImageUrl(s.filename),
+            price: s.price,
+          }));
 
   return (
     <section
@@ -37,7 +55,6 @@ export function HomepageGrid() {
       style={{ background: "var(--bg)" }}
     >
       <div className="max-w-7xl mx-auto px-6 md:px-10">
-        {/* Heading */}
         <motion.div
           className="flex items-end justify-between mb-12"
           initial={reduced ? {} : { opacity: 0, y: 20 }}
@@ -72,42 +89,54 @@ export function HomepageGrid() {
           </Link>
         </motion.div>
 
-        {/* Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
-          {FEATURED.map((sticker, i) => (
-            <motion.div
-              key={sticker.id}
-              initial={reduced ? {} : { opacity: 0, y: 28 }}
-              animate={
-                inView
-                  ? { opacity: 1, y: 0 }
-                  : reduced
-                  ? { opacity: 1, y: 0 }
-                  : { opacity: 0, y: 28 }
-              }
-              transition={{
-                duration: 0.5,
-                delay: reduced ? 0 : i * 0.06,
-                ease: "easeOut",
-              }}
-            >
-              <StickerCard
-                product={{
-                  id: sticker.id,
-                  name: sticker.name,
-                  price: sticker.price,
-                  imageUrl: stickerImageUrl(sticker.filename),
-                  category: sticker.category,
-                  isNew: sticker.isNew,
+          {featured.map((product, i) => {
+            const catalogEntry = CATALOG.find((s) => s.id === product.id);
+            return (
+              <motion.div
+                key={product.id}
+                initial={reduced ? {} : { opacity: 0, y: 28 }}
+                animate={
+                  inView
+                    ? { opacity: 1, y: 0 }
+                    : reduced
+                    ? { opacity: 1, y: 0 }
+                    : { opacity: 0, y: 28 }
+                }
+                transition={{
+                  duration: 0.5,
+                  delay: reduced ? 0 : i * 0.06,
+                  ease: "easeOut",
                 }}
-                onAddToCart={() => add(sticker)}
-                onOpen={() => openLightbox(FEATURED, i)}
-              />
-            </motion.div>
-          ))}
+              >
+                <StickerCard
+                  product={{
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    imageUrl: product.imageUrl,
+                    category: catalogEntry?.category ?? "individuals",
+                    isNew: catalogEntry?.isNew,
+                  }}
+                  onAddToCart={catalogEntry ? () => add(catalogEntry) : undefined}
+                  onOpen={() => {
+                    if (catalogEntry) {
+                      const idx = featured.findIndex((p) => p.id === product.id);
+                      openLightbox(
+                        featured.map((p) => {
+                          const c = CATALOG.find((s) => s.id === p.id);
+                          return c ? { ...c, imageUrl: p.imageUrl } : null;
+                        }).filter((x): x is NonNullable<typeof x> => x != null),
+                        idx
+                      );
+                    }
+                  }}
+                />
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Mobile "view all" */}
         <div className="mt-10 text-center sm:hidden">
           <Link
             href="/shop"

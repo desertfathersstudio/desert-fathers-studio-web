@@ -6,15 +6,61 @@ import { ProductFeatures } from "@/components/d2c/ProductFeatures";
 import { TrustSection } from "@/components/d2c/TrustSection";
 import { Footer } from "@/components/d2c/Footer";
 import { BookOpen, NotebookPen, Laptop, Droplets, Gift } from "lucide-react";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { withVersion } from "@/lib/image-version";
 
-export default function HomePage() {
+export default async function HomePage() {
+  // One query to build imageMap + stripItems + featuredProducts for all homepage components
+  let imageMap: Record<string, string> = {};
+  let stripItems: { id: string; name: string; imageUrl: string }[] = [];
+  let featuredProducts: { id: string; name: string; imageUrl: string; price: number }[] = [];
+
+  try {
+    const sb = await createSupabaseServer();
+    const [activeRes, featuredRes] = await Promise.all([
+      sb
+        .from("products")
+        .select("id, name, image_url, image_updated_at, retail_price")
+        .eq("active", true)
+        .eq("coming_soon", false),
+      sb
+        .from("products")
+        .select("id, name, image_url, image_updated_at, retail_price")
+        .eq("active", true)
+        .eq("coming_soon", false)
+        .eq("featured", true),
+    ]);
+
+    for (const row of activeRes.data ?? []) {
+      const url = withVersion(row.image_url, row.image_updated_at);
+      if (url) imageMap[row.name] = url;
+    }
+
+    stripItems = (activeRes.data ?? [])
+      .filter((r) => r.image_url)
+      .map((r) => ({
+        id: String(r.id),
+        name: String(r.name),
+        imageUrl: withVersion(r.image_url, r.image_updated_at) ?? r.image_url,
+      }));
+
+    featuredProducts = (featuredRes.data ?? []).map((r) => ({
+      id: String(r.id),
+      name: String(r.name),
+      imageUrl: withVersion(r.image_url, r.image_updated_at) ?? "",
+      price: Number(r.retail_price),
+    }));
+  } catch {
+    // gracefully degrade — components fall back to catalog static data
+  }
+
   return (
     <>
       <Nav />
       <main>
-        <HeroSection />
-        <FeaturedCollections />
-        <HomepageGrid />
+        <HeroSection imageMap={imageMap} stripItems={stripItems} />
+        <FeaturedCollections imageMap={imageMap} />
+        <HomepageGrid featuredProducts={featuredProducts} imageMap={imageMap} />
         <ProductFeatures />
         <UseCasesSection />
         <TrustSection />

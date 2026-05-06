@@ -5,6 +5,7 @@ import { X, Upload, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { adminUpdateProduct, adminArchiveProduct } from "@/app/admin/inventory/actions";
 import type { InventoryStatus, ProductWithInventory, ReviewStatus } from "@/lib/admin/types";
+import { withVersion } from "@/lib/image-version";
 
 const REVIEW_OPTIONS: { value: ReviewStatus; label: string }[] = [
   { value: "approved",     label: "Approved" },
@@ -33,7 +34,9 @@ export function EditProductModal({
   const [incoming, setIncoming]           = useState(product.inventory?.incoming ?? 0);
   const [threshold, setThreshold]         = useState(product.inventory?.low_stock_threshold ?? 10);
   const [imageUrl, setImageUrl]           = useState(product.image_url ?? "");
+  const [imageUpdatedAt, setImageUpdatedAt] = useState(product.image_updated_at ?? null);
   const [comingSoon, setComingSoon]       = useState(product.coming_soon ?? false);
+  const [featured, setFeatured]           = useState(product.featured ?? false);
   const [uploading, setUploading]         = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -47,7 +50,9 @@ export function EditProductModal({
       const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Upload failed");
+      const ts = new Date().toISOString();
       setImageUrl(json.url);
+      setImageUpdatedAt(ts);
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Upload failed");
     } finally {
@@ -71,6 +76,7 @@ export function EditProductModal({
           threshold,
           hasInventory: !!product.inventory,
           comingSoon,
+          featured,
         });
 
         const updated: ProductWithInventory = {
@@ -79,7 +85,9 @@ export function EditProductModal({
           review_status: reviewStatus,
           review_comments: reviewComments || null,
           image_url: imageUrl || null,
+          image_updated_at: imageUrl ? imageUpdatedAt : product.image_updated_at,
           coming_soon: comingSoon,
+          featured,
           inventory: {
             ...(product.inventory ?? { id: "", product_id: product.id, last_updated: null }),
             on_hand: onHand,
@@ -129,7 +137,7 @@ export function EditProductModal({
             <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
               <div style={thumbBox}>
                 {imageUrl ? (
-                  <img src={imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  <img src={withVersion(imageUrl, imageUpdatedAt) ?? imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                 ) : (
                   <span style={{ fontSize: "0.65rem", color: "#c9b5b5" }}>No image</span>
                 )}
@@ -222,6 +230,60 @@ export function EditProductModal({
                   position: "absolute",
                   top: 3,
                   left: comingSoon ? 18 : 3,
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  background: "#fff",
+                  transition: "left 0.2s",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                }}
+              />
+            </button>
+          </div>
+
+          {/* Featured toggle */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0.625rem 0.75rem",
+              background: featured ? "#f0f9ec" : "#f9f5f0",
+              borderRadius: 8,
+              border: `1px solid ${featured ? "#a3d080" : "#e8ddd5"}`,
+            }}
+          >
+            <div>
+              <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 600, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif" }}>
+                Featured (Bestseller)
+              </p>
+              <p style={{ margin: "2px 0 0", fontSize: "0.68rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+                {featured
+                  ? "Shown in the Bestsellers section on the homepage."
+                  : "Not shown in the Bestsellers section."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFeatured((v) => !v)}
+              style={{
+                width: 38,
+                height: 22,
+                borderRadius: 11,
+                border: "none",
+                background: featured ? "#4a9e35" : "#d4c4b8",
+                cursor: "pointer",
+                position: "relative",
+                flexShrink: 0,
+                transition: "background 0.2s",
+              }}
+              aria-label={featured ? "Remove from featured" : "Mark as featured"}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: 3,
+                  left: featured ? 18 : 3,
                   width: 16,
                   height: 16,
                   borderRadius: "50%",

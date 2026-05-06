@@ -90,7 +90,7 @@ export function InventoryView({
     setEditProduct(null);
   }
 
-  function handleBatchUpdated(updates: { id: string; imageUrl: string; reviewStatus?: string }[]) {
+  function handleBatchUpdated(updates: { id: string; imageUrl: string; imageUpdatedAt: string; reviewStatus?: string }[]) {
     setProducts((prev) =>
       prev.map((p) => {
         const u = updates.find((x) => x.id === p.id);
@@ -98,6 +98,7 @@ export function InventoryView({
         return {
           ...p,
           image_url: u.imageUrl,
+          image_updated_at: u.imageUpdatedAt,
           ...(u.reviewStatus ? { review_status: u.reviewStatus as import("@/lib/admin/types").ReviewStatus } : {}),
         };
       })

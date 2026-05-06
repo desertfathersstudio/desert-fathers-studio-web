@@ -3,15 +3,15 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CATALOG, stickerImageUrl, type Sticker } from "@/lib/catalog";
+import { CATALOG, stickerImageUrl } from "@/lib/catalog";
 
-const ITEM_W = 108;  // px
-const ITEM_GAP = 16; // px — right margin on every item (no flex gap, so math is exact)
-const ITEM_STRIDE = ITEM_W + ITEM_GAP; // 124px per slot
-const CYCLE_PX = CATALOG.length * ITEM_STRIDE; // exact pixel width of one copy
-const DURATION_S = Math.round(CYCLE_PX / 80); // ~80 px/s scroll speed
+const ITEM_W = 108;
+const ITEM_GAP = 16;
+const ITEM_STRIDE = ITEM_W + ITEM_GAP;
 
-function shuffle(arr: Sticker[]): Sticker[] {
+type StripItem = { id: string; name: string; imageUrl: string };
+
+function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -20,16 +20,35 @@ function shuffle(arr: Sticker[]): Sticker[] {
   return a;
 }
 
-export function HeroStickerStrip() {
-  // Start with catalog order (server + hydration safe), shuffle after mount
-  const [copy, setCopy] = useState<Sticker[]>(CATALOG);
+function catalogFallback(): StripItem[] {
+  return CATALOG.map((s) => ({ id: s.id, name: s.name, imageUrl: stickerImageUrl(s.filename) }));
+}
+
+export function HeroStickerStrip({
+  imageMap = {},
+  stripItems = [],
+}: {
+  imageMap?: Record<string, string>;
+  stripItems?: StripItem[];
+}) {
+  const source: StripItem[] = stripItems.length > 0 ? stripItems : catalogFallback();
+
+  // Override imageUrls with versioned URLs from imageMap where available
+  const resolved: StripItem[] = source.map((s) => ({
+    ...s,
+    imageUrl: imageMap[s.name] ?? s.imageUrl,
+  }));
+
+  const CYCLE_PX = resolved.length * ITEM_STRIDE;
+  const DURATION_S = Math.round(CYCLE_PX / 80);
+
+  const [copy, setCopy] = useState<StripItem[]>(resolved);
 
   useEffect(() => {
-    setCopy(shuffle(CATALOG));
+    setCopy(shuffle(resolved));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Two identical copies — when we slide exactly -CYCLE_PX, copy 2 is in the same
-  // position copy 1 started, so the loop is pixel-perfect seamless.
   const items = [...copy, ...copy];
 
   return (
@@ -50,12 +69,10 @@ export function HeroStickerStrip() {
         }
       `}</style>
 
-      {/* Left fade */}
       <div
         className="absolute left-0 top-0 bottom-0 z-10 pointer-events-none"
         style={{ width: 80, background: "linear-gradient(to right, var(--bg), transparent)" }}
       />
-      {/* Right fade */}
       <div
         className="absolute right-0 top-0 bottom-0 z-10 pointer-events-none"
         style={{ width: 80, background: "linear-gradient(to left, var(--bg), transparent)" }}
@@ -81,7 +98,7 @@ export function HeroStickerStrip() {
               }}
             >
               <Image
-                src={stickerImageUrl(sticker.filename)}
+                src={sticker.imageUrl}
                 alt={sticker.name}
                 fill
                 className="object-contain p-2"

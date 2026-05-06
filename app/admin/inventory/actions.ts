@@ -83,6 +83,7 @@ export async function adminUpdateProduct(
     threshold: number;
     hasInventory: boolean;
     comingSoon?: boolean;
+    featured?: boolean;
   }
 ): Promise<void> {
   const sb = createSupabaseService();
@@ -94,16 +95,25 @@ export async function adminUpdateProduct(
     .eq("id", productId)
     .single();
 
+  const ts = new Date().toISOString();
   const updatePayload: Record<string, unknown> = {
     name: input.name,
     review_status: input.reviewStatus,
     review_comments: input.reviewComments,
     image_url: input.imageUrl,
-    updated_at: new Date().toISOString(),
+    updated_at: ts,
   };
+
+  if (input.imageUrl) {
+    updatePayload.image_updated_at = ts;
+  }
 
   if (typeof input.comingSoon === "boolean") {
     updatePayload.coming_soon = input.comingSoon;
+  }
+
+  if (typeof input.featured === "boolean") {
+    updatePayload.featured = input.featured;
   }
 
   const { error: pErr } = await sb
@@ -154,17 +164,20 @@ export async function adminBatchReplaceImage(
   productId: string,
   imageUrl: string,
   mode: "live" | "review"
-): Promise<void> {
+): Promise<{ imageUpdatedAt: string }> {
   const sb = createSupabaseService();
+  const ts = new Date().toISOString();
   const payload: Record<string, unknown> = {
     image_url: imageUrl,
-    updated_at: new Date().toISOString(),
+    image_updated_at: ts,
+    updated_at: ts,
   };
   if (mode === "review") {
     payload.review_status = "under_review";
   }
   const { error } = await sb.from("products").update(payload).eq("id", productId);
   if (error) throw new Error(error.message);
+  return { imageUpdatedAt: ts };
 }
 
 export async function adminArchiveProduct(productId: string): Promise<void> {
@@ -198,6 +211,7 @@ export async function adminAddProduct(input: {
       review_status: input.reviewStatus,
       retail_price: input.retailPrice,
       image_url: input.imageUrl || null,
+      ...(input.imageUrl ? { image_updated_at: new Date().toISOString() } : {}),
       active: true,
       can_buy_individually: true,
     })

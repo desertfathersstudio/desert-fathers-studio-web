@@ -50,11 +50,13 @@ export interface Product {
   size: string | null;
   description: string | null;
   image_url: string | null;
+  image_updated_at: string | null;
   drive_link: string | null;
   retail_price: number;
   review_status: ReviewStatus;
   review_comments: string | null;
   coming_soon: boolean;
+  featured: boolean;
   active: boolean;
   created_at: string;
   updated_at: string;

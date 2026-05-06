@@ -5,6 +5,7 @@ import { X, Upload, CheckCircle, AlertCircle, ImageIcon, HelpCircle } from "luci
 import { toast } from "sonner";
 import { adminBatchReplaceImage } from "@/app/admin/inventory/actions";
 import type { ProductWithInventory } from "@/lib/admin/types";
+import { withVersion } from "@/lib/image-version";
 
 type Mode = "live" | "review";
 type UploadStatus = "queued" | "uploading" | "done" | "error";
@@ -136,7 +137,7 @@ export function BatchImageReplaceModal({
 }: {
   products: ProductWithInventory[];
   onClose: () => void;
-  onBatchUpdated: (updates: { id: string; imageUrl: string; reviewStatus?: string }[]) => void;
+  onBatchUpdated: (updates: { id: string; imageUrl: string; imageUpdatedAt: string; reviewStatus?: string }[]) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<Mode>("live");
@@ -245,7 +246,7 @@ export function BatchImageReplaceModal({
     assignments.forEach((a) => init.set(a.product.id, "queued"));
     setProgress(init);
 
-    const updates: { id: string; imageUrl: string; reviewStatus?: string }[] = [];
+    const updates: { id: string; imageUrl: string; imageUpdatedAt: string; reviewStatus?: string }[] = [];
     let errorCount = 0;
 
     for (const { product, file } of assignments) {
@@ -258,8 +259,8 @@ export function BatchImageReplaceModal({
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Upload failed");
 
-        await adminBatchReplaceImage(product.id, json.url, mode);
-        updates.push({ id: product.id, imageUrl: json.url, ...(mode === "review" ? { reviewStatus: "under_review" } : {}) });
+        const { imageUpdatedAt } = await adminBatchReplaceImage(product.id, json.url, mode);
+        updates.push({ id: product.id, imageUrl: json.url, imageUpdatedAt, ...(mode === "review" ? { reviewStatus: "under_review" } : {}) });
         setProgress((prev) => new Map(prev).set(product.id, "done"));
       } catch (err: unknown) {
         console.error(err);
@@ -365,7 +366,7 @@ export function BatchImageReplaceModal({
                     {/* Candidate product current image */}
                     <div style={thumbStyle}>
                       {fp.candidateProduct.image_url
-                        ? <img src={fp.candidateProduct.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                        ? <img src={withVersion(fp.candidateProduct.image_url, fp.candidateProduct.image_updated_at) ?? fp.candidateProduct.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                         : <ImageIcon size={16} style={{ color: "#c9b5b5" }} />}
                     </div>
                     {/* Info */}
@@ -414,7 +415,7 @@ export function BatchImageReplaceModal({
                     <div key={product.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.625rem 0.75rem", borderRadius: 8, border: "1px solid", borderColor: status === "done" ? "#bbf7d0" : status === "error" ? "#fecaca" : "#e8ddd5", background: status === "done" ? "#f0fdf4" : status === "error" ? "#fef2f2" : "#faf7f4" }}>
                       <div style={thumbStyle}>
                         {product.image_url
-                          ? <img src={product.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                          ? <img src={withVersion(product.image_url, product.image_updated_at) ?? product.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                           : <ImageIcon size={16} style={{ color: "#c9b5b5" }} />}
                       </div>
                       <span style={{ fontSize: "0.72rem", color: "#b09090", fontFamily: "Inter, system-ui, sans-serif", flexShrink: 0 }}>→</span>

@@ -9,6 +9,7 @@ import {
   categoryTextColor,
   productImageUrl,
 } from "@/lib/wholesale/pricing";
+import { withVersion } from "@/lib/image-version";
 import type { WholesaleProduct } from "@/types/wholesale";
 
 export async function GET(req: NextRequest) {
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     const sb = createSupabaseService();
     const { data, error } = await sb
       .from("products")
-      .select("id, sku, name, size, image_url, drive_link, review_status, review_comments, created_at, can_buy_individually, categories(name)")
+      .select("id, sku, name, size, image_url, image_updated_at, drive_link, review_status, review_comments, created_at, can_buy_individually, categories(name)")
       .eq("active", true)
       .order("created_at", { ascending: false });
 
@@ -51,12 +52,13 @@ export async function GET(req: NextRequest) {
       const packOnly =
         !!packType && !standalonePackDesign && !isPackProduct;
 
-      const imageUrl = productImageUrl(
+      const rawImageUrl = productImageUrl(
         row.image_url as string | null,
         row.drive_link as string | null,
         "w400",
         cacheBust
       );
+      const imageUrl = withVersion(rawImageUrl, row.image_updated_at as string | null) ?? rawImageUrl;
 
       const dateAdded = row.created_at as string;
       const isNew = new Date(dateAdded).getTime() > NEW_BADGE_CUTOFF;

@@ -3,6 +3,7 @@
 import { X, Edit2, ExternalLink, Package } from "lucide-react";
 import type { ProductWithInventory } from "@/lib/admin/types";
 import { InventoryBadge, ReviewBadge, IncomingBadge } from "./StatusBadge";
+import { withVersion } from "@/lib/image-version";
 
 const COST_PER_STICKER = 0.38; // approximate unit cost
 
@@ -120,7 +121,7 @@ export function ProductDetailDrawer({
         >
           {product.image_url ? (
             <img
-              src={product.image_url}
+              src={withVersion(product.image_url, product.image_updated_at) ?? product.image_url}
               alt={product.name}
               style={{ maxHeight: 180, maxWidth: "90%", objectFit: "contain" }}
             />

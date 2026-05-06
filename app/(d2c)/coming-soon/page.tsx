@@ -3,6 +3,7 @@ import { Nav } from "@/components/d2c/Nav";
 import { Footer } from "@/components/d2c/Footer";
 import { NotifyMeButton } from "@/components/d2c/NotifyMeButton";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { withVersion } from "@/lib/image-version";
 
 interface ComingSoonProduct {
   id: string;
@@ -16,11 +17,13 @@ async function getComingSoonProducts(): Promise<ComingSoonProduct[]> {
     const sb = await createSupabaseServer();
     const { data } = await sb
       .from("products")
-      .select("id, name, image_url, sku")
+      .select("id, name, image_url, image_updated_at, sku")
       .eq("coming_soon", true)
       .eq("active", true)
       .eq("review_status", "approved");
-    return ((data ?? []) as ComingSoonProduct[]).sort((a, b) => {
+    return ((data ?? []) as (ComingSoonProduct & { image_updated_at: string | null })[])
+      .map((p) => ({ ...p, image_url: withVersion(p.image_url, p.image_updated_at) ?? p.image_url }))
+      .sort((a, b) => {
       const numA = parseInt(a.sku.replace(/[^0-9]/g, ""), 10) || 0;
       const numB = parseInt(b.sku.replace(/[^0-9]/g, ""), 10) || 0;
       return numA - numB;

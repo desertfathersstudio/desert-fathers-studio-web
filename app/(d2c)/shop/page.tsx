@@ -3,6 +3,7 @@ import { CatalogSection } from "@/components/d2c/CatalogSection";
 import { Footer } from "@/components/d2c/Footer";
 import { CATALOG, type CategoryKey } from "@/lib/catalog";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { withVersion } from "@/lib/image-version";
 
 // Extract the base filename from an R2 URL (reverse of stickerImageUrl)
 function r2UrlToFilenameBase(url: string): string {
@@ -35,11 +36,11 @@ export default async function ShopPage({
     : undefined;
 
   let soldOutNames: string[] = [];
-  let comingSoonNames: string[] = [];
+  let activeNames: string[] = [];
   let imageOverrides: Record<string, string> = {};
   try {
     const sb = await createSupabaseServer();
-    const [productsRes, comingSoonRes, imageOverridesRes] = await Promise.all([
+    const [productsRes, imageOverridesRes] = await Promise.all([
       sb
         .from("products")
         .select("name, inventory(on_hand)")
@@ -47,36 +48,23 @@ export default async function ShopPage({
         .eq("coming_soon", false),
       sb
         .from("products")
-        .select("image_url, name")
-        .eq("active", true)
-        .eq("coming_soon", true),
-      sb
-        .from("products")
-        .select("name, image_url")
+        .select("name, image_url, image_updated_at")
         .eq("active", true)
         .not("image_url", "is", null),
     ]);
-    soldOutNames = (productsRes.data ?? [])
-      .filter((p: { name: string; inventory: { on_hand: number }[] }) => {
+
+    const rows = (productsRes.data ?? []) as { name: string; inventory: { on_hand: number }[] }[];
+    activeNames = rows.map((p) => p.name);
+    soldOutNames = rows
+      .filter((p) => {
         const inv = p.inventory?.[0];
         return inv !== undefined && inv.on_hand === 0;
       })
-      .map((p: { name: string }) => p.name);
+      .map((p) => p.name);
 
-    const catalogNameSet = new Set(CATALOG.map((s) => s.name));
-    const resolved = new Set<string>();
-    for (const p of (comingSoonRes.data ?? []) as { image_url: string | null; name: string }[]) {
-      // Primary: direct name match against catalog
-      if (catalogNameSet.has(p.name)) { resolved.add(p.name); continue; }
-      // Fallback: R2 URL → filename base → catalog name
-      const base = r2UrlToFilenameBase(p.image_url ?? "");
-      const byFilename = CATALOG_BY_FILENAME_BASE.get(base);
-      if (byFilename) resolved.add(byFilename);
-    }
-    comingSoonNames = [...resolved];
-
-    for (const p of (imageOverridesRes.data ?? []) as { name: string; image_url: string }[]) {
-      if (p.image_url) imageOverrides[p.name] = p.image_url;
+    for (const p of (imageOverridesRes.data ?? []) as { name: string; image_url: string; image_updated_at: string | null }[]) {
+      const url = withVersion(p.image_url, p.image_updated_at) ?? p.image_url;
+      if (url) imageOverrides[p.name] = url;
     }
   } catch {
     // gracefully degrade if DB is unavailable
@@ -117,7 +105,7 @@ export default async function ShopPage({
           </div>
         </div>
 
-        <CatalogSection initialCategory={category} soldOutNames={soldOutNames} comingSoonNames={comingSoonNames} imageOverrides={imageOverrides} />
+        <CatalogSection initialCategory={category} soldOutNames={soldOutNames} activeNames={activeNames} imageOverrides={imageOverrides} />
       </main>
       <Footer />
     </>

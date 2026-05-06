@@ -4,7 +4,13 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { HeroStickerStrip } from "@/components/d2c/HeroStickerStrip";
 
-export function HeroSection() {
+export function HeroSection({
+  imageMap = {},
+  stripItems = [],
+}: {
+  imageMap?: Record<string, string>;
+  stripItems?: { id: string; name: string; imageUrl: string }[];
+}) {
   const reduced = useReducedMotion();
 
   return (
@@ -120,7 +126,7 @@ export function HeroSection() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.7, delay: 0.75 }}
       >
-        <HeroStickerStrip />
+        <HeroStickerStrip imageMap={imageMap} stripItems={stripItems} />
       </motion.div>
 
       <div

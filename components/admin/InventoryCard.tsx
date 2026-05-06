@@ -1,5 +1,6 @@
 import type { ProductWithInventory } from "@/lib/admin/types";
 import { InventoryBadge, ReviewBadge, IncomingBadge } from "./StatusBadge";
+import { withVersion } from "@/lib/image-version";
 
 export function InventoryCard({
   product,
@@ -44,7 +45,7 @@ export function InventoryCard({
       >
         {product.image_url ? (
           <img
-            src={product.image_url}
+            src={withVersion(product.image_url, product.image_updated_at) ?? product.image_url}
             alt=""
             style={{ width: "100%", height: "100%", objectFit: "contain" }}
           />

@@ -37,7 +37,13 @@ const PACK_CONFIGS: Record<string, PackConfig> = {
   },
 };
 
-export function PackDetail({ slug }: { slug: string }) {
+export function PackDetail({
+  slug,
+  imageMap = {},
+}: {
+  slug: string;
+  imageMap?: Record<string, string>;
+}) {
   const pack = PACK_CONFIGS[slug];
   if (!pack) return null;
 
@@ -73,7 +79,7 @@ export function PackDetail({ slug }: { slug: string }) {
             }}
           >
             <Image
-              src={stickerImageUrl(pack.backCover)}
+              src={imageMap[pack.name] ?? stickerImageUrl(pack.backCover)}
               alt={`${pack.name} — all included designs`}
               fill
               className="object-contain p-6"
@@ -207,7 +213,7 @@ export function PackDetail({ slug }: { slug: string }) {
                 }}
               >
                 <Image
-                  src={stickerImageUrl(sticker.filename)}
+                  src={imageMap[sticker.name] ?? stickerImageUrl(sticker.filename)}
                   alt={sticker.name}
                   fill
                   className="object-contain p-4 transition-transform duration-300 ease-out group-hover:scale-[1.04]"

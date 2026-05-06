@@ -6,43 +6,46 @@ import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { stickerImageUrl } from "@/lib/catalog";
 
-const COLLECTIONS = [
-  {
-    id: "holy-week",
-    title: "Holy Week Pack — Set of 23",
-    badge: "$18.00",
-    topSelling: true,
-    description:
-      "The complete story of Holy Week, from the Raising of Lazarus to the Resurrection.",
-    href: "/shop/holy-week-pack",
-    image: stickerImageUrl("Holy Week Pack BACK.png"),
-    accentColor: "var(--brand)",
-  },
-  {
-    id: "resurrection",
-    title: "Resurrection Pack — Set of 10",
-    badge: "$10.00",
-    topSelling: true,
-    description:
-      "Ten Resurrection appearances — from the Empty Tomb to Pentecost.",
-    href: "/shop/resurrection-pack",
-    image: stickerImageUrl("Resurrection Pack BACK.png"),
-    accentColor: "var(--gold)",
-  },
-  {
-    id: "individual",
-    title: "Individual Stickers",
-    badge: "$2.00 each",
-    topSelling: false,
-    description:
-      "Saints, angels, prophets, Christ, Our Lady, and more — browse 80+ designs.",
-    href: "/shop",
-    image: stickerImageUrl("Pantokrator.png"),
-    accentColor: "var(--navy)",
-  },
-];
-
-export function FeaturedCollections() {
+export function FeaturedCollections({
+  imageMap = {},
+}: {
+  imageMap?: Record<string, string>;
+}) {
+  const COLLECTIONS = [
+    {
+      id: "holy-week",
+      title: "Holy Week Pack — Set of 23",
+      badge: "$18.00",
+      topSelling: true,
+      description:
+        "The complete story of Holy Week, from the Raising of Lazarus to the Resurrection.",
+      href: "/shop/holy-week-pack",
+      image: imageMap["Holy Week Pack"] ?? stickerImageUrl("Holy Week Pack BACK.png"),
+      accentColor: "var(--brand)",
+    },
+    {
+      id: "resurrection",
+      title: "Resurrection Pack — Set of 10",
+      badge: "$10.00",
+      topSelling: true,
+      description:
+        "Ten Resurrection appearances — from the Empty Tomb to Pentecost.",
+      href: "/shop/resurrection-pack",
+      image: imageMap["Resurrection Pack"] ?? stickerImageUrl("Resurrection Pack BACK.png"),
+      accentColor: "var(--gold)",
+    },
+    {
+      id: "individual",
+      title: "Individual Stickers",
+      badge: "$2.00 each",
+      topSelling: false,
+      description:
+        "Saints, angels, prophets, Christ, Our Lady, and more — browse 80+ designs.",
+      href: "/shop",
+      image: imageMap["Pantokrator"] ?? stickerImageUrl("Pantokrator.png"),
+      accentColor: "var(--navy)",
+    },
+  ];
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px 0px" });
   const reduced = useReducedMotion();

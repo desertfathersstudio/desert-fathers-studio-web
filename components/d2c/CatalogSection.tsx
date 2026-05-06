@@ -37,19 +37,19 @@ function toCardProduct(s: Sticker, soldOut: boolean, imageOverrides?: Record<str
 export function CatalogSection({
   initialCategory,
   soldOutNames = [],
-  comingSoonNames = [],
+  activeNames = [],
   imageOverrides = {},
 }: {
   initialCategory?: CategoryKey;
   soldOutNames?: string[];
-  comingSoonNames?: string[];
+  activeNames?: string[];
   imageOverrides?: Record<string, string>;
 }) {
   const [active, setActive] = useState<CategoryKey>(initialCategory ?? "all");
   const { add, openCart } = useCart();
   const { open: openLightbox } = useLightbox();
-  const soldOutSet    = useMemo(() => new Set(soldOutNames),    [soldOutNames]);
-  const comingSoonSet = useMemo(() => new Set(comingSoonNames), [comingSoonNames]);
+  const soldOutSet  = useMemo(() => new Set(soldOutNames),  [soldOutNames]);
+  const activeSet   = useMemo(() => new Set(activeNames),   [activeNames]);
 
   // Sync active filter when initialCategory changes via URL navigation
   useEffect(() => {
@@ -57,8 +57,8 @@ export function CatalogSection({
   }, [initialCategory]);
 
   const visibleCatalog = useMemo(
-    () => CATALOG.filter((s) => s.isPack || !comingSoonSet.has(s.name)),
-    [comingSoonSet]
+    () => CATALOG.filter((s) => s.isPack || (activeSet.size > 0 ? activeSet.has(s.name) : true)),
+    [activeSet]
   );
 
   const grouped = useMemo(() => {
@@ -133,7 +133,7 @@ export function CatalogSection({
         {/* Content */}
         {active === "all" ? (
           <div className="space-y-12">
-            {packGroup && <PackRow items={packGroup.items} comingSoonSet={comingSoonSet} imageOverrides={imageOverrides} onAdd={(s) => { add(s); openCart(); }} />}
+            {packGroup && <PackRow items={packGroup.items} activeSet={activeSet} imageOverrides={imageOverrides} onAdd={(s) => { add(s); openCart(); }} />}
             <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} imageOverrides={imageOverrides} />
           </div>
         ) : active === "individuals" ? (
@@ -141,7 +141,7 @@ export function CatalogSection({
         ) : (
           <div>
             {active === "packs" && packGroup ? (
-              <PackRow items={packGroup.items} comingSoonSet={comingSoonSet} imageOverrides={imageOverrides} onAdd={(s) => { add(s); openCart(); }} />
+              <PackRow items={packGroup.items} activeSet={activeSet} imageOverrides={imageOverrides} onAdd={(s) => { add(s); openCart(); }} />
             ) : (
               <StickerGrid
                 items={grouped.find((g) => g.key === active)?.items ?? []}
@@ -187,19 +187,19 @@ function Pill({
 
 function PackRow({
   items,
-  comingSoonSet,
+  activeSet,
   imageOverrides,
   onAdd,
 }: {
   items: Sticker[];
-  comingSoonSet: Set<string>;
+  activeSet: Set<string>;
   imageOverrides?: Record<string, string>;
   onAdd: (s: Sticker) => void;
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
       {items.map((pack) => {
-        const isComingSoon = comingSoonSet.has(pack.name);
+        const isComingSoon = activeSet.size > 0 && !activeSet.has(pack.name);
         return (
           <article
             key={pack.id}
