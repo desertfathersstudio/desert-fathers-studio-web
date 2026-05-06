@@ -40,6 +40,7 @@ export default async function ShopPage({
   let imageOverrides: Record<string, string> = {};
   try {
     const sb = createSupabaseService();
+    console.log('[shop] running productsRes query: active=true, coming_soon=false');
     const [productsRes, imageOverridesRes] = await Promise.all([
       sb
         .from("products")
@@ -52,6 +53,9 @@ export default async function ShopPage({
         .eq("active", true)
         .not("image_url", "is", null),
     ]);
+    console.log('[shop] productsRes rows:', productsRes.data?.length, 'error:', productsRes.error?.message ?? null);
+    console.log('[shop] productsRes names:', productsRes.data?.map((p: { name: string }) => p.name));
+    console.log('[shop] imageOverridesRes rows:', imageOverridesRes.data?.length, 'error:', imageOverridesRes.error?.message ?? null);
 
     const rows = (productsRes.data ?? []) as { name: string; inventory: { on_hand: number }[] }[];
     activeNames = rows.map((p) => p.name);
@@ -66,8 +70,9 @@ export default async function ShopPage({
       const url = withVersion(p.image_url, p.image_updated_at) ?? p.image_url;
       if (url) imageOverrides[p.name] = url;
     }
-  } catch {
-    // gracefully degrade if DB is unavailable
+    console.log('[shop] activeNames count:', activeNames.length);
+  } catch (err) {
+    console.log('[shop] CAUGHT ERROR:', err);
   }
 
   return (
