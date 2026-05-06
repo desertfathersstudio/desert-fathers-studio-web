@@ -71,6 +71,15 @@ export default async function ShopPage({
       if (url) imageOverrides[p.name] = url;
     }
     console.log('[shop] activeNames count:', activeNames.length);
+
+    // Diagnose name mismatches between DB and CATALOG
+    const catalogNames = CATALOG.map((s) => s.name);
+    const activeSet = new Set(activeNames);
+    const matched = catalogNames.filter((n) => activeSet.has(n));
+    const dbNamesNotInCatalog = activeNames.filter((n) => !new Set(catalogNames).has(n));
+    console.log('[shop] CATALOG length:', CATALOG.length);
+    console.log('[shop] CATALOG names matched by DB:', matched.length, matched);
+    console.log('[shop] DB names NOT in CATALOG:', dbNamesNotInCatalog.length, dbNamesNotInCatalog);
   } catch (err) {
     console.log('[shop] CAUGHT ERROR:', err);
   }
