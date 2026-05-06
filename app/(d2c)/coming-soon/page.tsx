@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Image from "next/image";
 import { Nav } from "@/components/d2c/Nav";
 import { Footer } from "@/components/d2c/Footer";

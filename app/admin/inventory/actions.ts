@@ -1,8 +1,16 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { createSupabaseService } from "@/lib/supabase/service";
 import type { ProductWithInventory, ReviewStatus } from "@/lib/admin/types";
+
+function revalidatePublicRoutes() {
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath("/coming-soon");
+  revalidatePath("/shop/[slug]", "page");
+}
 
 async function sendAvailabilityNotifications(productName: string) {
   const sb = createSupabaseService();
@@ -158,6 +166,8 @@ export async function adminUpdateProduct(
       await sendAvailabilityNotifications(input.name).catch(console.error);
     }
   }
+
+  revalidatePublicRoutes();
 }
 
 export async function adminBatchReplaceImage(
@@ -177,6 +187,7 @@ export async function adminBatchReplaceImage(
   }
   const { error } = await sb.from("products").update(payload).eq("id", productId);
   if (error) throw new Error(error.message);
+  revalidatePublicRoutes();
   return { imageUpdatedAt: ts };
 }
 
@@ -187,6 +198,7 @@ export async function adminArchiveProduct(productId: string): Promise<void> {
     .update({ active: false })
     .eq("id", productId);
   if (error) throw new Error(error.message);
+  revalidatePublicRoutes();
 }
 
 export async function adminAddProduct(input: {
@@ -231,5 +243,6 @@ export async function adminAddProduct(input: {
     .single();
   if (iErr) throw new Error(iErr.message);
 
+  revalidatePublicRoutes();
   return { ...prod, inventory: inv } as ProductWithInventory;
 }
