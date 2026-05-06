@@ -1,29 +1,27 @@
 import { Nav } from "@/components/d2c/Nav";
 import { CatalogSection } from "@/components/d2c/CatalogSection";
 import { Footer } from "@/components/d2c/Footer";
-import { CATALOG, type CategoryKey } from "@/lib/catalog";
+import { CATALOG, type CategoryKey, type Sticker } from "@/lib/catalog";
+import { D2C_PRICE } from "@/lib/pricing";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { withVersion } from "@/lib/image-version";
-
-// Extract the base filename from an R2 URL (reverse of stickerImageUrl)
-function r2UrlToFilenameBase(url: string): string {
-  try {
-    const encoded = new URL(url).pathname.split("/").pop() ?? "";
-    return decodeURIComponent(encoded).replace(/\.[^.]+$/, "");
-  } catch {
-    return "";
-  }
-}
-
-// Map catalog entries by filename base so we can look them up by R2 URL
-const CATALOG_BY_FILENAME_BASE = new Map(
-  CATALOG.map((s) => [s.filename.replace(/\.[^.]+$/, ""), s.name])
-);
 
 const VALID_CATEGORIES: CategoryKey[] = [
   "individuals", "packs", "christ", "our-lady", "angels", "saints",
   "prophets", "scenes", "holy-week", "resurrection",
 ];
+
+const DB_CATEGORY_TO_KEY: Record<string, Exclude<CategoryKey, "all" | "individuals">> = {
+  "Packs":                  "packs",
+  "Christ":                 "christ",
+  "Our Lady":               "our-lady",
+  "Angels":                 "angels",
+  "Saints":                 "saints",
+  "Prophets & Patriarchs":  "prophets",
+  "Scenes":                 "scenes",
+  "Holy Week":              "holy-week",
+  "Resurrection":           "resurrection",
+};
 
 export default async function ShopPage({
   searchParams,
@@ -35,53 +33,50 @@ export default async function ShopPage({
     ? (categoryParam as CategoryKey)
     : undefined;
 
+  let products: Sticker[] = [];
   let soldOutNames: string[] = [];
-  let activeNames: string[] = [];
-  let imageOverrides: Record<string, string> = {};
   try {
     const sb = createSupabaseService();
-    console.log('[shop] running productsRes query: active=true, coming_soon=false');
-    const [productsRes, imageOverridesRes] = await Promise.all([
-      sb
-        .from("products")
-        .select("name, inventory(on_hand)")
-        .eq("active", true)
-        .eq("coming_soon", false),
-      sb
-        .from("products")
-        .select("name, image_url, image_updated_at")
-        .eq("active", true)
-        .not("image_url", "is", null),
-    ]);
-    console.log('[shop] productsRes rows:', productsRes.data?.length, 'error:', productsRes.error?.message ?? null);
-    console.log('[shop] productsRes names:', productsRes.data?.map((p: { name: string }) => p.name));
-    console.log('[shop] imageOverridesRes rows:', imageOverridesRes.data?.length, 'error:', imageOverridesRes.error?.message ?? null);
+    const { data, error } = await sb
+      .from("products")
+      .select("name, retail_price, image_url, image_updated_at, categories(name), inventory(on_hand)")
+      .eq("active", true)
+      .eq("coming_soon", false);
+    if (error) throw error;
 
-    const rows = (productsRes.data ?? []) as { name: string; inventory: { on_hand: number }[] }[];
-    activeNames = rows.map((p) => p.name);
-    soldOutNames = rows
-      .filter((p) => {
-        const inv = p.inventory?.[0];
-        return inv !== undefined && inv.on_hand === 0;
-      })
-      .map((p) => p.name);
+    for (const row of data ?? []) {
+      const catalogEntry = CATALOG.find((c) => c.name === row.name);
 
-    for (const p of (imageOverridesRes.data ?? []) as { name: string; image_url: string; image_updated_at: string | null }[]) {
-      const url = withVersion(p.image_url, p.image_updated_at) ?? p.image_url;
-      if (url) imageOverrides[p.name] = url;
+      const categoriesRaw = row.categories as { name: string }[] | { name: string } | null;
+      const dbCategoryName = Array.isArray(categoriesRaw)
+        ? categoriesRaw[0]?.name
+        : (categoriesRaw as { name: string } | null)?.name;
+
+      const productCategory: Exclude<CategoryKey, "all"> =
+        catalogEntry?.category ??
+        (dbCategoryName ? DB_CATEGORY_TO_KEY[dbCategoryName] : undefined) ??
+        "saints";
+
+      const inv = (row.inventory as { on_hand: number }[] | null)?.[0];
+      if (inv !== undefined && inv !== null && inv.on_hand === 0) {
+        soldOutNames.push(row.name as string);
+      }
+
+      products.push({
+        id: catalogEntry?.id ?? (row.name as string).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        name: row.name as string,
+        filename: catalogEntry?.filename ?? "",
+        imageUrl: withVersion(row.image_url as string | null, row.image_updated_at as string | null) ?? undefined,
+        price: Number(row.retail_price ?? catalogEntry?.price ?? D2C_PRICE),
+        category: productCategory,
+        isPack: catalogEntry?.isPack,
+        packSize: catalogEntry?.packSize,
+        packOnly: catalogEntry?.packOnly,
+        isNew: catalogEntry?.isNew,
+      });
     }
-    console.log('[shop] activeNames count:', activeNames.length);
-
-    // Diagnose name mismatches between DB and CATALOG
-    const catalogNames = CATALOG.map((s) => s.name);
-    const activeSet = new Set(activeNames);
-    const matched = catalogNames.filter((n) => activeSet.has(n));
-    const dbNamesNotInCatalog = activeNames.filter((n) => !new Set(catalogNames).has(n));
-    console.log('[shop] CATALOG length:', CATALOG.length);
-    console.log('[shop] CATALOG names matched by DB:', matched.length, matched);
-    console.log('[shop] DB names NOT in CATALOG:', dbNamesNotInCatalog.length, dbNamesNotInCatalog);
   } catch (err) {
-    console.log('[shop] CAUGHT ERROR:', err);
+    console.error("[shop] error fetching products:", err);
   }
 
   return (
@@ -119,7 +114,7 @@ export default async function ShopPage({
           </div>
         </div>
 
-        <CatalogSection initialCategory={category} soldOutNames={soldOutNames} activeNames={activeNames} imageOverrides={imageOverrides} />
+        <CatalogSection initialCategory={category} soldOutNames={soldOutNames} products={products} />
       </main>
       <Footer />
     </>

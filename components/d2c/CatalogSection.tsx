@@ -15,16 +15,16 @@ import { StickerCard, type StickerProduct } from "@/components/shared/StickerCar
 import { useCart } from "@/lib/cart";
 import { useLightbox } from "@/lib/lightbox";
 
-function resolveImageUrl(s: Sticker, imageOverrides?: Record<string, string>): string {
-  return s.imageUrl ?? imageOverrides?.[s.name] ?? stickerImageUrl(s.filename);
+function resolveImageUrl(s: Sticker): string {
+  return s.imageUrl ?? (s.filename ? stickerImageUrl(s.filename) : "");
 }
 
-function toCardProduct(s: Sticker, soldOut: boolean, imageOverrides?: Record<string, string>): StickerProduct {
+function toCardProduct(s: Sticker, soldOut: boolean): StickerProduct {
   return {
     id: s.id,
     name: s.name,
     price: s.price,
-    imageUrl: resolveImageUrl(s, imageOverrides),
+    imageUrl: resolveImageUrl(s),
     category: s.category,
     isNew: s.isNew,
     isPack: s.isPack,
@@ -37,29 +37,23 @@ function toCardProduct(s: Sticker, soldOut: boolean, imageOverrides?: Record<str
 export function CatalogSection({
   initialCategory,
   soldOutNames = [],
-  activeNames = [],
-  imageOverrides = {},
+  products = [],
 }: {
   initialCategory?: CategoryKey;
   soldOutNames?: string[];
-  activeNames?: string[];
-  imageOverrides?: Record<string, string>;
+  products?: Sticker[];
 }) {
   const [active, setActive] = useState<CategoryKey>(initialCategory ?? "all");
   const { add, openCart } = useCart();
   const { open: openLightbox } = useLightbox();
-  const soldOutSet  = useMemo(() => new Set(soldOutNames),  [soldOutNames]);
-  const activeSet   = useMemo(() => new Set(activeNames),   [activeNames]);
+  const soldOutSet = useMemo(() => new Set(soldOutNames), [soldOutNames]);
 
   // Sync active filter when initialCategory changes via URL navigation
   useEffect(() => {
     setActive(initialCategory ?? "all");
   }, [initialCategory]);
 
-  const visibleCatalog = useMemo(
-    () => CATALOG.filter((s) => s.isPack || (activeSet.size > 0 ? activeSet.has(s.name) : true)),
-    [activeSet]
-  );
+  const visibleCatalog = products;
 
   const grouped = useMemo(() => {
     return CATEGORY_ORDER.map((key) => ({
@@ -120,10 +114,10 @@ export function CatalogSection({
         {/* Filter pills */}
         <div className="flex flex-wrap gap-2 mb-14">
           <Pill label="All" active={active === "all"} onClick={() => setActive("all")} />
-          {CATEGORY_ORDER.map((key) => (
+          {grouped.map(({ key, label }) => (
             <Pill
               key={key}
-              label={CATEGORY_LABELS[key]}
+              label={label}
               active={active === key}
               onClick={() => setActive(key)}
             />
@@ -133,22 +127,21 @@ export function CatalogSection({
         {/* Content */}
         {active === "all" ? (
           <div className="space-y-12">
-            {packGroup && <PackRow items={packGroup.items} activeSet={activeSet} imageOverrides={imageOverrides} onAdd={(s) => { add(s); openCart(); }} />}
-            <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} imageOverrides={imageOverrides} />
+            {packGroup && <PackRow items={packGroup.items} onAdd={(s) => { add(s); openCart(); }} />}
+            <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} />
           </div>
         ) : active === "individuals" ? (
-          <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} imageOverrides={imageOverrides} />
+          <StickerGrid items={flatStickers} onAdd={add} onOpenLightbox={openLightbox} soldOutSet={soldOutSet} />
         ) : (
           <div>
             {active === "packs" && packGroup ? (
-              <PackRow items={packGroup.items} activeSet={activeSet} imageOverrides={imageOverrides} onAdd={(s) => { add(s); openCart(); }} />
+              <PackRow items={packGroup.items} onAdd={(s) => { add(s); openCart(); }} />
             ) : (
               <StickerGrid
                 items={grouped.find((g) => g.key === active)?.items ?? []}
                 onAdd={add}
                 onOpenLightbox={openLightbox}
                 soldOutSet={soldOutSet}
-                imageOverrides={imageOverrides}
               />
             )}
           </div>
@@ -187,19 +180,14 @@ function Pill({
 
 function PackRow({
   items,
-  activeSet,
-  imageOverrides,
   onAdd,
 }: {
   items: Sticker[];
-  activeSet: Set<string>;
-  imageOverrides?: Record<string, string>;
   onAdd: (s: Sticker) => void;
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
       {items.map((pack) => {
-        const isComingSoon = activeSet.size > 0 && !activeSet.has(pack.name);
         return (
           <article
             key={pack.id}
@@ -216,24 +204,12 @@ function PackRow({
                 style={{ background: "#fff" }}
               >
                 <Image
-                  src={resolveImageUrl(pack, imageOverrides)}
+                  src={resolveImageUrl(pack)}
                   alt={pack.name}
                   fill
                   className="object-contain p-12 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
                   sizes="(max-width: 640px) 100vw, 50vw"
                 />
-                {isComingSoon && (
-                  <span
-                    className="absolute top-3 left-3 text-[9px] font-semibold uppercase tracking-wide px-2 py-1"
-                    style={{
-                      background: "var(--brand)",
-                      color: "#efe7d6",
-                      borderRadius: 4,
-                    }}
-                  >
-                    Coming Soon
-                  </span>
-                )}
               </div>
             </Link>
 
@@ -265,30 +241,21 @@ function PackRow({
                 >
                   ${pack.price.toFixed(2)}
                 </p>
-                {isComingSoon ? (
-                  <span
-                    className="text-xs"
-                    style={{ color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}
-                  >
-                    Available soon
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => onAdd(pack)}
-                    className="text-xs font-semibold px-4 py-2 transition-opacity hover:opacity-80"
-                    style={{
-                      background: "var(--brand)",
-                      color: "#efe7d6",
-                      borderRadius: 6,
-                      border: "none",
-                      cursor: "pointer",
-                      fontFamily: "var(--font-sans)",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    Add to Cart
-                  </button>
-                )}
+                <button
+                  onClick={() => onAdd(pack)}
+                  className="text-xs font-semibold px-4 py-2 transition-opacity hover:opacity-80"
+                  style={{
+                    background: "var(--brand)",
+                    color: "#efe7d6",
+                    borderRadius: 6,
+                    border: "none",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-sans)",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  Add to Cart
+                </button>
               </div>
             </div>
           </article>
@@ -303,18 +270,16 @@ function StickerGrid({
   onAdd,
   onOpenLightbox,
   soldOutSet,
-  imageOverrides,
 }: {
   items: Sticker[];
   onAdd: (s: Sticker) => void;
   onOpenLightbox: (items: Sticker[], index: number) => void;
   soldOutSet: Set<string>;
-  imageOverrides?: Record<string, string>;
 }) {
   // Build items with imageUrl pre-resolved so lightbox also uses the correct URL
   const resolvedItems = useMemo(
-    () => items.map((s) => ({ ...s, imageUrl: resolveImageUrl(s, imageOverrides) })),
-    [items, imageOverrides]
+    () => items.map((s) => ({ ...s, imageUrl: resolveImageUrl(s) })),
+    [items]
   );
 
   return (
