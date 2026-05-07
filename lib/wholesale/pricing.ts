@@ -70,8 +70,8 @@ export function getPackType(name: string, category: string, sku: string): "HWP" 
   const c   = normalizeForPack(category ?? "");
   const pid = String(sku ?? "").toUpperCase();
 
-  if (pid === "RP_PACK" || c.includes("resurrection pack") || n.startsWith("rp")) return "RP";
-  if (pid === "HWP_PACK" || c.includes("holy week pack")) return "HWP";
+  if (pid === "RP_PACK" || c === "resurrection" || c.includes("resurrection pack") || n.startsWith("rp")) return "RP";
+  if (pid === "HWP_PACK" || c === "holy week" || c.includes("holy week pack")) return "HWP";
 
   for (const hwpName of HWP_NAMES) {
     if (n === hwpName || n.includes(hwpName)) return "HWP";
