@@ -529,11 +529,12 @@ function CatalogLightbox({
   const packName  = p.packType === "HWP" ? "Holy Week Pack" : "Resurrection Pack";
   const packSize  = p.packType === "HWP" ? "Set of 23" : "Set of 10";
 
-  const unitPrice = orderMode === "pack" ? packPrice : priceSingle;
+  // Pack products (PK-1/PK-2) are always priced per set
+  const unitPrice = (p.isPackProduct || orderMode === "pack") ? packPrice : priceSingle;
   const lineTotal = (unitPrice * qty).toFixed(2);
 
   function handleAdd() {
-    if (orderMode === "pack" && p.packType) {
+    if (p.isPackProduct || (orderMode === "pack" && p.packType)) {
       onAddToCart({
         productId: packId,
         designName: packName,
@@ -562,7 +563,7 @@ function CatalogLightbox({
   }
 
   const showPackOption = !!p.packType && !p.isPackProduct;
-  const showSingleOption = true;
+  const showSingleOption = !p.isPackProduct;
 
   return (
     <div
@@ -653,9 +654,10 @@ function CatalogLightbox({
         </div>
 
         {/* Body */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}>
+        <div className="ws-lightbox-body" style={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}>
           {/* Image */}
           <div
+            className="ws-lightbox-image"
             style={{
               flex: 1,
               background: "var(--bg-card)",
@@ -679,6 +681,7 @@ function CatalogLightbox({
 
           {/* Side */}
           <div
+            className="ws-lightbox-side"
             style={{
               width: 270,
               flexShrink: 0,
@@ -750,7 +753,7 @@ function CatalogLightbox({
 
             {/* Qty */}
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={smallLabel}>Quantity</label>
+              <label style={smallLabel}>{p.isPackProduct ? "Quantity (sets)" : "Quantity"}</label>
               <select value={qty} onChange={(e) => setQty(Number(e.target.value))} style={inputSm}>
                 {QTY_OPTIONS.filter((q) => q >= minQty).map((q) => <option key={q} value={q}>{q}</option>)}
               </select>
@@ -760,7 +763,7 @@ function CatalogLightbox({
             <div style={{ fontSize: "0.84rem", color: "var(--text)", fontFamily: "var(--font-inter)" }}>
               <span style={{ color: "var(--text-muted)" }}>Total: </span>
               <strong style={{ color: "var(--gold)" }}>{currencySymbol}{lineTotal}</strong>
-              {orderMode === "pack" && <span style={{ color: "var(--text-muted)", fontSize: "0.76rem" }}> (full pack)</span>}
+              {(p.isPackProduct || orderMode === "pack") && <span style={{ color: "var(--text-muted)", fontSize: "0.76rem" }}> ({p.isPackProduct ? `${qty} set${qty !== 1 ? "s" : ""}` : "full pack"})</span>}
             </div>
 
             <button

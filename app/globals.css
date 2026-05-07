@@ -133,3 +133,23 @@ body {
 .ws-portal [data-tab]:not([data-active]):hover {
   color: var(--text);
 }
+
+/* Wholesale lightbox — stack vertically on narrow viewports */
+@media (max-width: 600px) {
+  .ws-lightbox-body {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .ws-lightbox-image {
+    flex: none !important;
+    height: 220px !important;
+    border-bottom: 1px solid var(--border);
+  }
+  .ws-lightbox-side {
+    width: 100% !important;
+    border-left: none !important;
+    border-top: none;
+    overflow-y: visible !important;
+  }
+}
