@@ -304,7 +304,6 @@ function CatalogCard({
   const priceLabel =
     pid === "RP_PACK"  ? `${currencySymbol}${priceRpPack.toFixed(2)}/set` :
     pid === "HWP_PACK" ? `${currencySymbol}${priceHwpPack.toFixed(2)}/set` :
-    p.packOnly         ? `${p.packType === "HWP" ? "Holy Week Pack" : "Resurrection Pack"} ${currencySymbol}${(p.packType === "HWP" ? priceHwpPack : priceRpPack).toFixed(2)}/set` :
                          `${currencySymbol}${priceSingle.toFixed(2)}/sticker`;
 
   return (
@@ -563,7 +562,7 @@ function CatalogLightbox({
   }
 
   const showPackOption = !!p.packType && !p.isPackProduct;
-  const showSingleOption = !p.packOnly;
+  const showSingleOption = true;
 
   return (
     <div
