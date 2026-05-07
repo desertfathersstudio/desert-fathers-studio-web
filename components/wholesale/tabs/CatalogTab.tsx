@@ -44,7 +44,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
   const [confirmUnapproveId, setConfirmUnapproveId] = useState<string | null>(null);
 
   const approved = useMemo(
-    () => products.filter((p) => p.reviewStatus === "approved" || !p.reviewStatus),
+    () => products.filter((p) => (p.reviewStatus === "approved" || !p.reviewStatus) && !p.packOnly),
     [products]
   );
 

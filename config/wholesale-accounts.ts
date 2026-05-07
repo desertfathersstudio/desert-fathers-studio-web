@@ -92,6 +92,17 @@ const KNOWN_ACCOUNTS: WholesaleAccountConfig[] = [
     priceHwpPack: 16.00,
     currencySymbol: "A$",
   },
+  {
+    accountId:          "maryjohn",
+    displayName:        "St. Mary & St. John Convent, Ohio",
+    notifyEmail:        "st.mosesbookstore@gmail.com",
+    hasPendingTab:      false,
+    canEditFulfillment: false,
+    contactNames:       [],
+    priceSingle:  0.90,
+    priceRpPack:  5.00,
+    priceHwpPack: 10.00,
+  },
 ];
 
 export function getAccountById(accountId: string): WholesaleAccountConfig | null {
