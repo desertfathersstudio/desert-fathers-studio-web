@@ -43,13 +43,12 @@ export async function GET(req: NextRequest) {
         ? (categoriesRaw[0]?.name ?? "")
         : (categoriesRaw?.name ?? "");
 
-      // Pack product rows (PK-1, PK-2) are virtual items in the wholesale UI — skip them here
-      if (category === "Packs") return [];
-
       const sku = String(row.sku ?? "");
       const name = String(row.name ?? "");
+      const skuUp = sku.toUpperCase();
       const isPackProduct =
-        sku.toUpperCase() === "RP_PACK" || sku.toUpperCase() === "HWP_PACK";
+        skuUp === "RP_PACK" || skuUp === "HWP_PACK" ||
+        skuUp === "PK-1"    || skuUp === "PK-2";
 
       const packType = getPackType(name, category, sku);
       const standalonePackDesign = isStandalonePackDesign(name);
