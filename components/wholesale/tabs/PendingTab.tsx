@@ -43,15 +43,17 @@ export function PendingTab({ products, onProductApproved, onProductsUpdated, acc
   }, [pending]);
 
   const visible = useMemo(() => {
-    return pending.filter((p) => {
-      const hasCom = Boolean(p.reviewComments?.trim());
-      const okStatus =
-        statusFilter === "All" ||
-        (statusFilter === "has" && hasCom) ||
-        (statusFilter === "none" && !hasCom);
-      const okCat = catFilter === "All" || p.category === catFilter;
-      return okStatus && okCat;
-    });
+    return pending
+      .filter((p) => {
+        const hasCom = Boolean(p.reviewComments?.trim());
+        const okStatus =
+          statusFilter === "All" ||
+          (statusFilter === "has" && hasCom) ||
+          (statusFilter === "none" && !hasCom);
+        const okCat = catFilter === "All" || p.category === catFilter;
+        return okStatus && okCat;
+      })
+      .sort((a, b) => a.sku.localeCompare(b.sku, undefined, { numeric: true }));
   }, [pending, statusFilter, catFilter]);
 
   useEffect(() => {
@@ -69,7 +71,7 @@ export function PendingTab({ products, onProductApproved, onProductsUpdated, acc
   }, [accountId]);
 
   useEffect(() => {
-    if (lightboxIdx !== null) return;
+    if (lightboxIdx === null) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setLightboxIdx(null);
       if (e.key === "ArrowLeft") setLightboxIdx((i) => i !== null && i > 0 ? i - 1 : i);

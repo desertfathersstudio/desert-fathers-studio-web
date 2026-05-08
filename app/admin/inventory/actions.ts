@@ -84,6 +84,7 @@ export async function adminUpdateProduct(
   productId: string,
   input: {
     name: string;
+    categoryId?: string | null;
     reviewStatus: ReviewStatus;
     reviewComments: string | null;
     imageUrl: string | null;
@@ -112,6 +113,10 @@ export async function adminUpdateProduct(
     image_url: input.imageUrl,
     updated_at: ts,
   };
+
+  if ("categoryId" in input) {
+    updatePayload.category_id = input.categoryId ?? null;
+  }
 
   if (input.imageUrl) {
     updatePayload.image_updated_at = ts;

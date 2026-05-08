@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 import { X, Upload, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { adminUpdateProduct, adminArchiveProduct } from "@/app/admin/inventory/actions";
-import type { InventoryStatus, ProductWithInventory, ReviewStatus } from "@/lib/admin/types";
+import type { Category, InventoryStatus, ProductWithInventory, ReviewStatus } from "@/lib/admin/types";
 import { withVersion } from "@/lib/image-version";
 
 const REVIEW_OPTIONS: { value: ReviewStatus; label: string }[] = [
@@ -27,6 +28,8 @@ export function EditProductModal({
   const fileRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
 
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryId, setCategoryId] = useState<string>(product.category_id ?? "");
   const [name, setName]                   = useState(product.name);
   const [reviewStatus, setReviewStatus]   = useState<ReviewStatus>(product.review_status);
   const [reviewComments, setReviewComments] = useState(product.review_comments ?? "");
@@ -39,6 +42,13 @@ export function EditProductModal({
   const [featured, setFeatured]           = useState(product.featured ?? false);
   const [uploading, setUploading]         = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => {
+    const sb = createSupabaseBrowser();
+    sb.from("categories").select("id, name").order("name").then(({ data }) => {
+      if (data) setCategories(data);
+    });
+  }, []);
 
   async function handleImageUpload(file: File) {
     setUploading(true);
@@ -68,6 +78,7 @@ export function EditProductModal({
 
         await adminUpdateProduct(product.id, {
           name,
+          categoryId: categoryId || null,
           reviewStatus,
           reviewComments: reviewComments || null,
           imageUrl: imageUrl || null,
@@ -79,9 +90,12 @@ export function EditProductModal({
           featured,
         });
 
+        const resolvedCategory = categories.find((c) => c.id === categoryId) ?? null;
         const updated: ProductWithInventory = {
           ...product,
           name,
+          category_id: categoryId || null,
+          categories: resolvedCategory ? { name: resolvedCategory.name } : null,
           review_status: reviewStatus,
           review_comments: reviewComments || null,
           image_url: imageUrl || null,
@@ -171,6 +185,21 @@ export function EditProductModal({
               onChange={(e) => setName(e.target.value)}
               style={inputStyle}
             />
+          </div>
+
+          {/* Category */}
+          <div>
+            <Label>Category</Label>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">— No category —</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Review status */}
