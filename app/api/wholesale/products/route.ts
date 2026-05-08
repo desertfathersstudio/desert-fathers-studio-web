@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
       const rawImageUrl = productImageUrl(
         row.image_url as string | null,
         row.drive_link as string | null,
-        "w400",
+        "w800",
         cacheBust
       );
       const imageUrl = withVersion(rawImageUrl, row.image_updated_at as string | null) ?? rawImageUrl;
