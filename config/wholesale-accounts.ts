@@ -18,6 +18,8 @@ export interface WholesaleAccountConfig {
   currencySymbol?: string;
   /** Minimum sticker quantity per line item (default 50; abbey is 25) */
   minQty?: number;
+  /** Wholesale price overrides for specific pack SKUs (e.g. { "PK-3": 2.25 }) */
+  packPrices?: Record<string, number>;
 }
 
 // Client-safe: accountIds only, no PINs.

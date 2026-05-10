@@ -303,6 +303,7 @@ function CatalogCard({
   const priceLabel =
     (p.isPackProduct && p.packType === "RP")  ? `${currencySymbol}${priceRpPack.toFixed(2)}/set` :
     (p.isPackProduct && p.packType === "HWP") ? `${currencySymbol}${priceHwpPack.toFixed(2)}/set` :
+    (p.isPackProduct && p.wholesalePrice !== undefined) ? `${currencySymbol}${p.wholesalePrice.toFixed(2)}/set` :
     p.packOnly ? `${p.packType === "HWP" ? "Holy Week Pack" : "Resurrection Pack"} ${currencySymbol}${(p.packType === "HWP" ? priceHwpPack : priceRpPack).toFixed(2)}/set` :
                  `${currencySymbol}${priceSingle.toFixed(2)}/sticker`;
 
@@ -524,12 +525,15 @@ function CatalogLightbox({
 
   const touchX = useRef<number | null>(null);
 
-  const packPrice = p.packType === "HWP" ? priceHwpPack : priceRpPack;
-  const packId    = p.packType === "HWP" ? "HWP_PACK" : "RP_PACK";
-  const packName  = p.packType === "HWP" ? "Holy Week Pack" : "Resurrection Pack";
-  const packSize  = p.packType === "HWP" ? "Set of 23" : "Set of 10";
+  const packPrice =
+    p.packType === "HWP" ? priceHwpPack :
+    p.packType === "RP"  ? priceRpPack  :
+    (p.wholesalePrice ?? priceRpPack);
+  const packId    = p.packType === "HWP" ? "HWP_PACK" : p.packType === "RP" ? "RP_PACK" : p.sku;
+  const packName  = p.packType === "HWP" ? "Holy Week Pack" : p.packType === "RP" ? "Resurrection Pack" : p.name;
+  const packSize  = p.packType === "HWP" ? "Set of 23" : p.packType === "RP" ? "Set of 10" : "Pack";
 
-  // Pack products (PK-1/PK-2) are always priced per set
+  // Pack products are always priced per set
   const unitPrice = (p.isPackProduct || orderMode === "pack") ? packPrice : priceSingle;
   const lineTotal = (unitPrice * qty).toFixed(2);
 

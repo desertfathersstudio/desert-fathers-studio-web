@@ -18,6 +18,7 @@ const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
       "Br. Abanob Abba Moses",
     ],
     minQty: 25,
+    packPrices: { "PK-3": 2.25 },
   },
   "5095": {
     accountId:          "demiana",
@@ -90,4 +91,8 @@ const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
 
 export function getAccountByPin(pin: string): WholesaleAccountConfig | null {
   return ACCOUNT_MAPPING[pin] ?? null;
+}
+
+export function getServerAccountByAccountId(accountId: string): WholesaleAccountConfig | null {
+  return Object.values(ACCOUNT_MAPPING).find((a) => a.accountId === accountId) ?? null;
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
 import { getSessionAccountId } from "@/lib/wholesale/validate-session";
+import { getServerAccountByAccountId } from "@/lib/wholesale/accounts-server";
 import {
   getPackType,
   isStandalonePackDesign,
@@ -32,6 +33,25 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
+
+    // Fetch wholesale_price for generic PK-# packs (PK-3+) from sticker_packs
+    // and apply any per-account packPrices override
+    const genericPackSkus = (data ?? [])
+      .map((r) => String(r.sku ?? "").toUpperCase())
+      .filter((s) => /^PK-\d+$/.test(s) && s !== "PK-1" && s !== "PK-2");
+
+    const packWholesalePrices: Record<string, number> = {};
+    if (genericPackSkus.length > 0) {
+      const { data: packMeta } = await sb
+        .from("sticker_packs")
+        .select("sku, wholesale_price")
+        .in("sku", genericPackSkus);
+      for (const pm of packMeta ?? []) {
+        packWholesalePrices[String(pm.sku).toUpperCase()] = Number(pm.wholesale_price ?? 0);
+      }
+    }
+    const accountConfig = getServerAccountByAccountId(accountId);
+    const accountPackPrices = accountConfig?.packPrices ?? {};
 
     const cacheBust = String(Date.now());
     // Only designs added after this date get the "New" badge going forward
@@ -66,6 +86,12 @@ export async function GET(req: NextRequest) {
       const dateAdded = row.created_at as string;
       const isNew = new Date(dateAdded).getTime() > NEW_BADGE_CUTOFF;
 
+      // For generic PK-# packs (not RP or HWP), embed the effective wholesale price
+      const isGenericPack = isPackProduct && !packType && /^PK-\d+$/.test(skuUp);
+      const wholesalePrice = isGenericPack
+        ? (accountPackPrices[skuUp] ?? packWholesalePrices[skuUp])
+        : undefined;
+
       return [{
         id: String(row.id),
         sku,
@@ -83,6 +109,7 @@ export async function GET(req: NextRequest) {
         categoryBg: categoryBgColor(category),
         categoryText: categoryTextColor(category),
         isNew,
+        ...(wholesalePrice !== undefined ? { wholesalePrice } : {}),
       }];
     });
 

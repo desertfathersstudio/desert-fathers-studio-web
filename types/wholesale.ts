@@ -17,6 +17,8 @@ export interface WholesaleProduct {
   categoryBg: string;
   categoryText: string;
   isNew: boolean;
+  /** Pre-computed wholesale price for generic pack products (PK-3+). Undefined for regular stickers and RP/HWP packs. */
+  wholesalePrice?: number;
 }
 
 export interface WholesaleCartLine {
