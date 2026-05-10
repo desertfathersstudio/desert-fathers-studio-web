@@ -18,6 +18,8 @@ export interface WholesaleAccountConfig {
   currencySymbol?: string;
   /** Minimum sticker quantity per line item (default 50; abbey is 25) */
   minQty?: number;
+  /** Fixed set of allowed order quantities. When set, replaces the global QTY_OPTIONS dropdown. */
+  qtyOptions?: number[];
   /** Wholesale price overrides for specific pack SKUs (e.g. { "PK-3": 2.25 }) */
   packPrices?: Record<string, number>;
 }
@@ -36,7 +38,8 @@ const KNOWN_ACCOUNTS: WholesaleAccountConfig[] = [
       "Fr. Zosima Abba Moses",
       "Br. Abanob Abba Moses",
     ],
-    minQty: 25,
+    minQty: 5,
+    qtyOptions: [5, 10],
   },
   {
     accountId:          "demiana",

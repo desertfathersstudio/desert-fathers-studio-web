@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
     priceHwpPack:       account.priceHwpPack   ?? WS_PRICE_HWP_PACK,
     currencySymbol:     account.currencySymbol ?? "$",
     minQty:             account.minQty         ?? 50,
+    ...(account.qtyOptions ? { qtyOptions: account.qtyOptions } : {}),
   });
 
   res.cookies.set(sessionCookieOptions(token));

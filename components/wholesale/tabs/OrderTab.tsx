@@ -13,7 +13,7 @@ interface Props {
   products: WholesaleProduct[];
   cart: WholesaleCartLine[];
   onCartChange: (lines: WholesaleCartLine[]) => void;
-  session: { accountId: string; displayName: string; notifyEmail: string; contactNames: string[]; priceSingle: number; priceRpPack: number; priceHwpPack: number; currencySymbol: string; minQty: number };
+  session: { accountId: string; displayName: string; notifyEmail: string; contactNames: string[]; priceSingle: number; priceRpPack: number; priceHwpPack: number; currencySymbol: string; minQty: number; qtyOptions?: number[] };
   onOrderSubmitted: () => void;
 }
 
@@ -22,13 +22,14 @@ type AddMode = "single" | "bulk";
 export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitted }: Props) {
   const { priceSingle, priceRpPack, priceHwpPack, contactNames, currencySymbol } = session;
   const minQty = session.minQty ?? 25;
+  const qtyOptions = session.qtyOptions ?? QTY_OPTIONS.filter((q) => q >= minQty);
 
   const [mode, setMode] = useState<AddMode>("single");
   const [selectedSku, setSelectedSku] = useState("");
-  const [qty, setQty] = useState(minQty);
+  const [qty, setQty] = useState(qtyOptions[0] ?? minQty);
   const [asap, setAsap] = useState(false);
   const [bulkSearch, setBulkSearch] = useState("");
-  const [bulkQty, setBulkQty] = useState(minQty);
+  const [bulkQty, setBulkQty] = useState(qtyOptions[0] ?? minQty);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [cartSelected, setCartSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
@@ -497,7 +498,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
               <div>
                 <label style={fieldLabel}>Qty</label>
                 <select value={qty} onChange={(e) => setQty(Number(e.target.value))} style={inputStyle}>
-                  {QTY_OPTIONS.filter((q) => q >= minQty).map((q) => <option key={q} value={q}>{q}</option>)}
+                  {qtyOptions.map((q) => <option key={q} value={q}>{q}</option>)}
                 </select>
               </div>
               <button
@@ -589,7 +590,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                 onChange={(e) => setBulkQty(Number(e.target.value))}
                 style={{ ...inputStyle, width: "auto" }}
               >
-                {QTY_OPTIONS.filter((q) => q >= minQty).map((q) => <option key={q} value={q}>{q}</option>)}
+                {qtyOptions.map((q) => <option key={q} value={q}>{q}</option>)}
               </select>
               <button
                 onClick={() => {

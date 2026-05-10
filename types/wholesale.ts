@@ -95,6 +95,7 @@ export interface WholesaleSession {
   priceHwpPack: number;
   currencySymbol: string;
   minQty: number;
+  qtyOptions?: number[];
 }
 
 export const SESSION_KEY = "ws_session";
