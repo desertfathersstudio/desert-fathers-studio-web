@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
       const skuUp = sku.toUpperCase();
       const isPackProduct =
         skuUp === "RP_PACK" || skuUp === "HWP_PACK" ||
-        skuUp === "PK-1"    || skuUp === "PK-2";
+        /^PK-\d+$/.test(skuUp);
 
       const packType = getPackType(name, category, sku);
       const standalonePackDesign = isStandalonePackDesign(name);

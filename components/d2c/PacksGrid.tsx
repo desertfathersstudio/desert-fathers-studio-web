@@ -43,6 +43,8 @@ export function PacksGrid({
     >
       {packs.map((pack, i) => {
         const config = PACK_CONFIGS[pack.id];
+        const accent = pack.accentColor ?? config?.accent ?? "var(--gold)";
+        const description = pack.description ?? config?.description;
         const imageUrl =
           pack.imageUrl ?? (pack.filename ? stickerImageUrl(pack.filename) : null);
         const avail = availability[pack.id];
@@ -98,7 +100,7 @@ export function PacksGrid({
             >
               <p
                 className="text-[10px] uppercase tracking-[0.22em] font-medium mb-2"
-                style={{ color: config?.accent ?? "var(--gold)" }}
+                style={{ color: accent }}
               >
                 Set of {pack.packSize}
               </p>
@@ -115,12 +117,12 @@ export function PacksGrid({
                 {pack.name}
               </h2>
 
-              {config?.description && (
+              {description && (
                 <p
                   className="mb-5 text-sm leading-relaxed"
                   style={{ color: "var(--text-muted)", maxWidth: "46ch" }}
                 >
-                  {config.description}
+                  {description}
                 </p>
               )}
 

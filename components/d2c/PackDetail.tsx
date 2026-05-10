@@ -5,31 +5,62 @@ import { PACK_CONFIGS } from "@/lib/pack-configs";
 import { PackAddToCartButton } from "@/components/d2c/PackAddToCartButton";
 import { NotifyMeButton } from "@/components/d2c/NotifyMeButton";
 
+interface PackDataProp {
+  name: string;
+  description: string;
+  accentColor: string;
+  packSize: number;
+  retailPrice: number;
+}
+
 export function PackDetail({
   slug,
   imageMap = {},
   availableIndividually = new Set(),
   comingSoon = false,
+  packData,
+  stickerNames,
 }: {
   slug: string;
   imageMap?: Record<string, string>;
   availableIndividually?: Set<string>;
   comingSoon?: boolean;
+  packData?: PackDataProp;
+  stickerNames?: string[];
 }) {
-  const pack = PACK_CONFIGS[slug];
-  if (!pack) return null;
+  // Static config takes precedence for existing packs; DB-sourced packData fills the gap for new ones
+  const config = PACK_CONFIGS[slug];
 
-  const stickers = CATALOG.filter((s) => s.category === pack.category);
-  const soloCount = stickers.filter((s) => availableIndividually.has(s.name)).length;
+  const packName        = config?.name        ?? packData?.name        ?? "Pack";
+  const packDescription = config?.description ?? packData?.description ?? "";
+  const packPrice       = config?.price       ?? packData?.retailPrice  ?? 0;
+  const accentColor     = config?.accent      ?? packData?.accentColor  ?? "var(--brand)";
+
+  // Sticker list: prefer DB-sourced names, fall back to CATALOG for existing packs
+  const effectiveStickers: { id: string; name: string; filename: string }[] = stickerNames
+    ? stickerNames.map((name) => ({ id: name, name, filename: "" }))
+    : CATALOG.filter((s) => s.category === (config?.category ?? ""));
+
+  const packSize  = effectiveStickers.length || config?.packSize || packData?.packSize || 0;
+  const soloCount = effectiveStickers.filter((s) => availableIndividually.has(s.name)).length;
+
+  // The pack product itself for the cart button
   const packSticker = CATALOG.find((s) => s.id === slug) ?? {
-    id: pack.id,
-    name: pack.name,
-    filename: pack.backCover,
-    price: pack.price,
+    id: slug,
+    name: packName,
+    filename: config?.backCover ?? "",
+    price: packPrice,
     category: "packs" as const,
     isPack: true as const,
-    packSize: pack.packSize,
+    packSize,
   };
+
+  // Back cover image: from imageMap (DB) or from static R2 path via backCover filename
+  const backCoverSrc =
+    imageMap[packName] ??
+    (config?.backCover ? stickerImageUrl(config.backCover) : null);
+
+  if (!config && !packData) return null;
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
@@ -59,13 +90,15 @@ export function PackDetail({
               border: "1px solid var(--border)",
             }}
           >
-            <Image
-              src={imageMap[pack.name] ?? stickerImageUrl(pack.backCover)}
-              alt={`${pack.name} — all included designs`}
-              fill
-              className="object-contain p-6"
-              priority
-            />
+            {backCoverSrc && (
+              <Image
+                src={backCoverSrc}
+                alt={`${packName} — all included designs`}
+                fill
+                className="object-contain p-6"
+                priority
+              />
+            )}
           </div>
 
           {/* Pack info */}
@@ -79,14 +112,16 @@ export function PackDetail({
                 color: "var(--text)",
               }}
             >
-              {pack.name} — Set of {pack.packSize}
+              {packName} — Set of {packSize}
             </h1>
-            <p
-              className="mb-8 leading-relaxed"
-              style={{ color: "var(--text-muted)", maxWidth: "44ch" }}
-            >
-              {pack.description}
-            </p>
+            {packDescription && (
+              <p
+                className="mb-8 leading-relaxed"
+                style={{ color: "var(--text-muted)", maxWidth: "44ch" }}
+              >
+                {packDescription}
+              </p>
+            )}
 
             <div className="flex items-baseline gap-3 mb-6">
               <span
@@ -97,10 +132,10 @@ export function PackDetail({
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                ${pack.price.toFixed(2)}
+                ${packPrice.toFixed(2)}
               </span>
               <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-                for all {pack.packSize} designs
+                for all {packSize} designs
               </span>
             </div>
 
@@ -109,9 +144,9 @@ export function PackDetail({
               className="flex flex-col gap-2 mb-8 text-sm"
               style={{ color: "var(--text-muted)" }}
             >
-              <span>✦ {stickers.length} unique designs in this pack</span>
+              <span>✦ {effectiveStickers.length} unique designs in this pack</span>
               {soloCount > 0 && (
-                <span>✦ {soloCount} of {stickers.length} also available individually</span>
+                <span>✦ {soloCount} of {effectiveStickers.length} also available individually</span>
               )}
               <span>✦ 2&quot; die-cut, weather-resistant vinyl</span>
             </div>
@@ -137,7 +172,7 @@ export function PackDetail({
                 >
                   Coming Soon
                 </span>
-                <NotifyMeButton productName={pack.name} variant="full" />
+                <NotifyMeButton productName={packName} variant="full" />
               </div>
             ) : (
               <PackAddToCartButton pack={packSticker} />
@@ -153,147 +188,145 @@ export function PackDetail({
       />
 
       {/* Sticker grid */}
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-20">
-        <div className="flex items-end justify-between gap-4 mb-10 flex-wrap">
-          <div>
-            <p
-              className="text-[11px] uppercase tracking-[0.2em] font-medium mb-1"
-              style={{ color: "var(--text-muted)" }}
-            >
-              What&apos;s inside
-            </p>
-            <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", fontWeight: 400, color: "var(--text)" }}>
-              {stickers.length} designs
-            </p>
-          </div>
-          {/* Legend */}
-          <div className="flex gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
-            <span className="flex items-center gap-1.5">
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: "var(--brand)",
-                  opacity: 0.7,
-                }}
-              />
-              Pack only
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: "var(--gold)",
-                }}
-              />
-              Also sold individually
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">
-          {stickers.map((sticker) => {
-            const isIndividual = availableIndividually.has(sticker.name);
-            return (
-              <div key={sticker.id} className="group flex flex-col">
-                {/* Image */}
-                <div
-                  className="relative aspect-square overflow-hidden"
+      {effectiveStickers.length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-20">
+          <div className="flex items-end justify-between gap-4 mb-10 flex-wrap">
+            <div>
+              <p
+                className="text-[11px] uppercase tracking-[0.2em] font-medium mb-1"
+                style={{ color: "var(--text-muted)" }}
+              >
+                What&apos;s inside
+              </p>
+              <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", fontWeight: 400, color: "var(--text)" }}>
+                {effectiveStickers.length} designs
+              </p>
+            </div>
+            {/* Legend */}
+            <div className="flex gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
+              <span className="flex items-center gap-1.5">
+                <span
                   style={{
-                    background: "white",
-                    borderRadius: "var(--radius-card)",
-                    border: "1px solid var(--border)",
+                    display: "inline-block",
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: accentColor !== "var(--brand)" ? accentColor : "var(--brand)",
+                    opacity: 0.7,
                   }}
-                >
-                  <Image
-                    src={imageMap[sticker.name] ?? stickerImageUrl(sticker.filename)}
-                    alt={sticker.name}
-                    fill
-                    className="object-contain p-4 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  />
-                  {/* Clickable overlay for individually available stickers */}
-                  {isIndividual && (
-                    <Link
-                      href="/shop"
-                      className="absolute inset-0"
-                      aria-label={`Shop ${sticker.name} individually`}
-                    />
-                  )}
-                  {/* Availability dot */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      background: isIndividual ? "var(--gold)" : "var(--brand)",
-                      opacity: isIndividual ? 1 : 0.7,
-                    }}
-                  />
-                </div>
-
-                {/* Name + badge */}
-                <div className="mt-2 flex flex-col gap-0.5">
-                  <p
-                    style={{
-                      fontFamily: "var(--font-serif)",
-                      fontSize: "0.9rem",
-                      color: "var(--text)",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {sticker.name}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: "0.68rem",
-                      color: isIndividual ? "var(--gold)" : "var(--text-muted)",
-                      fontWeight: isIndividual ? 500 : 400,
-                    }}
-                  >
-                    {isIndividual ? "Also sold individually" : "Pack only"}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Footer note */}
-        {soloCount > 0 && (
-          <div
-            className="mt-14 mx-auto max-w-xl text-center"
-            style={{
-              padding: "1.25rem 1.5rem",
-              background: "var(--bg-card)",
-              borderRadius: "var(--radius-card)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <p style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", color: "var(--text)", marginBottom: "0.4rem" }}>
-              Want just a few?
-            </p>
-            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
-              {soloCount} sticker{soloCount !== 1 ? "s" : ""} from this pack can be purchased individually for $2.00 each. Browse them in the main catalog.
-            </p>
-            <Link
-              href="/shop"
-              className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium transition-opacity hover:opacity-70"
-              style={{ color: "var(--brand)" }}
-            >
-              Browse individual stickers →
-            </Link>
+                />
+                Pack only
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: "var(--gold)",
+                  }}
+                />
+                Also sold individually
+              </span>
+            </div>
           </div>
-        )}
-      </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">
+            {effectiveStickers.map((sticker) => {
+              const isIndividual = availableIndividually.has(sticker.name);
+              const imgSrc =
+                imageMap[sticker.name] ??
+                (sticker.filename ? stickerImageUrl(sticker.filename) : null);
+
+              return (
+                <div key={sticker.id} className="group flex flex-col">
+                  <div
+                    className="relative aspect-square overflow-hidden"
+                    style={{
+                      background: "white",
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid var(--border)",
+                    }}
+                  >
+                    {imgSrc && (
+                      <Image
+                        src={imgSrc}
+                        alt={sticker.name}
+                        fill
+                        className="object-contain p-4 transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      />
+                    )}
+                    {isIndividual && (
+                      <Link
+                        href="/shop"
+                        className="absolute inset-0"
+                        aria-label={`Shop ${sticker.name} individually`}
+                      />
+                    )}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 8, right: 8,
+                        width: 8, height: 8,
+                        borderRadius: "50%",
+                        background: isIndividual ? "var(--gold)" : "var(--brand)",
+                        opacity: isIndividual ? 1 : 0.7,
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-2 flex flex-col gap-0.5">
+                    <p
+                      style={{
+                        fontFamily: "var(--font-serif)",
+                        fontSize: "0.9rem",
+                        color: "var(--text)",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {sticker.name}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "0.68rem",
+                        color: isIndividual ? "var(--gold)" : "var(--text-muted)",
+                        fontWeight: isIndividual ? 500 : 400,
+                      }}
+                    >
+                      {isIndividual ? "Also sold individually" : "Pack only"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Footer note */}
+          {soloCount > 0 && (
+            <div
+              className="mt-14 mx-auto max-w-xl text-center"
+              style={{
+                padding: "1.25rem 1.5rem",
+                background: "var(--bg-card)",
+                borderRadius: "var(--radius-card)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <p style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", color: "var(--text)", marginBottom: "0.4rem" }}>
+                Want just a few?
+              </p>
+              <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
+                {soloCount} sticker{soloCount !== 1 ? "s" : ""} from this pack can be purchased individually for $2.00 each. Browse them in the main catalog.
+              </p>
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium transition-opacity hover:opacity-70"
+                style={{ color: "var(--brand)" }}
+              >
+                Browse individual stickers →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -31,6 +31,8 @@ export interface Sticker {
   packSize?: number;
   isNew?: boolean;
   packOnly?: boolean;
+  description?: string;  // DB-sourced for packs; shown on packs page
+  accentColor?: string;  // DB-sourced for packs; overrides PACK_CONFIGS accent
 }
 
 export const CATEGORY_LABELS: Record<Exclude<CategoryKey, "all" | "individuals">, string> = {

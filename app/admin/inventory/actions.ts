@@ -207,6 +207,105 @@ export async function adminArchiveProduct(productId: string): Promise<void> {
   revalidatePublicRoutes();
 }
 
+export async function adminAddPack(input: {
+  name: string;
+  description: string;
+  retailPrice: number;
+  wholesalePrice: number;
+  accentColor: string;
+  imageUrl: string | null;
+  imageUpdatedAt: string | null;
+  constituentProductIds: string[];
+  packOnly: boolean;
+}): Promise<ProductWithInventory> {
+  const sb = createSupabaseService();
+  const ts = new Date().toISOString();
+
+  // Derive next PK-# by inspecting existing sticker_packs SKUs
+  const { data: existingPacks } = await sb.from("sticker_packs").select("sku");
+  const usedNums = (existingPacks ?? [])
+    .map((p) => parseInt(String(p.sku ?? "").replace(/^PK-/i, ""), 10))
+    .filter((n) => !isNaN(n));
+  const nextNum = usedNums.length > 0 ? Math.max(...usedNums) + 1 : 3;
+  const sku = `PK-${nextNum}`;
+
+  // Slug and short_code from name
+  const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const shortCode = input.name.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
+
+  // 1. Insert sticker_packs row
+  const { data: pack, error: spErr } = await sb
+    .from("sticker_packs")
+    .insert({
+      short_code: shortCode,
+      name: input.name,
+      sku,
+      slug,
+      description: input.description,
+      accent_color: input.accentColor,
+      pack_size: input.constituentProductIds.length,
+      retail_price: input.retailPrice,
+      wholesale_price: input.wholesalePrice,
+      active: true,
+      created_at: ts,
+    })
+    .select("id")
+    .single();
+  if (spErr) throw new Error(spErr.message);
+
+  // 2. Insert pack product row (the thing D2C customers actually add to cart)
+  const { data: prod, error: pErr } = await sb
+    .from("products")
+    .insert({
+      sku,
+      name: input.name,
+      category_id: null,
+      pack_id: null,
+      review_status: "approved" as ReviewStatus,
+      retail_price: input.retailPrice,
+      image_url: input.imageUrl || null,
+      ...(input.imageUrl ? { image_updated_at: input.imageUpdatedAt ?? ts } : {}),
+      active: true,
+      can_buy_individually: false,
+      updated_at: ts,
+    })
+    .select("*, categories(name)")
+    .single();
+  if (pErr) throw new Error(pErr.message);
+
+  // 3. Initialize per-product inventory record for the pack row
+  const { data: inv, error: iErr } = await sb
+    .from("inventory")
+    .insert({ product_id: prod.id, on_hand: 0, incoming: 0, low_stock_threshold: 5 })
+    .select()
+    .single();
+  if (iErr) throw new Error(iErr.message);
+
+  // 4. Initialize pack_inventory record
+  await sb.from("pack_inventory").insert({
+    pack_id: pack.id,
+    on_hand: 0,
+    incoming: 0,
+    low_stock_threshold: 5,
+  });
+
+  // 5. Link constituent stickers → this pack
+  if (input.constituentProductIds.length > 0) {
+    const { error: linkErr } = await sb
+      .from("products")
+      .update({
+        pack_id: pack.id,
+        ...(input.packOnly ? { can_buy_individually: false } : {}),
+      })
+      .in("id", input.constituentProductIds);
+    if (linkErr) throw new Error(linkErr.message);
+  }
+
+  revalidatePublicRoutes();
+  revalidatePath("/admin/inventory");
+  return { ...prod, inventory: inv } as ProductWithInventory;
+}
+
 export async function adminAddProduct(input: {
   sku: string;
   name: string;

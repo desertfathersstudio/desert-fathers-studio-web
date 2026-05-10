@@ -4,79 +4,106 @@ import { PackDetail } from "@/components/d2c/PackDetail";
 import { Footer } from "@/components/d2c/Footer";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { withVersion } from "@/lib/image-version";
-import { CATALOG } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
 
-const VALID_SLUGS = ["holy-week-pack", "resurrection-pack"];
-
-const SLUG_TO_CATEGORY: Record<string, string> = {
-  "holy-week-pack": "holy-week",
-  "resurrection-pack": "resurrection",
-};
-
-const SLUG_TO_PACK_NAME: Record<string, string> = {
-  "holy-week-pack": "Holy Week Pack",
-  "resurrection-pack": "Resurrection Pack",
-};
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const names: Record<string, string> = {
-    "holy-week-pack": "Holy Week Pack",
-    "resurrection-pack": "Resurrection Pack",
-  };
-  const name = names[slug];
-  if (!name) return {};
+  const sb = createSupabaseService();
+  const { data } = await sb
+    .from("sticker_packs")
+    .select("name")
+    .eq("slug", slug)
+    .eq("active", true)
+    .maybeSingle();
+  if (!data?.name) return {};
   return {
-    title: name,
-    description: `${name} — Coptic Orthodox icon stickers from Desert Fathers Studio.`,
+    title: data.name as string,
+    description: `${data.name} — Coptic Orthodox icon stickers from Desert Fathers Studio.`,
   };
 }
 
 export default async function PackPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  if (!VALID_SLUGS.includes(slug)) notFound();
+  const sb = createSupabaseService();
 
-  const category = SLUG_TO_CATEGORY[slug];
-  const packName = SLUG_TO_PACK_NAME[slug];
+  // 1. Look up the pack by slug (DB-driven — no hardcoded VALID_SLUGS)
+  const { data: packMeta } = await sb
+    .from("sticker_packs")
+    .select("id, name, sku, slug, description, accent_color, pack_size, retail_price")
+    .eq("slug", slug)
+    .eq("active", true)
+    .maybeSingle();
 
-  // Collect names we need versioned images for: the pack itself + all stickers in this category
-  const packStickerNames = CATALOG
-    .filter((s) => s.category === category)
-    .map((s) => s.name);
-  const namesToFetch = [packName, ...packStickerNames];
+  if (!packMeta) notFound();
 
   let imageMap: Record<string, string> = {};
+  let stickerNames: string[] = [];
   let availableIndividually = new Set<string>();
   let packComingSoon = false;
+
   try {
-    const sb = createSupabaseService();
-    const [{ data: imgData }, { data: indivData }] = await Promise.all([
-      sb.from("products").select("name, image_url, image_updated_at, coming_soon").in("name", namesToFetch),
-      sb.from("products").select("name").eq("active", true).eq("coming_soon", false)
-        .not("name", "in", "(Holy Week Pack,Resurrection Pack)"),
+    // 2. Fetch pack product row (for image + coming_soon flag) and constituent stickers in parallel
+    const [{ data: packProduct }, { data: constituentProducts }] = await Promise.all([
+      sb.from("products")
+        .select("name, image_url, image_updated_at, coming_soon")
+        .eq("sku", packMeta.sku as string)
+        .maybeSingle(),
+      sb.from("products")
+        .select("name, image_url, image_updated_at, can_buy_individually")
+        .eq("pack_id", packMeta.id as string)
+        .eq("active", true),
     ]);
 
-    for (const row of imgData ?? []) {
-      const url = withVersion(row.image_url, row.image_updated_at);
-      if (url) imageMap[row.name] = url;
+    // Build image map: pack product cover + all constituent sticker images
+    if (packProduct) {
+      const url = withVersion(
+        packProduct.image_url as string | null,
+        packProduct.image_updated_at as string | null,
+      );
+      if (url) imageMap[packMeta.name as string] = url;
+      packComingSoon = (packProduct.coming_soon as boolean) ?? false;
     }
-    packComingSoon =
-      (imgData?.find((r) => r.name === packName) as { coming_soon?: boolean } | undefined)
-        ?.coming_soon ?? false;
-    for (const row of indivData ?? []) {
-      if (row.name) availableIndividually.add(row.name as string);
+
+    for (const row of constituentProducts ?? []) {
+      const url = withVersion(
+        row.image_url as string | null,
+        row.image_updated_at as string | null,
+      );
+      if (url && row.name) imageMap[row.name as string] = url;
     }
-  } catch {
-    // gracefully degrade
+
+    // Build sticker names and individually-available set from constituent products
+    stickerNames = (constituentProducts ?? []).map((p) => p.name as string).filter(Boolean);
+    for (const p of constituentProducts ?? []) {
+      if (p.can_buy_individually && p.name) {
+        availableIndividually.add(p.name as string);
+      }
+    }
+  } catch (err) {
+    console.error(`[shop/${slug}] error fetching pack detail:`, err);
   }
+
+  const packData = {
+    name:               packMeta.name as string,
+    description:        (packMeta.description as string | null) ?? "",
+    accentColor:        (packMeta.accent_color as string | null) ?? "var(--brand)",
+    packSize:           stickerNames.length || (packMeta.pack_size as number | null) || 0,
+    retailPrice:        Number(packMeta.retail_price ?? 0),
+  };
 
   return (
     <>
       <Nav />
       <main className="pt-16">
-        <PackDetail slug={slug} imageMap={imageMap} availableIndividually={availableIndividually} comingSoon={packComingSoon} />
+        <PackDetail
+          slug={slug}
+          imageMap={imageMap}
+          availableIndividually={availableIndividually}
+          comingSoon={packComingSoon}
+          packData={packData}
+          stickerNames={stickerNames}
+        />
       </main>
       <Footer />
     </>

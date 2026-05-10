@@ -7,6 +7,7 @@ import { StatCard } from "./StatCard";
 import { InventoryCharts } from "./InventoryCharts";
 import { InventoryCard } from "./InventoryCard";
 import { AddProductModal } from "./AddProductModal";
+import { AddPackModal } from "./AddPackModal";
 import { EditProductModal } from "./EditProductModal";
 import { ProductDetailDrawer } from "./ProductDetailDrawer";
 import { BatchImageReplaceModal } from "./BatchImageReplaceModal";
@@ -34,6 +35,7 @@ export function InventoryView({
   const [filter, setFilter] = useState<Filter>("all");
   const [sortBy, setSortBy] = useState<SortBy>("sku");
   const [addOpen, setAddOpen] = useState(false);
+  const [addPackOpen, setAddPackOpen] = useState(false);
   const [batchReplaceOpen, setBatchReplaceOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<ProductWithInventory | null>(null);
   const [detailProduct, setDetailProduct] = useState<ProductWithInventory | null>(null);
@@ -249,7 +251,30 @@ export function InventoryView({
           Replace Images
         </button>
 
-        {/* Add button */}
+        {/* Add Pack button */}
+        <button
+          onClick={() => setAddPackOpen(true)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 14px",
+            borderRadius: 8,
+            background: "transparent",
+            color: "#6b4050",
+            border: "1px solid #6b1d3b",
+            fontSize: "0.82rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            fontFamily: "Inter, system-ui, sans-serif",
+            flexShrink: 0,
+          }}
+        >
+          <Plus size={14} />
+          Add Pack
+        </button>
+
+        {/* Add Design button */}
         <button
           onClick={() => setAddOpen(true)}
           style={{
@@ -322,6 +347,15 @@ export function InventoryView({
         <AddProductModal
           onClose={() => setAddOpen(false)}
           onAdded={handleProductAdded}
+        />
+      )}
+      {addPackOpen && (
+        <AddPackModal
+          onClose={() => setAddPackOpen(false)}
+          onAdded={(prod) => {
+            setProducts((prev) => [...prev, prod].sort((a, b) => a.sku.localeCompare(b.sku)));
+            setAddPackOpen(false);
+          }}
         />
       )}
       {batchReplaceOpen && (
