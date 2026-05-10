@@ -217,6 +217,7 @@ export async function adminAddPack(input: {
   imageUpdatedAt: string | null;
   constituentProductIds: string[];
   packOnly: boolean;
+  newStickers: { name: string; imageUrl: string; imageUpdatedAt: string }[];
 }): Promise<ProductWithInventory> {
   const sb = createSupabaseService();
   const ts = new Date().toISOString();
@@ -233,6 +234,8 @@ export async function adminAddPack(input: {
   const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const shortCode = input.name.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
 
+  const totalSize = input.constituentProductIds.length + input.newStickers.length;
+
   // 1. Insert sticker_packs row
   const { data: pack, error: spErr } = await sb
     .from("sticker_packs")
@@ -243,7 +246,7 @@ export async function adminAddPack(input: {
       slug,
       description: input.description,
       accent_color: input.accentColor,
-      pack_size: input.constituentProductIds.length,
+      pack_size: totalSize,
       retail_price: input.retailPrice,
       wholesale_price: input.wholesalePrice,
       active: true,
@@ -299,6 +302,48 @@ export async function adminAddPack(input: {
       })
       .in("id", input.constituentProductIds);
     if (linkErr) throw new Error(linkErr.message);
+  }
+
+  // 6. Create new sticker products for each uploaded image
+  if (input.newStickers.length > 0) {
+    // Derive next STK-### offset
+    const { data: existingStickers } = await sb.from("products").select("sku").ilike("sku", "STK-%");
+    const usedStkNums = (existingStickers ?? [])
+      .map((p) => parseInt(String(p.sku ?? "").replace(/^STK-/i, ""), 10))
+      .filter((n) => !isNaN(n));
+    const maxStkNum = usedStkNums.length > 0 ? Math.max(...usedStkNums) : 0;
+
+    const stickerRows = input.newStickers.map((s, idx) => ({
+      sku: `STK-${String(maxStkNum + idx + 1).padStart(3, "0")}`,
+      name: s.name,
+      category_id: null,
+      pack_id: pack.id,
+      review_status: "under_review" as ReviewStatus,
+      retail_price: 2.0,
+      image_url: s.imageUrl,
+      image_updated_at: s.imageUpdatedAt,
+      active: true,
+      can_buy_individually: !input.packOnly,
+      updated_at: ts,
+    }));
+
+    const { data: newProds, error: spErr2 } = await sb
+      .from("products")
+      .insert(stickerRows)
+      .select("id");
+    if (spErr2) throw new Error(spErr2.message);
+
+    // Bulk insert inventory rows for all new stickers
+    const invRows = (newProds ?? []).map((p) => ({
+      product_id: p.id,
+      on_hand: 0,
+      incoming: 0,
+      low_stock_threshold: 10,
+    }));
+    if (invRows.length > 0) {
+      const { error: invErr } = await sb.from("inventory").insert(invRows);
+      if (invErr) throw new Error(invErr.message);
+    }
   }
 
   revalidatePublicRoutes();

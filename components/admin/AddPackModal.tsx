@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useTransition } from "react";
-import { X, Upload, Package } from "lucide-react";
+import { X, Upload, Package, ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { adminAddPack } from "@/app/admin/inventory/actions";
@@ -22,6 +22,22 @@ interface ProductRow {
   pack_id: string | null;
 }
 
+interface StickerUpload {
+  tempId: string;
+  name: string;
+  imageUrl: string;
+  imageUpdatedAt: string;
+  uploading: boolean;
+}
+
+function toTitleCase(filename: string): string {
+  return filename
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+}
+
 export function AddPackModal({
   onClose,
   onAdded,
@@ -29,7 +45,8 @@ export function AddPackModal({
   onClose: () => void;
   onAdded: (p: ProductWithInventory) => void;
 }) {
-  const fileRef = useRef<HTMLInputElement>(null);
+  const coverFileRef   = useRef<HTMLInputElement>(null);
+  const stickerFileRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
 
   const [name, setName]               = useState("");
@@ -39,13 +56,15 @@ export function AddPackModal({
   const [accentColor, setAccentColor] = useState("var(--brand)");
   const [imageUrl, setImageUrl]       = useState("");
   const [imageUpdatedAt, setImageUpdatedAt] = useState<string | null>(null);
-  const [uploading, setUploading]     = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
   const [packOnly, setPackOnly]       = useState(true);
 
   const [allProducts, setAllProducts]   = useState<ProductRow[]>([]);
   const [selected, setSelected]         = useState<Set<string>>(new Set());
   const [prodSearch, setProdSearch]     = useState("");
   const [loadingProds, setLoadingProds] = useState(true);
+
+  const [stickerUploads, setStickerUploads] = useState<StickerUpload[]>([]);
 
   useEffect(() => {
     const sb = createSupabaseBrowser();
@@ -83,8 +102,8 @@ export function AddPackModal({
     setSelected(new Set());
   }
 
-  async function handleImageUpload(file: File) {
-    setUploading(true);
+  async function handleCoverUpload(file: File) {
+    setCoverUploading(true);
     try {
       const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "pack-cover";
       const form = new FormData();
@@ -96,21 +115,74 @@ export function AddPackModal({
       if (!res.ok) throw new Error(json.error ?? "Upload failed");
       setImageUrl(json.url);
       setImageUpdatedAt(new Date().toISOString());
-      toast.success("Image uploaded");
+      toast.success("Cover image uploaded");
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Upload failed");
     } finally {
-      setUploading(false);
+      setCoverUploading(false);
     }
   }
+
+  async function handleStickerFiles(files: FileList) {
+    const fileArr = Array.from(files);
+    const newUploads: StickerUpload[] = fileArr.map((file) => ({
+      tempId: `${Date.now()}-${Math.random()}`,
+      name: toTitleCase(file.name),
+      imageUrl: "",
+      imageUpdatedAt: "",
+      uploading: true,
+    }));
+    setStickerUploads((prev) => [...prev, ...newUploads]);
+
+    await Promise.all(
+      fileArr.map(async (file, idx) => {
+        const tempId = newUploads[idx].tempId;
+        const stickerName = newUploads[idx].name;
+        try {
+          const form = new FormData();
+          form.append("file", file);
+          form.append("sku", "stk-upload");
+          form.append("name", stickerName);
+          const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error ?? "Upload failed");
+          setStickerUploads((prev) =>
+            prev.map((u) =>
+              u.tempId === tempId
+                ? { ...u, imageUrl: json.url, imageUpdatedAt: new Date().toISOString(), uploading: false }
+                : u
+            )
+          );
+        } catch (err: unknown) {
+          toast.error(`Failed to upload ${file.name}: ${(err as Error).message}`);
+          setStickerUploads((prev) => prev.filter((u) => u.tempId !== tempId));
+        }
+      })
+    );
+  }
+
+  function updateStickerName(tempId: string, value: string) {
+    setStickerUploads((prev) =>
+      prev.map((u) => (u.tempId === tempId ? { ...u, name: value } : u))
+    );
+  }
+
+  function removeStickerUpload(tempId: string) {
+    setStickerUploads((prev) => prev.filter((u) => u.tempId !== tempId));
+  }
+
+  const completedUploads = stickerUploads.filter((u) => !u.uploading && u.imageUrl);
+  const anyUploading = stickerUploads.some((u) => u.uploading);
+  const totalStickers = selected.size + completedUploads.length;
+  const canSave = totalStickers > 0 && !anyUploading;
 
   function handleSave() {
     if (!name.trim()) {
       toast.error("Pack name is required");
       return;
     }
-    if (selected.size === 0) {
-      toast.error("Select at least one constituent sticker");
+    if (!canSave) {
+      toast.error("Add at least one sticker (select existing or upload new)");
       return;
     }
 
@@ -126,8 +198,16 @@ export function AddPackModal({
           imageUpdatedAt: imageUpdatedAt || null,
           constituentProductIds: Array.from(selected),
           packOnly,
+          newStickers: completedUploads.map((u) => ({
+            name: u.name.trim() || "Untitled Sticker",
+            imageUrl: u.imageUrl,
+            imageUpdatedAt: u.imageUpdatedAt,
+          })),
         });
-        toast.success(`"${name.trim()}" created — ${selected.size} stickers linked`);
+        const parts: string[] = [];
+        if (selected.size > 0) parts.push(`${selected.size} linked`);
+        if (completedUploads.length > 0) parts.push(`${completedUploads.length} new (pending review)`);
+        toast.success(`"${name.trim()}" created — ${parts.join(", ")}`);
         onAdded(created);
       } catch (err: unknown) {
         toast.error((err as Error).message ?? "Failed to create pack");
@@ -175,7 +255,7 @@ export function AddPackModal({
             <Package size={16} color="#6b1d3b" />
             <div>
               <p style={modalTitle}>New Pack</p>
-              <p style={modalSub}>Creates a pack product + links constituent stickers</p>
+              <p style={modalSub}>Creates a pack product + links or creates constituent stickers</p>
             </div>
           </div>
           <button onClick={onClose} style={closeBtn}><X size={18} /></button>
@@ -195,15 +275,15 @@ export function AddPackModal({
                 }
               </div>
               <input
-                ref={fileRef}
+                ref={coverFileRef}
                 type="file"
                 accept="image/*"
                 style={{ display: "none" }}
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCoverUpload(f); }}
               />
-              <button onClick={() => fileRef.current?.click()} disabled={uploading} style={outlineBtn}>
+              <button onClick={() => coverFileRef.current?.click()} disabled={coverUploading} style={outlineBtn}>
                 <Upload size={13} />
-                {uploading ? "Uploading…" : "Upload back cover"}
+                {coverUploading ? "Uploading…" : "Upload back cover"}
               </button>
             </div>
           </div>
@@ -283,8 +363,8 @@ export function AddPackModal({
               </p>
               <p style={{ margin: "2px 0 0", fontSize: "0.68rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
                 {packOnly
-                  ? "Selected stickers will only be sold as part of this pack (can_buy_individually = false)."
-                  : "Selected stickers can still be purchased individually in the main catalog."}
+                  ? "All stickers in this pack will not be sold individually (can_buy_individually = false)."
+                  : "Stickers can still be purchased individually in the main catalog."}
               </p>
             </div>
             <button
@@ -305,10 +385,111 @@ export function AddPackModal({
             </button>
           </div>
 
-          {/* Constituent sticker selection */}
+          {/* ── Upload new sticker images ── */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <Label>Constituent Stickers</Label>
+              <Label>Upload New Sticker Images</Label>
+              {stickerUploads.length > 0 && (
+                <span style={{ fontSize: "0.72rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+                  {completedUploads.length} ready{anyUploading ? `, ${stickerUploads.filter(u => u.uploading).length} uploading…` : ""}
+                </span>
+              )}
+            </div>
+            <p style={{ margin: "0 0 8px", fontSize: "0.72rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+              Each image becomes a new inventory item with <strong>under review</strong> status, auto-assigned STK-### SKU, linked to this pack.
+            </p>
+            <input
+              ref={stickerFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: "none" }}
+              onChange={(e) => { if (e.target.files?.length) handleStickerFiles(e.target.files); e.target.value = ""; }}
+            />
+            <button onClick={() => stickerFileRef.current?.click()} style={outlineBtn}>
+              <ImagePlus size={13} />
+              Choose sticker images…
+            </button>
+
+            {/* Uploaded sticker cards */}
+            {stickerUploads.length > 0 && (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                gap: "0.5rem",
+                marginTop: "0.75rem",
+              }}>
+                {stickerUploads.map((u) => (
+                  <div
+                    key={u.tempId}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      padding: "0.45rem 0.6rem",
+                      background: "#fdfaf8",
+                      border: "1px solid #e8ddd5",
+                      borderRadius: 8,
+                    }}
+                  >
+                    {/* Thumbnail */}
+                    <div style={{
+                      width: 40, height: 40, flexShrink: 0,
+                      borderRadius: 6, background: "#f0ece6",
+                      border: "1px solid #e8ddd5",
+                      overflow: "hidden",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      {u.uploading ? (
+                        <Loader2 size={14} color="#9a7080" style={{ animation: "spin 1s linear infinite" }} />
+                      ) : u.imageUrl ? (
+                        <img src={u.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      ) : null}
+                    </div>
+
+                    {/* Editable name */}
+                    <input
+                      value={u.name}
+                      onChange={(e) => updateStickerName(u.tempId, e.target.value)}
+                      disabled={u.uploading}
+                      placeholder="Sticker name"
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        padding: "4px 6px",
+                        fontSize: "0.78rem",
+                        fontFamily: "Inter, system-ui, sans-serif",
+                        color: "#2a1a0e",
+                        border: "1px solid #e8ddd5",
+                        borderRadius: 5,
+                        background: u.uploading ? "#f5f0ea" : "#fff",
+                        outline: "none",
+                      }}
+                    />
+
+                    {/* Remove */}
+                    <button
+                      onClick={() => removeStickerUpload(u.tempId)}
+                      disabled={u.uploading}
+                      style={{
+                        flexShrink: 0, background: "none", border: "none",
+                        cursor: u.uploading ? "not-allowed" : "pointer",
+                        color: "#c9b5b5", padding: 2,
+                      }}
+                      aria-label="Remove"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Link existing stickers ── */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+              <Label>Link Existing Stickers</Label>
               <div style={{ display: "flex", gap: 8 }}>
                 <span style={{ fontSize: "0.72rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif", alignSelf: "center" }}>
                   {selected.size} selected
@@ -331,7 +512,7 @@ export function AddPackModal({
             <div style={{
               border: "1px solid #e8ddd5",
               borderRadius: 8,
-              maxHeight: 220,
+              maxHeight: 200,
               overflowY: "auto",
               background: "#fdfaf8",
             }}>
@@ -393,8 +574,16 @@ export function AddPackModal({
           borderTop: "1px solid #e8ddd5",
         }}>
           <button onClick={onClose} style={outlineBtn}>Cancel</button>
-          <button onClick={handleSave} disabled={isPending || selected.size === 0} style={primaryBtn}>
-            {isPending ? "Creating…" : `Create Pack${selected.size > 0 ? ` (${selected.size} stickers)` : ""}`}
+          <button
+            onClick={handleSave}
+            disabled={isPending || !canSave}
+            style={{ ...primaryBtn, opacity: isPending || !canSave ? 0.6 : 1, cursor: isPending || !canSave ? "not-allowed" : "pointer" }}
+          >
+            {isPending
+              ? "Creating…"
+              : totalStickers > 0
+              ? `Create Pack (${totalStickers} sticker${totalStickers !== 1 ? "s" : ""})`
+              : "Create Pack"}
           </button>
         </div>
       </div>
