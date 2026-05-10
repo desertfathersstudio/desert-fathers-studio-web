@@ -270,6 +270,7 @@ export async function adminAddPack(input: {
       ...(input.imageUrl ? { image_updated_at: input.imageUpdatedAt ?? ts } : {}),
       active: true,
       can_buy_individually: false,
+      coming_soon: true,
       updated_at: ts,
     })
     .select("*, categories(name)")

@@ -41,7 +41,9 @@ export default async function ShopPage({
       .from("products")
       .select("name, retail_price, image_url, image_updated_at, categories(name), inventory(on_hand)")
       .eq("active", true)
-      .eq("coming_soon", false);
+      .eq("coming_soon", false)
+      .eq("review_status", "approved")
+      .eq("can_buy_individually", true);
     if (error) throw error;
 
     for (const row of data ?? []) {

@@ -61,12 +61,14 @@ export default async function PacksPage() {
       }
     }
 
-    // Build Sticker[] for PacksGrid
+    // Build Sticker[] for PacksGrid — skip packs whose product is not yet live
     for (const pack of stickerPacks) {
       const slug = pack.slug as string;
       if (!slug) continue;
 
       const productRow = productBySku.get(pack.sku as string);
+      // Hide pack if no product row exists yet, or if it's still marked coming_soon
+      if (!productRow || (productRow.coming_soon as boolean)) continue;
 
       const imageUrl = productRow
         ? (withVersion(productRow.image_url as string | null, productRow.image_updated_at as string | null) ?? undefined)
