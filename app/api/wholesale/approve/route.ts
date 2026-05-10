@@ -23,13 +23,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const newStatus = action === "approve" ? "approved" : "under_review";
+  // Approve → Coming Soon page (not straight to shop); unapprove → hide from Coming Soon too
+  const update =
+    action === "approve"
+      ? { review_status: "approved" as const, coming_soon: true }
+      : { review_status: "under_review" as const, coming_soon: false };
 
   try {
     const sb = createSupabaseService();
     const { error } = await sb
       .from("products")
-      .update({ review_status: newStatus })
+      .update(update)
       .eq("id", productId);
 
     if (error) throw error;
