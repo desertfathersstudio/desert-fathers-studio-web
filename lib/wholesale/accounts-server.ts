@@ -18,7 +18,7 @@ const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
       "Br. Abanob Abba Moses",
     ],
     minQty: 25,
-    packPrices: { "PK-3": 2.25 },
+    packPrices: { "PK-3": 2.00 },
   },
   "5095": {
     accountId:          "demiana",
