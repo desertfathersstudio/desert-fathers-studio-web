@@ -39,10 +39,24 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     [products]
   );
 
+  function stkSortKey(sku: string): [number, number] {
+    const pk = sku.match(/^PK-(\d+)$/i);
+    if (pk) return [0, parseInt(pk[1], 10)];
+    const stk = sku.match(/^STK-(\d+)$/i);
+    if (stk) return [1, parseInt(stk[1], 10)];
+    return [2, 0];
+  }
+
   // Wholesale allows ordering any sticker individually — no pack lock
   const orderableProducts = useMemo(() => {
     const packs = approved.filter((p) => p.isPackProduct);
-    const singles = approved.filter((p) => !p.isPackProduct);
+    const singles = approved
+      .filter((p) => !p.isPackProduct)
+      .sort((a, b) => {
+        const [at, an] = stkSortKey(a.sku);
+        const [bt, bn] = stkSortKey(b.sku);
+        return at !== bt ? at - bt : an - bn;
+      });
     return [...packs, ...singles];
   }, [approved]);
 
@@ -92,15 +106,32 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
         return matchCat && (!q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
       }
       return !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
+    }).sort((a, b) => {
+      const an = stkNum(a.sku), bn = stkNum(b.sku);
+      if (an !== null && bn !== null) return an - bn;
+      return a.sku.localeCompare(b.sku, undefined, { numeric: true });
     });
-    // Prepend relevant pack items
-    const packs = VIRTUAL_PACKS.filter((pk) => {
+
+    // Generic DB pack products (PK-3+, not RP/HWP) — only shown in All
+    const genericPacks = approved.filter((p) => {
+      if (!p.isPackProduct || p.packType === "RP" || p.packType === "HWP") return false;
+      if (bulkGroupFilter !== "All") return false;
+      return !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
+    });
+
+    // Virtual packs (RP_PACK, HWP_PACK)
+    const virtualPacks = VIRTUAL_PACKS.filter((pk) => {
       if (bulkGroupFilter === "RP") return pk.packType === "RP";
       if (bulkGroupFilter === "HWP") return pk.packType === "HWP";
       if (bulkGroupFilter === "All") return !q || pk.name.toLowerCase().includes(q);
       return false;
     });
-    return [...packs.map((pk) => ({ ...pk, isVirtualPack: true })), ...stickers.map((p) => ({ ...p, isVirtualPack: false }))];
+
+    return [
+      ...virtualPacks.map((pk) => ({ ...pk, isVirtualPack: true as const })),
+      ...genericPacks.map((p) => ({ ...p, isVirtualPack: false as const })),
+      ...stickers.map((p) => ({ ...p, isVirtualPack: false as const })),
+    ];
   }, [approved, bulkSearch, bulkGroupFilter]);
 
   function addToCart(line: WholesaleCartLine) {
@@ -137,11 +168,11 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
     addToCart({
       productId: p.sku,
       designName: p.name,
-      category: p.category,
+      category: p.isPackProduct ? "Pack" : p.category,
       size: p.size,
       imageUrl: p.imageUrl,
       qty,
-      unitPrice: priceSingle,
+      unitPrice: p.isPackProduct ? (p.wholesalePrice ?? 0) : priceSingle,
       asap,
     });
     toast.success(`${p.name} added`);
@@ -162,11 +193,11 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
       lines.push({
         productId: p.sku,
         designName: p.name,
-        category: p.category,
+        category: p.isPackProduct ? "Pack" : p.category,
         size: p.size,
         imageUrl: p.imageUrl,
         qty: bulkQty,
-        unitPrice: priceSingle,
+        unitPrice: p.isPackProduct ? (p.wholesalePrice ?? 0) : priceSingle,
         asap: false,
       });
     }
@@ -446,6 +477,13 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                   <option value="">— Select a design —</option>
                   <option value="RP_PACK">Resurrection Pack — {currencySymbol}{priceRpPack.toFixed(2)}/set</option>
                   <option value="HWP_PACK">Holy Week Pack — {currencySymbol}{priceHwpPack.toFixed(2)}/set</option>
+                  {orderableProducts
+                    .filter((p) => p.isPackProduct && p.packType !== "RP" && p.packType !== "HWP")
+                    .map((p) => (
+                      <option key={p.sku} value={p.sku}>
+                        {p.name} — {currencySymbol}{(p.wholesalePrice ?? 0).toFixed(2)}/set
+                      </option>
+                    ))}
                   <option value="" disabled>──────────</option>
                   {orderableProducts
                     .filter((p) => !p.isPackProduct)
@@ -604,7 +642,12 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
                     <span style={{ flex: 1 }}>
                       {p.name}
                       <small style={{ color: "var(--text-muted)", marginLeft: "0.4rem" }}>
-                        ({p.sku}){"unitPrice" in p && p.isVirtualPack ? ` — ${currencySymbol}${(p as { unitPrice: number }).unitPrice.toFixed(2)}/set` : ""}
+                        ({p.sku})
+                        {"unitPrice" in p && p.isVirtualPack
+                          ? ` — ${currencySymbol}${(p as { unitPrice: number }).unitPrice.toFixed(2)}/set`
+                          : "isPackProduct" in p && p.isPackProduct && p.wholesalePrice !== undefined
+                          ? ` — ${currencySymbol}${p.wholesalePrice.toFixed(2)}/set`
+                          : ""}
                       </small>
                     </span>
                   </label>
