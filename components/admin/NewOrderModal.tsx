@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { MfgOrder, OrderStatus, Supplier } from "@/lib/admin/types";
 
-type MinProduct = { id: string; sku: string; name: string; image_url: string | null; category: string | null };
+type MinProduct = { id: string; sku: string; name: string; image_url: string | null; categories: { name: string }[] | null };
 
 const ITEM_TYPES = ["full_batch", "sample", "proof", "reprint"] as const;
 type ItemType = typeof ITEM_TYPES[number];
@@ -66,7 +66,7 @@ export function NewOrderModal({
 
   const categories = useMemo(() => {
     const cats = new Set<string>();
-    products.forEach((p) => { if (p.category) cats.add(p.category); });
+    products.forEach((p) => { const n = p.categories?.[0]?.name; if (n) cats.add(n); });
     return Array.from(cats).sort();
   }, [products]);
 
@@ -85,7 +85,7 @@ export function NewOrderModal({
         const n = stkNum(p.sku);
         if (n === null || n < 36 || n > 67) return false;
       } else if (categoryFilter !== "All") {
-        if (p.category !== categoryFilter) return false;
+        if (p.categories?.[0]?.name !== categoryFilter) return false;
       }
       return !q || p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q);
     });

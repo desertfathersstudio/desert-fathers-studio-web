@@ -27,7 +27,7 @@ export default async function OrdersPage() {
 
   const { data: products } = await sb
     .from("products")
-    .select("id, sku, name, image_url, category")
+    .select("id, sku, name, image_url, categories(name)")
     .eq("active", true)
     .order("sku");
 
