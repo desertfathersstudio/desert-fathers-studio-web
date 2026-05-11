@@ -72,6 +72,7 @@ export interface WholesaleOrder {
   customerEmail: string;
   items: WholesaleOrderItem[];
   grandTotal: number;
+  discountAmount: number;
   asap: boolean;
   notes: string | null;
   orderStage: OrderStage;

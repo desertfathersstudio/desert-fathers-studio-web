@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Save, Check, Trash2, XCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Save, Check, Trash2, XCircle, Tag } from "lucide-react";
 import { ORDER_STAGES, ORDER_STAGES_WITH_CANCEL } from "@/types/wholesale";
 import type { WholesaleOrder, OrderStage } from "@/types/wholesale";
 import {
@@ -11,6 +11,7 @@ import {
   adminConfirmPaymentReceived,
   adminCancelWholesaleOrder,
   adminDeleteWholesaleOrder,
+  adminApplyDiscount,
 } from "@/app/admin/wholesale/actions";
 
 const PORTAL_CONFIG: Record<string, { label: string; short: string; color: string; bg: string; border: string; badge: string; badgeText: string }> = {
@@ -236,7 +237,42 @@ function AdminOrderCard({
   const [stageSel, setStageSel] = useState<OrderStage>(order.orderStage);
   const [tracking, setTracking] = useState(order.trackingNumber ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [discountMode, setDiscountMode] = useState<"$" | "%">("$");
+  const [discountInput, setDiscountInput] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  const originalTotal = order.items.reduce((s, i) => s + i.lineTotal, 0);
+
+  const discountPreview = (() => {
+    const v = parseFloat(discountInput);
+    if (isNaN(v) || v <= 0) return null;
+    const amt = discountMode === "%" ? originalTotal * v / 100 : v;
+    return Math.max(0, originalTotal - amt);
+  })();
+
+  function applyDiscount() {
+    const v = parseFloat(discountInput);
+    if (isNaN(v) || v <= 0) return;
+    const amt = discountMode === "%" ? originalTotal * v / 100 : v;
+    startTransition(async () => {
+      try {
+        const result = await adminApplyDiscount(order.orderId, parseFloat(amt.toFixed(2)));
+        onUpdated({ ...order, discountAmount: result.discountAmount, grandTotal: result.effectiveTotal });
+        setDiscountInput("");
+        toast.success(`Discount of $${result.discountAmount.toFixed(2)} applied`);
+      } catch (e) { toast.error(String(e)); }
+    });
+  }
+
+  function removeDiscount() {
+    startTransition(async () => {
+      try {
+        const result = await adminApplyDiscount(order.orderId, 0);
+        onUpdated({ ...order, discountAmount: 0, grandTotal: result.effectiveTotal });
+        toast.success("Discount removed");
+      } catch (e) { toast.error(String(e)); }
+    });
+  }
 
   const isCancelled = order.orderStage === "Cancelled";
   const stageColors = STAGE_COLOR[order.orderStage] ?? { bg: "#e0e0e0", text: "#555" };
@@ -324,6 +360,9 @@ function AdminOrderCard({
           {order.paymentReceived && (
             <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: "#d4edda", color: "#155724" }}>✓ Paid</span>
           )}
+          {order.discountAmount > 0 && (
+            <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: "#dcfce7", color: "#15803d" }}>−${order.discountAmount.toFixed(2)}</span>
+          )}
         </div>
         {expanded ? <ChevronUp size={15} style={{ color: "var(--text-muted, #7a6a5a)", flexShrink: 0 }} /> : <ChevronDown size={15} style={{ color: "var(--text-muted, #7a6a5a)", flexShrink: 0 }} />}
       </button>
@@ -382,7 +421,17 @@ function AdminOrderCard({
                 ))}
               </tbody>
             </table>
-            <p style={{ textAlign: "right", margin: "0.5rem 0 0", fontWeight: 700, fontSize: "0.95rem" }}>
+            {order.discountAmount > 0 && (
+              <p style={{ textAlign: "right", margin: "0.4rem 0 0", fontSize: "0.82rem", color: "#15803d" }}>
+                Discount: <strong>−${order.discountAmount.toFixed(2)}</strong>
+              </p>
+            )}
+            <p style={{ textAlign: "right", margin: "0.25rem 0 0", fontWeight: 700, fontSize: "0.95rem" }}>
+              {order.discountAmount > 0 && (
+                <span style={{ fontWeight: 400, fontSize: "0.78rem", color: "var(--text-muted, #7a6a5a)", textDecoration: "line-through", marginRight: "0.5rem" }}>
+                  ${originalTotal.toFixed(2)}
+                </span>
+              )}
               Grand Total: <span style={{ color: "var(--brand, #6B1F2A)" }}>${order.grandTotal.toFixed(2)}</span>
             </p>
           </div>
@@ -434,6 +483,56 @@ function AdminOrderCard({
                 </div>
               </>
             )}
+
+            {/* Discount */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+              <label style={lbl}>Discount</label>
+              {order.discountAmount > 0 ? (
+                <>
+                  <span style={{ fontSize: "0.74rem", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: "#dcfce7", color: "#15803d" }}>
+                    −${order.discountAmount.toFixed(2)} applied
+                  </span>
+                  <button
+                    onClick={removeDiscount} disabled={isPending}
+                    style={{ fontSize: "0.72rem", padding: "0.25rem 0.6rem", background: "white", border: "1px solid #fca5a5", color: "#dc2626", borderRadius: 6, cursor: "pointer" }}
+                  >
+                    Remove
+                  </button>
+                </>
+              ) : null}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                <div style={{ display: "flex", border: "1px solid var(--border, #e4d8c8)", borderRadius: 6, overflow: "hidden" }}>
+                  {(["$", "%"] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setDiscountMode(m)}
+                      style={{ padding: "0.3rem 0.6rem", fontSize: "0.78rem", fontWeight: discountMode === m ? 700 : 400, background: discountMode === m ? "var(--brand, #6B1F2A)" : "white", color: discountMode === m ? "#fff" : "inherit", border: "none", cursor: "pointer" }}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number" min="0" step="0.01"
+                  value={discountInput}
+                  onChange={(e) => setDiscountInput(e.target.value)}
+                  placeholder={discountMode === "%" ? "e.g. 10" : "e.g. 5.00"}
+                  style={{ ...ctrl, width: 100 }}
+                />
+                {discountPreview !== null && (
+                  <span style={{ fontSize: "0.72rem", color: "#15803d", fontWeight: 600 }}>
+                    → ${discountPreview.toFixed(2)}
+                  </span>
+                )}
+                <button
+                  onClick={applyDiscount}
+                  disabled={isPending || discountPreview === null}
+                  style={{ ...saveBtn, background: "#15803d", display: "inline-flex", alignItems: "center", gap: 4 }}
+                >
+                  <Tag size={12} /> Apply
+                </button>
+              </div>
+            </div>
 
             {/* Danger zone — cancel + delete */}
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", borderTop: "1px dashed #f5c6c6", paddingTop: "0.75rem", marginTop: "0.25rem" }}>

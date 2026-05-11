@@ -1,7 +1,7 @@
 "use server";
 
 import { createSupabaseService } from "@/lib/supabase/service";
-import type { OrderStage } from "@/types/wholesale";
+import type { OrderStage, WholesaleOrderItem } from "@/types/wholesale";
 
 export async function adminUpdateOrderStage(orderId: string, stage: OrderStage) {
   const sb = createSupabaseService();
@@ -58,6 +58,28 @@ export async function adminCancelWholesaleOrder(orderId: string) {
     .update({ order_stage: "Cancelled", inventory_adjusted: false })
     .eq("order_id", orderId);
   if (error) throw new Error(error.message);
+}
+
+export async function adminApplyDiscount(orderId: string, discountAmount: number) {
+  const sb = createSupabaseService();
+  const { data, error: fetchErr } = await sb
+    .from("wholesale_orders")
+    .select("items")
+    .eq("order_id", orderId)
+    .single();
+  if (fetchErr) throw new Error(fetchErr.message);
+
+  const originalTotal = ((data.items as WholesaleOrderItem[]) ?? [])
+    .reduce((sum, item) => sum + item.lineTotal, 0);
+  const effectiveTotal = Math.max(0, originalTotal - discountAmount);
+
+  const { error } = await sb
+    .from("wholesale_orders")
+    .update({ discount_amount: discountAmount, grand_total: effectiveTotal })
+    .eq("order_id", orderId);
+  if (error) throw new Error(error.message);
+
+  return { originalTotal, effectiveTotal, discountAmount };
 }
 
 export async function adminDeleteWholesaleOrder(orderId: string) {

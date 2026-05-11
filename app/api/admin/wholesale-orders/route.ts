@@ -24,6 +24,7 @@ export async function GET() {
     customerEmail: String(row.customer_email),
     items: (row.items as WholesaleOrderItem[]) ?? [],
     grandTotal: Number(row.grand_total),
+    discountAmount: Number(row.discount_amount ?? 0),
     asap: Boolean(row.asap),
     orderStage: (row.order_stage as OrderStage) ?? "Pending",
     trackingNumber: row.tracking_number as string | null,
