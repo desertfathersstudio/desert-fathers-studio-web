@@ -63,7 +63,7 @@ export async function adminCancelWholesaleOrder(orderId: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function adminApplyDiscount(orderId: string, discountAmount: number) {
+export async function adminApplyDiscount(orderId: string, discountAmount: number, discountNote: string | null) {
   const sb = createSupabaseService();
   const { data, error: fetchErr } = await sb
     .from("wholesale_orders")
@@ -78,7 +78,7 @@ export async function adminApplyDiscount(orderId: string, discountAmount: number
 
   const { error } = await sb
     .from("wholesale_orders")
-    .update({ discount_amount: discountAmount, grand_total: effectiveTotal })
+    .update({ discount_amount: discountAmount, discount_note: discountNote || null, grand_total: effectiveTotal })
     .eq("order_id", orderId);
   if (error) throw new Error(error.message);
 
@@ -91,23 +91,25 @@ export async function adminApplyDiscount(orderId: string, discountAmount: number
         originalTotal,
         discountAmount,
         effectiveTotal,
+        discountNote: discountNote || null,
       });
     } catch (e) {
       console.error("[adminApplyDiscount] email failed:", e);
     }
   });
 
-  return { originalTotal, effectiveTotal, discountAmount };
+  return { originalTotal, effectiveTotal, discountAmount, discountNote: discountNote || null };
 }
 
 async function sendDiscountEmail(opts: {
   orderId: string; customerName: string; customerEmail: string;
   originalTotal: number; discountAmount: number; effectiveTotal: number;
+  discountNote: string | null;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey || apiKey === "placeholder") return;
 
-  const { orderId, customerName, customerEmail, originalTotal, discountAmount, effectiveTotal } = opts;
+  const { orderId, customerName, customerEmail, originalTotal, discountAmount, effectiveTotal, discountNote } = opts;
   const fromEmail = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
   const from = `Desert Fathers Studio <${fromEmail}>`;
   const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -155,6 +157,12 @@ async function sendDiscountEmail(opts: {
         }
       </p>
     </div>
+
+    ${discountNote ? `<!-- Note block -->
+    <div style="background:#111d2e;border:1px solid #1e3a5a;border-left:3px solid #c9a84c;border-radius:8px;padding:14px 20px;margin-bottom:24px">
+      <p style="margin:0 0 5px;font-size:10px;font-weight:700;color:#c9a84c;letter-spacing:0.2em;text-transform:uppercase">Reason</p>
+      <p style="margin:0;font-size:13.5px;color:#d8e4f0;line-height:1.65;white-space:pre-wrap">${discountNote.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+    </div>` : ""}
 
     <!-- Total breakdown -->
     <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px">

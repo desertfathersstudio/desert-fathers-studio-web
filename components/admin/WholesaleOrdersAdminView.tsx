@@ -239,6 +239,7 @@ function AdminOrderCard({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [discountMode, setDiscountMode] = useState<"$" | "%">("$");
   const [discountInput, setDiscountInput] = useState("");
+  const [discountNote, setDiscountNote] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const originalTotal = order.items.reduce((s, i) => s + i.lineTotal, 0);
@@ -256,9 +257,10 @@ function AdminOrderCard({
     const amt = discountMode === "%" ? originalTotal * v / 100 : v;
     startTransition(async () => {
       try {
-        const result = await adminApplyDiscount(order.orderId, parseFloat(amt.toFixed(2)));
-        onUpdated({ ...order, discountAmount: result.discountAmount, grandTotal: result.effectiveTotal });
+        const result = await adminApplyDiscount(order.orderId, parseFloat(amt.toFixed(2)), discountNote.trim() || null);
+        onUpdated({ ...order, discountAmount: result.discountAmount, discountNote: result.discountNote, grandTotal: result.effectiveTotal });
         setDiscountInput("");
+        setDiscountNote("");
         toast.success(`Discount of $${result.discountAmount.toFixed(2)} applied`);
       } catch (e) { toast.error(String(e)); }
     });
@@ -267,8 +269,8 @@ function AdminOrderCard({
   function removeDiscount() {
     startTransition(async () => {
       try {
-        const result = await adminApplyDiscount(order.orderId, 0);
-        onUpdated({ ...order, discountAmount: 0, grandTotal: result.effectiveTotal });
+        const result = await adminApplyDiscount(order.orderId, 0, null);
+        onUpdated({ ...order, discountAmount: 0, discountNote: null, grandTotal: result.effectiveTotal });
         toast.success("Discount removed");
       } catch (e) { toast.error(String(e)); }
     });
@@ -488,18 +490,26 @@ function AdminOrderCard({
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
               <label style={lbl}>Discount</label>
               {order.discountAmount > 0 ? (
-                <>
-                  <span style={{ fontSize: "0.74rem", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: "#dcfce7", color: "#15803d" }}>
-                    −${order.discountAmount.toFixed(2)} applied
-                  </span>
-                  <button
-                    onClick={removeDiscount} disabled={isPending}
-                    style={{ fontSize: "0.72rem", padding: "0.25rem 0.6rem", background: "white", border: "1px solid #fca5a5", color: "#dc2626", borderRadius: 6, cursor: "pointer" }}
-                  >
-                    Remove
-                  </button>
-                </>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "0.74rem", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: "#dcfce7", color: "#15803d" }}>
+                      −${order.discountAmount.toFixed(2)} applied
+                    </span>
+                    <button
+                      onClick={removeDiscount} disabled={isPending}
+                      style={{ fontSize: "0.72rem", padding: "0.25rem 0.6rem", background: "white", border: "1px solid #fca5a5", color: "#dc2626", borderRadius: 6, cursor: "pointer" }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  {order.discountNote && (
+                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted, #7a6a5a)", fontStyle: "italic" }}>
+                      {order.discountNote}
+                    </p>
+                  )}
+                </div>
               ) : null}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
                 <div style={{ display: "flex", border: "1px solid var(--border, #e4d8c8)", borderRadius: 6, overflow: "hidden" }}>
                   {(["$", "%"] as const).map((m) => (
@@ -531,6 +541,14 @@ function AdminOrderCard({
                 >
                   <Tag size={12} /> Apply
                 </button>
+              </div>
+              <input
+                type="text"
+                value={discountNote}
+                onChange={(e) => setDiscountNote(e.target.value)}
+                placeholder="Reason for discount (sent in email)…"
+                style={{ ...ctrl, width: "100%", fontSize: "0.78rem" }}
+              />
               </div>
             </div>
 

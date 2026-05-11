@@ -64,6 +64,7 @@ export async function GET(req: NextRequest) {
       items: (row.items as WholesaleOrderItem[]) ?? [],
       grandTotal: Number(row.grand_total),
       discountAmount: Number(row.discount_amount ?? 0),
+      discountNote: (row.discount_note as string | null) ?? null,
       asap: Boolean(row.asap),
       orderStage: (row.order_stage as OrderStage) ?? "Pending",
       trackingNumber: row.tracking_number as string | null,
