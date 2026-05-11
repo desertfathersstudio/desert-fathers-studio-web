@@ -17,7 +17,7 @@ const ACCOUNT_MAPPING: Record<string, WholesaleAccountConfig> = {
       "Fr. Zosima Abba Moses",
       "Br. Abanob Abba Moses",
     ],
-    minQty: 5,
+    minQty: 25,
     qtyOptions: [5, 10],
     packPrices: { "PK-3": 2.00 },
   },

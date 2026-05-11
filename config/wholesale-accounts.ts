@@ -38,7 +38,7 @@ const KNOWN_ACCOUNTS: WholesaleAccountConfig[] = [
       "Fr. Zosima Abba Moses",
       "Br. Abanob Abba Moses",
     ],
-    minQty: 5,
+    minQty: 25,
     qtyOptions: [5, 10],
   },
   {

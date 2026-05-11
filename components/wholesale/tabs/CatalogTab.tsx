@@ -9,6 +9,7 @@ import {
   extractDriveFileId,
   driveThumbUrl,
 } from "@/lib/wholesale/pricing";
+import { getAccountById } from "@/config/wholesale-accounts";
 
 const SORT_OPTIONS = [
   { value: "newest",  label: "Newest first" },
@@ -36,6 +37,11 @@ interface Props {
 }
 
 export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved, priceSingle, priceRpPack, priceHwpPack, currencySymbol, minQty }: Props) {
+  const accountConfig = getAccountById(accountId);
+  const baseOptions = QTY_OPTIONS.filter((q) => q >= minQty);
+  const extras = (accountConfig?.qtyOptions ?? []).filter((q) => !baseOptions.includes(q));
+  const qtyOptions = [...extras, ...baseOptions];
+
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [sort, setSort] = useState<SortKey>("sku");
@@ -261,6 +267,7 @@ export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, on
           priceHwpPack={priceHwpPack}
           currencySymbol={currencySymbol}
           minQty={minQty}
+          qtyOptions={qtyOptions}
         />
       )}
     </div>
@@ -495,6 +502,7 @@ function CatalogLightbox({
   priceHwpPack,
   currencySymbol,
   minQty,
+  qtyOptions,
 }: {
   products: WholesaleProduct[];
   index: number;
@@ -506,6 +514,7 @@ function CatalogLightbox({
   priceHwpPack: number;
   currencySymbol: string;
   minQty: number;
+  qtyOptions: number[];
 }) {
   const p = products[index];
   const [qty, setQty] = useState(minQty);
@@ -759,7 +768,7 @@ function CatalogLightbox({
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <label style={smallLabel}>{p.isPackProduct ? "Quantity (sets)" : "Quantity"}</label>
               <select value={qty} onChange={(e) => setQty(Number(e.target.value))} style={inputSm}>
-                {QTY_OPTIONS.filter((q) => q >= minQty).map((q) => <option key={q} value={q}>{q}</option>)}
+                {qtyOptions.map((q) => <option key={q} value={q}>{q}</option>)}
               </select>
             </div>
 

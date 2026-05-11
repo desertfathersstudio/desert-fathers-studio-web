@@ -26,14 +26,16 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
   // current — bypasses stale session data cached in sessionStorage at login time.
   const accountConfig = getAccountById(session.accountId);
   const minQty = accountConfig?.minQty ?? session.minQty ?? 25;
-  const qtyOptions = accountConfig?.qtyOptions ?? QTY_OPTIONS.filter((q) => q >= minQty);
+  const baseOptions = QTY_OPTIONS.filter((q) => q >= minQty);
+  const extras = (accountConfig?.qtyOptions ?? []).filter((q) => !baseOptions.includes(q));
+  const qtyOptions = [...extras, ...baseOptions];
 
   const [mode, setMode] = useState<AddMode>("single");
   const [selectedSku, setSelectedSku] = useState("");
-  const [qty, setQty] = useState(qtyOptions[0] ?? minQty);
+  const [qty, setQty] = useState(minQty);
   const [asap, setAsap] = useState(false);
   const [bulkSearch, setBulkSearch] = useState("");
-  const [bulkQty, setBulkQty] = useState(qtyOptions[0] ?? minQty);
+  const [bulkQty, setBulkQty] = useState(minQty);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [cartSelected, setCartSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
