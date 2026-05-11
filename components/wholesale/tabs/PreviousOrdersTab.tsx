@@ -255,6 +255,11 @@ function OrderCard({
           <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
             {order.items.reduce((s, i) => s + i.qty, 0)} stickers — ${order.grandTotal.toFixed(2)}
           </span>
+          {order.discountAmount > 0 && (
+            <span style={{ fontSize: "0.66rem", fontWeight: 600, padding: "1px 7px", borderRadius: "999px", background: "#dcfce7", color: "#15803d", border: "1px solid #bbf7d0" }}>
+              −${order.discountAmount.toFixed(2)} credit
+            </span>
+          )}
           {order.asap && (
             <span style={{ fontSize: "0.66rem", fontWeight: 700, color: "#c45000", background: "#fff3e8", padding: "1px 7px", borderRadius: "999px", border: "1px solid #f5c5a0" }}>
               ASAP
@@ -395,9 +400,24 @@ function OrderCard({
                 ))}
               </tbody>
             </table>
-            <p style={{ textAlign: "right", margin: "0.6rem 0 0", fontWeight: 700, fontFamily: "var(--font-inter)", color: "var(--text)" }}>
+            {order.discountAmount > 0 && (
+              <p style={{ textAlign: "right", margin: "0.4rem 0 0", fontSize: "0.82rem", color: "#15803d", fontFamily: "var(--font-inter)" }}>
+                Credit applied: <strong>−${order.discountAmount.toFixed(2)}</strong>
+              </p>
+            )}
+            <p style={{ textAlign: "right", margin: "0.25rem 0 0", fontWeight: 700, fontFamily: "var(--font-inter)", color: "var(--text)" }}>
+              {order.discountAmount > 0 && (
+                <span style={{ fontWeight: 400, fontSize: "0.78rem", color: "var(--text-muted)", textDecoration: "line-through", marginRight: "0.5rem", fontVariantNumeric: "tabular-nums" }}>
+                  ${order.items.reduce((s, i) => s + i.lineTotal, 0).toFixed(2)}
+                </span>
+              )}
               Grand Total: <span style={{ color: "var(--gold)", fontVariantNumeric: "tabular-nums" }}>${order.grandTotal.toFixed(2)}</span>
             </p>
+            {order.discountAmount > 0 && order.discountNote && (
+              <p style={{ textAlign: "right", margin: "0.25rem 0 0", fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic", fontFamily: "var(--font-inter)" }}>
+                {order.discountNote}
+              </p>
+            )}
           </div>
 
           {/* Payment section */}
