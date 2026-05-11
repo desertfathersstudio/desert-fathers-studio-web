@@ -28,6 +28,16 @@ function saveCart(accountId: string, cart: WholesaleCartLine[]) {
   } catch {}
 }
 
+function cartStickerQty(line: { productId: string; size: string; qty: number }): number {
+  const id = line.productId.toUpperCase();
+  if (id === "HWP_PACK") return line.qty * 23;
+  if (id === "RP_PACK")  return line.qty * 10;
+  if (id === "PK-3")     return line.qty * 6;
+  const setMatch = line.size?.match(/^Set of (\d+)$/i);
+  if (setMatch) return line.qty * parseInt(setMatch[1], 10);
+  return line.qty;
+}
+
 export default function WholesaleDashboard() {
   const router = useRouter();
   const [session, setSession] = useState<WholesaleSession | null>(null);
@@ -124,7 +134,7 @@ export default function WholesaleDashboard() {
     setActiveTab("orders");
   }, [setCart]);
 
-  const cartCount = cart.reduce((sum, l) => sum + l.qty, 0);
+  const cartCount = cart.reduce((sum, l) => sum + cartStickerQty(l), 0);
 
   if (!session) {
     return (
@@ -222,7 +232,7 @@ export default function WholesaleDashboard() {
       {cartCount > 0 && activeTab !== "order" && (
         <button
           onClick={() => setActiveTab("order")}
-          aria-label={`View order — ${cartCount} item${cartCount !== 1 ? "s" : ""} in cart`}
+          aria-label={`View order — ${cartCount} sticker${cartCount !== 1 ? "s" : ""} in cart`}
           style={{
             position: "fixed",
             bottom: "1.5rem",
@@ -244,7 +254,7 @@ export default function WholesaleDashboard() {
           }}
         >
           <CartIcon />
-          {cartCount} item{cartCount !== 1 ? "s" : ""}
+          {cartCount} sticker{cartCount !== 1 ? "s" : ""}
         </button>
       )}
     </div>
