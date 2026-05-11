@@ -14,6 +14,17 @@ import {
   adminApplyDiscount,
 } from "@/app/admin/wholesale/actions";
 
+function stickerCount(items: { productId: string; size: string; qty: number }[]): number {
+  return items.reduce((total, item) => {
+    const id = item.productId.toUpperCase();
+    if (id === "HWP_PACK") return total + item.qty * 23;
+    if (id === "RP_PACK")  return total + item.qty * 10;
+    const setMatch = item.size?.match(/^Set of (\d+)$/i);
+    if (setMatch) return total + item.qty * parseInt(setMatch[1], 10);
+    return total + item.qty;
+  }, 0);
+}
+
 const PORTAL_CONFIG: Record<string, { label: string; short: string; color: string; bg: string; border: string; badge: string; badgeText: string }> = {
   abbey: {
     label: "St. Moses Abbey",
@@ -353,7 +364,7 @@ function AdminOrderCard({
           <span style={{ fontSize: "0.68rem", fontWeight: 700, padding: "1px 7px", borderRadius: "999px", background: portal.badge, color: portal.badgeText, border: `1px solid ${portal.border}` }}>{portal.short}</span>
           <span style={{ fontSize: "0.74rem", color: "var(--text-muted, #7a6a5a)" }}>{order.customerName}</span>
           <span style={{ fontSize: "0.72rem", color: "var(--text-muted, #7a6a5a)" }}>{formattedDate}</span>
-          <span style={{ fontSize: "0.72rem", color: "var(--text-muted, #7a6a5a)" }}>{order.items.length} item{order.items.length !== 1 ? "s" : ""} — ${order.grandTotal.toFixed(2)}</span>
+          <span style={{ fontSize: "0.72rem", color: "var(--text-muted, #7a6a5a)" }}>{stickerCount(order.items).toLocaleString()} sticker{stickerCount(order.items) !== 1 ? "s" : ""} — ${order.grandTotal.toFixed(2)}</span>
           {order.asap && <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#e65100", background: "#fff3cd", padding: "1px 7px", borderRadius: "999px" }}>⚡ ASAP</span>}
           <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: stageColors.bg, color: stageColors.text }}>{order.orderStage}</span>
           {order.paymentSent && !order.paymentReceived && (

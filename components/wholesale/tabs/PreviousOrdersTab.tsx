@@ -22,6 +22,17 @@ const STAGE_COLOR: Record<OrderStage, { bg: string; text: string; dot: string }>
   Cancelled:  { bg: "#fee2e2", text: "#991b1b", dot: "#ef4444" },
 };
 
+function stickerCount(items: { productId: string; size: string; qty: number }[]): number {
+  return items.reduce((total, item) => {
+    const id = item.productId.toUpperCase();
+    if (id === "HWP_PACK") return total + item.qty * 23;
+    if (id === "RP_PACK")  return total + item.qty * 10;
+    const setMatch = item.size?.match(/^Set of (\d+)$/i);
+    if (setMatch) return total + item.qty * parseInt(setMatch[1], 10);
+    return total + item.qty;
+  }, 0);
+}
+
 export function PreviousOrdersTab({ accountId, refreshKey }: Props) {
   const [orders, setOrders] = useState<WholesaleOrder[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -253,7 +264,7 @@ function OrderCard({
           </span>
           <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>{formattedDate}</span>
           <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-            {order.items.reduce((s, i) => s + i.qty, 0)} stickers — ${order.grandTotal.toFixed(2)}
+            {stickerCount(order.items).toLocaleString()} stickers — ${order.grandTotal.toFixed(2)}
           </span>
           {order.discountAmount > 0 && (
             <span style={{ fontSize: "0.66rem", fontWeight: 600, padding: "1px 7px", borderRadius: "999px", background: "#dcfce7", color: "#15803d", border: "1px solid #bbf7d0" }}>
