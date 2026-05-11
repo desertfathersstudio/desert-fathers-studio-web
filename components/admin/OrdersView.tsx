@@ -270,6 +270,34 @@ export function OrdersView({
                       </div>
                     )}
 
+                    {/* Cost breakdown */}
+                    {order.total_cost != null && (
+                      <div style={{ marginBottom: "1rem" }}>
+                        <p style={sectionLabel}>Cost Breakdown</p>
+                        <div style={{ background: "#fdf8f4", borderRadius: 8, padding: "0.6rem 0.75rem", display: "flex", flexDirection: "column", gap: "0.2rem", fontSize: "0.78rem", color: "#6b4050" }}>
+                          {(
+                            [
+                              ["Invoice Total", `$${order.total_cost.toFixed(2)}`],
+                              order.shipping > 0 ? ["Shipping", `$${order.shipping.toFixed(2)}`] : null,
+                              (order.tax_amount ?? 0) > 0 ? ["Taxes", `$${(order.tax_amount ?? 0).toFixed(2)}`] : null,
+                              (order.samples_cost ?? 0) > 0 ? ["Samples", `$${(order.samples_cost ?? 0).toFixed(2)}`] : null,
+                              order.base_cost != null ? ["Product cost", `$${order.base_cost.toFixed(2)}`] : null,
+                            ] as (string[] | null)[]
+                          ).filter((r): r is string[] => r !== null).map(([label, val]) => (
+                            <div key={label} style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span>{label}</span><span style={{ fontWeight: 600, color: "#2a1a0e" }}>{val}</span>
+                            </div>
+                          ))}
+                          {order.per_unit_cost != null && (
+                            <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "0.3rem", borderTop: "1px dashed #e8ddd5", marginTop: "0.2rem" }}>
+                              <span style={{ fontWeight: 700, color: "#6b1d3b" }}>Per-sticker cost</span>
+                              <span style={{ fontWeight: 800, color: "#6b1d3b" }}>${order.per_unit_cost.toFixed(4)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Notes */}
                     {order.notes && (
                       <div style={{ marginBottom: "1rem" }}>

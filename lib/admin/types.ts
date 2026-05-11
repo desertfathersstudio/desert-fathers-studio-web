@@ -93,6 +93,9 @@ export interface MfgOrder {
   base_cost: number | null;
   shipping: number;
   extra_costs: number;
+  tax_amount: number;
+  samples_cost: number;
+  per_unit_cost: number | null;
   total_cost: number | null;
   status: OrderStatus;
   tracking_number: string | null;
