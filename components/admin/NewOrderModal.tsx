@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { MfgOrder, OrderStatus, Supplier } from "@/lib/admin/types";
 
-type MinProduct = { id: string; sku: string; name: string; image_url: string | null };
+type MinProduct = { id: string; sku: string; name: string; image_url: string | null; category: string | null };
 
 const ITEM_TYPES = ["full_batch", "sample", "proof", "reprint"] as const;
 type ItemType = typeof ITEM_TYPES[number];
@@ -51,6 +51,7 @@ export function NewOrderModal({
 
   // Design multi-select
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [selected, setSelected] = useState<Record<string, SelectedLine>>({});
 
   // Live computed values
@@ -63,13 +64,32 @@ export function NewOrderModal({
   // Per-sticker cost is from the full invoice total (you paid it all for these stickers)
   const perUnitCost = totalQty > 0 && totalN > 0 ? totalN / totalQty : 0;
 
-  const filteredProducts = useMemo(() =>
-    products.filter((p) => {
-      const q = search.toLowerCase();
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    products.forEach((p) => { if (p.category) cats.add(p.category); });
+    return Array.from(cats).sort();
+  }, [products]);
+
+  function stkNum(sku: string) {
+    const m = sku.match(/^STK-(\d+)$/i);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  const filteredProducts = useMemo(() => {
+    const q = search.toLowerCase();
+    return products.filter((p) => {
+      if (categoryFilter === "Round 1") {
+        const n = stkNum(p.sku);
+        if (n === null || n < 1 || n > 35) return false;
+      } else if (categoryFilter === "Round 2") {
+        const n = stkNum(p.sku);
+        if (n === null || n < 36 || n > 67) return false;
+      } else if (categoryFilter !== "All") {
+        if (p.category !== categoryFilter) return false;
+      }
       return !q || p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q);
-    }),
-    [products, search]
-  );
+    });
+  }, [products, search, categoryFilter]);
 
   // ── Supplier creation ──────────────────────────────────────────────────────
   async function handleCreateSupplier() {
@@ -299,8 +319,36 @@ export function NewOrderModal({
           <div>
             <Label>Designs Ordered ({selectedIds.length} selected)</Label>
 
-            {/* Search + scrollable checklist */}
-            <div style={{ border: "1px solid #e8ddd5", borderRadius: 8, overflow: "hidden", marginBottom: selectedIds.length > 0 ? "0.75rem" : 0 }}>
+            {/* Category filter chips */}
+            <div style={{ display: "flex", gap: 0, flexWrap: "wrap", borderBottom: "1px solid #e8ddd5", marginBottom: 0 }}>
+              {(["All", "Round 1", "Round 2", ...categories] as string[]).map((cat) => {
+                const active = categoryFilter === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoryFilter(cat)}
+                    style={{
+                      padding: "0.3rem 0.6rem",
+                      border: "none",
+                      borderBottom: active ? "2px solid #6b1d3b" : "2px solid transparent",
+                      background: "none",
+                      color: active ? "#6b1d3b" : "#9a7080",
+                      fontSize: "0.72rem",
+                      fontWeight: active ? 700 : 400,
+                      cursor: "pointer",
+                      fontFamily: "Inter, system-ui, sans-serif",
+                      whiteSpace: "nowrap",
+                      transition: "color 120ms",
+                    }}
+                  >
+                    {cat === "Round 1" ? "Round 1 (1–35)" : cat === "Round 2" ? "Round 2 (36–67)" : cat}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search + Select All + scrollable checklist */}
+            <div style={{ border: "1px solid #e8ddd5", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden", marginBottom: selectedIds.length > 0 ? "0.75rem" : 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderBottom: "1px solid #e8ddd5", background: "#fdf8f4" }}>
                 <Search size={13} color="#9a7080" />
                 <input
@@ -312,6 +360,28 @@ export function NewOrderModal({
                 {search && (
                   <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#9a7080", padding: 0, fontSize: "0.78rem" }}>✕</button>
                 )}
+                <button
+                  onClick={() => {
+                    const allVisible = filteredProducts.map((p) => p.id);
+                    const allChecked = allVisible.length > 0 && allVisible.every((id) => !!selected[id]);
+                    if (allChecked) {
+                      setSelected((prev) => {
+                        const next = { ...prev };
+                        allVisible.forEach((id) => delete next[id]);
+                        return next;
+                      });
+                    } else {
+                      setSelected((prev) => {
+                        const next = { ...prev };
+                        allVisible.forEach((id) => { if (!next[id]) next[id] = { qty: 100, item_type: "full_batch" }; });
+                        return next;
+                      });
+                    }
+                  }}
+                  style={{ background: "none", border: "1px solid #e8ddd5", borderRadius: 5, cursor: "pointer", color: "#6b1d3b", padding: "2px 8px", fontSize: "0.72rem", fontWeight: 600, whiteSpace: "nowrap", fontFamily: "Inter, system-ui, sans-serif" }}
+                >
+                  {filteredProducts.length > 0 && filteredProducts.every((p) => !!selected[p.id]) ? "Deselect All" : "Select All"}
+                </button>
               </div>
               <div style={{ maxHeight: 180, overflowY: "auto" }}>
                 {filteredProducts.length === 0 ? (

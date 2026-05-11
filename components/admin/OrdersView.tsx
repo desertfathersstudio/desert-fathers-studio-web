@@ -7,7 +7,7 @@ import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { MfgOrder, OrderStatus, Supplier } from "@/lib/admin/types";
 import { NewOrderModal } from "./NewOrderModal";
 
-type MinProduct = { id: string; sku: string; name: string; image_url: string | null };
+type MinProduct = { id: string; sku: string; name: string; image_url: string | null; category: string | null };
 
 const STATUS_META: Record<OrderStatus, { label: string; color: string; bg: string; icon: React.ElementType }> = {
   ordered:   { label: "Ordered",   color: "#3949ab", bg: "rgba(99,73,171,0.1)",  icon: Package },
