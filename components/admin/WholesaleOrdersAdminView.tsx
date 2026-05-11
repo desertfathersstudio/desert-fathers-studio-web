@@ -19,6 +19,7 @@ function stickerCount(items: { productId: string; size: string; qty: number }[])
     const id = item.productId.toUpperCase();
     if (id === "HWP_PACK") return total + item.qty * 23;
     if (id === "RP_PACK")  return total + item.qty * 10;
+    if (id === "PK-3")     return total + item.qty * 6;
     const setMatch = item.size?.match(/^Set of (\d+)$/i);
     if (setMatch) return total + item.qty * parseInt(setMatch[1], 10);
     return total + item.qty;

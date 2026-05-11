@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { X, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useMemo } from "react";
+import { X, Plus, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { MfgOrder, OrderStatus, Supplier } from "@/lib/admin/types";
 
 type MinProduct = { id: string; sku: string; name: string; image_url: string | null };
-type LineItem = { product_id: string; qty_ordered: number; item_type: string };
 
 const ITEM_TYPES = ["full_batch", "sample", "proof", "reprint"] as const;
+type ItemType = typeof ITEM_TYPES[number];
+
+interface SelectedLine {
+  qty: number;
+  item_type: ItemType;
+}
 
 export function NewOrderModal({
   suppliers: initialSuppliers,
@@ -38,26 +43,33 @@ export function NewOrderModal({
   const [newSupplierName, setNewSupplierName] = useState("");
   const [creatingSupplier, setCreatingSupplier] = useState(false);
 
-  // Cost breakdown — user enters the invoice total and sub-components
-  const [totalAmount, setTotalAmount]   = useState("");
-  const [taxAmount, setTaxAmount]       = useState("");
+  // Cost breakdown
+  const [totalAmount, setTotalAmount]       = useState("");
+  const [taxAmount, setTaxAmount]           = useState("");
   const [shippingAmount, setShippingAmount] = useState("");
   const [samplesAmount, setSamplesAmount]   = useState("");
 
-  // Line items — no unit cost; cost is split from the total above
-  const [lines, setLines] = useState<LineItem[]>([
-    { product_id: products[0]?.id ?? "", qty_ordered: 100, item_type: "full_batch" },
-  ]);
-  const [saving, setSaving] = useState(false);
+  // Design multi-select
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Record<string, SelectedLine>>({});
 
   // Live computed values
-  const totalN    = parseFloat(totalAmount)   || 0;
-  const taxN      = parseFloat(taxAmount)     || 0;
+  const totalN    = parseFloat(totalAmount)    || 0;
+  const taxN      = parseFloat(taxAmount)      || 0;
   const shippingN = parseFloat(shippingAmount) || 0;
   const samplesN  = parseFloat(samplesAmount)  || 0;
   const productCost = Math.max(0, totalN - taxN - shippingN - samplesN);
-  const totalQty    = lines.reduce((s, l) => s + (l.qty_ordered || 0), 0);
-  const perUnitCost = totalQty > 0 ? productCost / totalQty : 0;
+  const totalQty  = Object.values(selected).reduce((s, l) => s + (l.qty || 0), 0);
+  // Per-sticker cost is from the full invoice total (you paid it all for these stickers)
+  const perUnitCost = totalQty > 0 && totalN > 0 ? totalN / totalQty : 0;
+
+  const filteredProducts = useMemo(() =>
+    products.filter((p) => {
+      const q = search.toLowerCase();
+      return !q || p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q);
+    }),
+    [products, search]
+  );
 
   // ── Supplier creation ──────────────────────────────────────────────────────
   async function handleCreateSupplier() {
@@ -83,22 +95,28 @@ export function NewOrderModal({
     }
   }
 
-  // ── Line item helpers ──────────────────────────────────────────────────────
-  function addLine() {
-    setLines((prev) => [...prev, { product_id: products[0]?.id ?? "", qty_ordered: 100, item_type: "full_batch" }]);
+  // ── Design selection ───────────────────────────────────────────────────────
+  function toggleProduct(id: string) {
+    setSelected((prev) => {
+      const next = { ...prev };
+      if (next[id]) {
+        delete next[id];
+      } else {
+        next[id] = { qty: 100, item_type: "full_batch" };
+      }
+      return next;
+    });
   }
-  function removeLine(i: number) {
-    setLines((prev) => prev.filter((_, idx) => idx !== i));
-  }
-  function updateLine(i: number, patch: Partial<LineItem>) {
-    setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
+
+  function updateLine(id: string, patch: Partial<SelectedLine>) {
+    setSelected((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
   }
 
   // ── Submit ─────────────────────────────────────────────────────────────────
   async function handleCreate() {
     if (!orderId.trim()) { toast.error("Order ID required"); return; }
     if (!totalAmount || totalN <= 0) { toast.error("Enter the total invoice amount"); return; }
-    if (lines.length === 0) { toast.error("Add at least one item"); return; }
+    if (Object.keys(selected).length === 0) { toast.error("Select at least one design"); return; }
 
     setSaving(true);
     try {
@@ -124,16 +142,16 @@ export function NewOrderModal({
         .single();
       if (oErr) throw oErr;
 
-      const itemRows = lines.map((l) => ({
+      const itemRows = Object.entries(selected).map(([product_id, line]) => ({
         mfg_order_id:           order.id,
-        product_id:             l.product_id,
-        qty_ordered:            l.qty_ordered,
-        item_type:              l.item_type,
+        product_id,
+        qty_ordered:            line.qty,
+        item_type:              line.item_type,
         unit_cost:              perUnitCost,
-        line_base_cost:         perUnitCost * l.qty_ordered,
-        shipping_allocation:    totalQty > 0 ? (shippingN / totalQty) * l.qty_ordered : 0,
+        line_base_cost:         perUnitCost * line.qty,
+        shipping_allocation:    totalQty > 0 ? (shippingN / totalQty) * line.qty : 0,
         extra_cost_allocation:  0,
-        total_line_cost:        perUnitCost * l.qty_ordered,
+        total_line_cost:        perUnitCost * line.qty,
         received:               false,
       }));
 
@@ -144,11 +162,8 @@ export function NewOrderModal({
       if (iErr) throw iErr;
 
       if (status !== "delivered") {
-        for (const line of lines) {
-          await sb.rpc("increment_incoming", {
-            p_product_id: line.product_id,
-            p_qty: line.qty_ordered,
-          });
+        for (const [product_id, line] of Object.entries(selected)) {
+          await sb.rpc("increment_incoming", { p_product_id: product_id, p_qty: line.qty });
         }
       }
 
@@ -160,6 +175,10 @@ export function NewOrderModal({
       setSaving(false);
     }
   }
+
+  const [saving, setSaving] = useState(false);
+  const selectedProductMap = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+  const selectedIds = Object.keys(selected);
 
   return (
     <Overlay onClose={onClose}>
@@ -240,16 +259,10 @@ export function NewOrderModal({
           {/* Cost breakdown */}
           <div style={{ background: "#fdf8f4", border: "1px solid #e8ddd5", borderRadius: 10, padding: "0.875rem" }}>
             <p style={{ margin: "0 0 0.75rem", fontSize: "0.72rem", fontWeight: 700, color: "#6b4050", textTransform: "uppercase", letterSpacing: "0.06em" }}>Cost Breakdown</p>
-
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem", marginBottom: "0.75rem" }}>
               <div>
                 <Label>Invoice Total ($)</Label>
-                <input
-                  type="number" min={0} step={0.01}
-                  value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)}
-                  placeholder="0.00"
-                  style={{ ...inputStyle, fontWeight: 700 }}
-                />
+                <input type="number" min={0} step={0.01} value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} placeholder="0.00" style={{ ...inputStyle, fontWeight: 700 }} />
               </div>
               <div>
                 <Label>Taxes ($)</Label>
@@ -264,19 +277,17 @@ export function NewOrderModal({
                 <input type="number" min={0} step={0.01} value={samplesAmount} onChange={(e) => setSamplesAmount(e.target.value)} placeholder="0.00" style={inputStyle} />
               </div>
             </div>
-
-            {/* Computed summary */}
             <div style={{ borderTop: "1px solid #e8ddd5", paddingTop: "0.625rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", color: "#6b4050" }}>
-                <span>Product cost (total − fees)</span>
-                <strong style={{ color: productCost < 0 ? "#dc2626" : "#2a1a0e" }}>${productCost.toFixed(2)}</strong>
+                <span>Product cost (excl. fees)</span>
+                <strong style={{ color: "#2a1a0e" }}>${productCost.toFixed(2)}</strong>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", color: "#6b4050" }}>
                 <span>Total stickers ordered</span>
                 <strong style={{ color: "#2a1a0e" }}>{totalQty.toLocaleString()}</strong>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", paddingTop: "0.25rem", borderTop: "1px dashed #e8ddd5", marginTop: "0.125rem" }}>
-                <span style={{ fontWeight: 700, color: "#6b1d3b" }}>Per-sticker cost</span>
+                <span style={{ fontWeight: 700, color: "#6b1d3b" }}>Per-sticker cost (from total)</span>
                 <strong style={{ color: "#6b1d3b", fontSize: "1rem" }}>
                   {totalQty > 0 && totalN > 0 ? `$${perUnitCost.toFixed(4)}` : "—"}
                 </strong>
@@ -284,39 +295,92 @@ export function NewOrderModal({
             </div>
           </div>
 
-          {/* Line items */}
+          {/* Design multi-select */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <Label>Designs Ordered</Label>
-              <button onClick={addLine} style={{ ...outlineBtn, padding: "3px 8px", fontSize: "0.72rem" }}>
-                <Plus size={11} /> Add Design
-              </button>
+            <Label>Designs Ordered ({selectedIds.length} selected)</Label>
+
+            {/* Search + scrollable checklist */}
+            <div style={{ border: "1px solid #e8ddd5", borderRadius: 8, overflow: "hidden", marginBottom: selectedIds.length > 0 ? "0.75rem" : 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderBottom: "1px solid #e8ddd5", background: "#fdf8f4" }}>
+                <Search size={13} color="#9a7080" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search designs…"
+                  style={{ flex: 1, border: "none", outline: "none", fontSize: "0.82rem", background: "transparent", color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif" }}
+                />
+                {search && (
+                  <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#9a7080", padding: 0, fontSize: "0.78rem" }}>✕</button>
+                )}
+              </div>
+              <div style={{ maxHeight: 180, overflowY: "auto" }}>
+                {filteredProducts.length === 0 ? (
+                  <p style={{ margin: 0, padding: "0.75rem", fontSize: "0.78rem", color: "#9a7080", textAlign: "center" }}>No designs found.</p>
+                ) : (
+                  filteredProducts.map((p) => {
+                    const isChecked = !!selected[p.id];
+                    return (
+                      <label
+                        key={p.id}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 8, padding: "5px 10px",
+                          cursor: "pointer", borderBottom: "1px solid #f5f0ea",
+                          background: isChecked ? "#fdf3f5" : "white",
+                          transition: "background 100ms",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleProduct(p.id)}
+                          style={{ accentColor: "#6b1d3b", flexShrink: 0 }}
+                        />
+                        {p.image_url && (
+                          <img src={p.image_url} alt="" style={{ width: 24, height: 24, objectFit: "contain", borderRadius: 4, background: "#f5f0ea", flexShrink: 0 }} />
+                        )}
+                        <span style={{ fontSize: "0.78rem", color: "#2a1a0e", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <span style={{ fontFamily: "monospace", color: "#9a7080", marginRight: 4 }}>{p.sku}</span>
+                          {p.name}
+                        </span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {lines.map((line, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 80px 110px 28px", gap: 6, alignItems: "center" }}>
-                  <select value={line.product_id} onChange={(e) => updateLine(i, { product_id: e.target.value })} style={{ ...inputStyle, fontSize: "0.78rem" }}>
-                    {products.map((p) => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
-                  </select>
-                  <input
-                    type="number" min={1} value={line.qty_ordered}
-                    onChange={(e) => updateLine(i, { qty_ordered: Number(e.target.value) })}
-                    placeholder="Qty"
-                    style={{ ...inputStyle, fontSize: "0.78rem" }}
-                  />
-                  <select value={line.item_type} onChange={(e) => updateLine(i, { item_type: e.target.value })} style={{ ...inputStyle, fontSize: "0.78rem" }}>
-                    {ITEM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <button onClick={() => removeLine(i)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 0, display: "flex", alignItems: "center" }}>
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            {totalQty > 0 && perUnitCost > 0 && (
-              <p style={{ margin: "0.5rem 0 0", fontSize: "0.72rem", color: "#9a7080", textAlign: "right" }}>
-                Each sticker allocated at <strong>${perUnitCost.toFixed(4)}</strong>
-              </p>
+
+            {/* Selected items with qty + type */}
+            {selectedIds.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 700, color: "#6b4050", textTransform: "uppercase", letterSpacing: "0.06em" }}>Quantities &amp; Types</p>
+                {selectedIds.map((id) => {
+                  const p = selectedProductMap.get(id);
+                  if (!p) return null;
+                  const line = selected[id];
+                  return (
+                    <div key={id} style={{ display: "grid", gridTemplateColumns: "1fr 80px 120px 26px", gap: 6, alignItems: "center" }}>
+                      <span style={{ fontSize: "0.78rem", color: "#2a1a0e", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <span style={{ fontFamily: "monospace", color: "#9a7080", marginRight: 4 }}>{p.sku}</span>
+                        {p.name}
+                      </span>
+                      <input
+                        type="number" min={1} value={line.qty}
+                        onChange={(e) => updateLine(id, { qty: Number(e.target.value) })}
+                        style={{ ...inputStyle, fontSize: "0.78rem", textAlign: "center" }}
+                      />
+                      <select value={line.item_type} onChange={(e) => updateLine(id, { item_type: e.target.value as ItemType })} style={{ ...inputStyle, fontSize: "0.78rem" }}>
+                        {ITEM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <button
+                        onClick={() => toggleProduct(id)}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "#9a7080", padding: 0, display: "flex", alignItems: "center", fontSize: "1rem", lineHeight: 1 }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
@@ -354,7 +418,7 @@ function Label({ children }: { children: React.ReactNode }) {
   return <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>{children}</label>;
 }
 
-const modalStyle: React.CSSProperties = { background: "#fff", borderRadius: 14, boxShadow: "0 20px 60px rgba(0,0,0,0.25)", width: "100%", maxWidth: 620, maxHeight: "92dvh", display: "flex", flexDirection: "column", overflow: "hidden" };
+const modalStyle: React.CSSProperties = { background: "#fff", borderRadius: 14, boxShadow: "0 20px 60px rgba(0,0,0,0.25)", width: "100%", maxWidth: 640, maxHeight: "92dvh", display: "flex", flexDirection: "column", overflow: "hidden" };
 const headerStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.125rem 0.875rem", borderBottom: "1px solid #e8ddd5" };
 const footerStyle: React.CSSProperties = { display: "flex", gap: "0.625rem", alignItems: "center", justifyContent: "flex-end", padding: "0.875rem 1.125rem", borderTop: "1px solid #e8ddd5" };
 const titleStyle: React.CSSProperties = { margin: 0, fontSize: "1rem", fontWeight: 700, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif" };

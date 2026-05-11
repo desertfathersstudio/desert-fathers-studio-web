@@ -252,11 +252,22 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
   }
 
   const grandTotal = cart.reduce((s, l) => s + l.unitPrice * l.qty, 0);
-  const cartCount = cart.reduce((s, l) => s + l.qty, 0);
-  const hasPackInCart = cart.some((l) => l.productId === "HWP_PACK" || l.productId === "RP_PACK");
-  const packSetCount = cart
-    .filter((l) => l.productId === "HWP_PACK" || l.productId === "RP_PACK")
-    .reduce((s, l) => s + l.qty, 0);
+
+  function cartStickerQty(line: { productId: string; size: string; qty: number }): number {
+    const id = line.productId.toUpperCase();
+    if (id === "HWP_PACK") return line.qty * 23;
+    if (id === "RP_PACK")  return line.qty * 10;
+    if (id === "PK-3")     return line.qty * 6;
+    const setMatch = line.size?.match(/^Set of (\d+)$/i);
+    if (setMatch) return line.qty * parseInt(setMatch[1], 10);
+    return line.qty;
+  }
+
+  const cartCount = cart.reduce((s, l) => s + cartStickerQty(l), 0);
+  const isPackLine = (l: { productId: string }) =>
+    l.productId === "HWP_PACK" || l.productId === "RP_PACK" || /^PK-\d+$/i.test(l.productId);
+  const hasPackInCart = cart.some(isPackLine);
+  const packSetCount = cart.filter(isPackLine).reduce((s, l) => s + l.qty, 0);
 
   const hasPresetNames = contactNames.length > 0;
   const defaultEmail = session.notifyEmail;
