@@ -77,6 +77,11 @@ export default async function PacksPage() {
       const price = Number(productRow?.retail_price ?? pack.retail_price ?? 0);
       const onHands = onHandsByPackId.get(pack.id as string) ?? [];
 
+      // Hide pack if every tracked constituent sticker is explicitly at 0 inventory.
+      // This prevents zero-stock packs from leaking into the shop even without coming_soon = true.
+      // (onHands.length === 0 means no inventory rows exist yet — shown but tracked as null.)
+      if (onHands.length > 0 && Math.min(...onHands) === 0) continue;
+
       packs.push({
         id: slug,
         name: pack.name as string,

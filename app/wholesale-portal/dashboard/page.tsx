@@ -71,17 +71,40 @@ export default function WholesaleDashboard() {
   useEffect(() => {
     if (!session) return;
     setProductsLoading(true);
+
     fetch(`/api/wholesale/products?accountId=${session.accountId}`)
-      .then((r) => r.json())
-      .then((data) => setProducts(Array.isArray(data) ? data : []))
-      .catch(() => setProducts([]))
+      .then(async (r) => {
+        if (r.status === 401) {
+          // Cookie expired while sessionStorage session persisted — force re-login
+          if (process.env.NODE_ENV !== "production") {
+            console.warn("[wholesale] 401 on products fetch — session cookie expired, clearing and redirecting");
+          }
+          try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+          router.replace("/wholesale-portal");
+          return;
+        }
+        if (!r.ok) throw new Error(`products fetch HTTP ${r.status}`);
+        const data = await r.json();
+        const products = Array.isArray(data) ? data : [];
+        if (process.env.NODE_ENV !== "production") {
+          console.debug(`[wholesale] loaded ${products.length} products for account=${session.accountId}`);
+        }
+        setProducts(products);
+      })
+      .catch((err) => {
+        console.error("[wholesale] failed to load products:", err);
+        setProducts([]);
+      })
       .finally(() => setProductsLoading(false));
 
     fetch("/api/wholesale/last-modified")
-      .then((r) => r.json())
-      .then((d) => setLastModified(d.lastModified ?? ""))
+      .then(async (r) => {
+        if (!r.ok) return; // auth failure — silently skip timestamp
+        const d = await r.json();
+        setLastModified(d.lastModified ?? "");
+      })
       .catch(() => {});
-  }, [session]);
+  }, [session, router]);
 
   const setCart = useCallback(
     (updater: WholesaleCartLine[] | ((prev: WholesaleCartLine[]) => WholesaleCartLine[])) => {
