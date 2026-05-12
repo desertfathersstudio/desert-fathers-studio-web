@@ -203,26 +203,17 @@ export function PackDetail({
               </p>
             </div>
             {/* Legend */}
-            <div className="flex gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
-              <span className="flex items-center gap-1.5">
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 8, height: 8, borderRadius: "50%",
-                    background: accentColor !== "var(--brand)" ? accentColor : "var(--brand)",
-                    opacity: 0.7,
-                  }}
-                />
+            <div className="flex gap-3 items-center flex-wrap">
+              <span className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
+                <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 999, background: "#9CA3AF", color: "#fff", fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.03em", lineHeight: 1.5 }}>
+                  Pack only
+                </span>
                 Pack only
               </span>
-              <span className="flex items-center gap-1.5">
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 8, height: 8, borderRadius: "50%",
-                    background: "var(--gold)",
-                  }}
-                />
+              <span className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
+                <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 999, background: "var(--brand)", color: "#fff", fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.03em", lineHeight: 1.5 }}>
+                  Individual
+                </span>
                 Also sold individually
               </span>
             </div>
@@ -261,16 +252,24 @@ export function PackDetail({
                         aria-label={`Shop ${sticker.name} individually`}
                       />
                     )}
-                    <div
+                    <span
                       style={{
                         position: "absolute",
-                        top: 8, right: 8,
-                        width: 8, height: 8,
-                        borderRadius: "50%",
-                        background: isIndividual ? "var(--gold)" : "var(--brand)",
-                        opacity: isIndividual ? 1 : 0.7,
+                        top: 7, right: 7,
+                        padding: "2px 7px",
+                        borderRadius: 999,
+                        background: isIndividual ? "var(--brand)" : "#9CA3AF",
+                        color: "#fff",
+                        fontSize: "0.6rem",
+                        fontWeight: 700,
+                        letterSpacing: "0.03em",
+                        lineHeight: 1.5,
+                        fontFamily: "var(--font-sans)",
+                        pointerEvents: "none",
                       }}
-                    />
+                    >
+                      {isIndividual ? "Individual" : "Pack only"}
+                    </span>
                   </div>
 
                   <div className="mt-2 flex flex-col gap-0.5">
@@ -287,8 +286,8 @@ export function PackDetail({
                     <p
                       style={{
                         fontSize: "0.68rem",
-                        color: isIndividual ? "var(--gold)" : "var(--text-muted)",
-                        fontWeight: isIndividual ? 500 : 400,
+                        color: isIndividual ? "var(--brand)" : "#9CA3AF",
+                        fontWeight: isIndividual ? 600 : 400,
                       }}
                     >
                       {isIndividual ? "Also sold individually" : "Pack only"}
