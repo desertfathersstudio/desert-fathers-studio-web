@@ -21,7 +21,7 @@ export function ProductDetailDrawer({
   const incoming = inv?.incoming ?? 0;
   const threshold = inv?.low_stock_threshold ?? 10;
   const status = inv?.status ?? "sold_out";
-  const retail = product.retail_price ?? 1.5;
+  const retail = product.retail_price ?? 2.0;
   const cost = COST_PER_STICKER;
   const margin = retail - cost;
   const marginPct = ((margin / retail) * 100).toFixed(0);
