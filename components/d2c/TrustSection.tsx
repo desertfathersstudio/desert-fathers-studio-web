@@ -48,16 +48,19 @@ export function TrustSection() {
               fontSize: "clamp(1.7rem, 3vw, 2.4rem)",
               fontWeight: 400,
               color: "var(--text)",
+              letterSpacing: "-0.01em",
             }}
           >
             Stickers you can trust.
           </h2>
+          <div className="ci-heading-accent mt-5" />
         </motion.div>
 
         {/* Ruled list — no card wrappers */}
+        <div className="h-px ci-draw-scroll" style={{ background: "var(--border)" }} />
         <div
           className="grid sm:grid-cols-3"
-          style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}
+          style={{ borderBottom: "1px solid var(--border)" }}
         >
           {PILLARS.map((p, i) => {
             const Icon = p.icon;

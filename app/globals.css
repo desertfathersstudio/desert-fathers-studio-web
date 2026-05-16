@@ -53,7 +53,19 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: "Cabinet Grotesk", var(--font-inter), system-ui, sans-serif;
+  font-feature-settings: "kern" 1, "calt" 1;
   min-height: 100dvh;
+}
+
+/* Optical quality for all heading levels */
+h1, h2, h3, h4 {
+  text-rendering: optimizeLegibility;
+  font-optical-sizing: auto;
+}
+
+/* Cormorant — enable ligatures, kerning, and oldstyle figures */
+h1, h2, h3, h4, [data-serif] {
+  font-feature-settings: "liga" 1, "kern" 1, "calt" 1, "onum" 1;
 }
 
 /* ── Scroll-reveal (CSS fallback for non-FM sections) ──────────────── */
@@ -91,6 +103,77 @@ body {
   .ws-portal [data-ws-card]:hover {
     transform: none;
     box-shadow: none;
+  }
+}
+
+/* ── Overdrive: Manuscript illumination ─────────────────────────────── */
+
+/* Hero gold hairline: draws outward from center on page load */
+@keyframes ci-draw-center {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+.ci-hairline-load {
+  transform-origin: center;
+  animation: ci-draw-center 1.4s cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: 0.5s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ci-hairline-load { animation: none; }
+}
+
+@supports (animation-timeline: scroll()) {
+
+  /* Section divider: draws left → right as it enters view */
+  @keyframes ci-draw-left {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  .ci-draw-scroll {
+    transform-origin: left center;
+    animation: ci-draw-left linear both;
+    animation-timeline: view(block);
+    animation-range: entry 0% entry 40%;
+  }
+
+  /* Gold accent rule: wipes below section headings on entry */
+  @keyframes ci-accent-wipe {
+    0%   { transform: scaleX(0); opacity: 0; }
+    30%  { opacity: 0.6; }
+    100% { transform: scaleX(1); opacity: 0.45; }
+  }
+
+  .ci-heading-accent {
+    height: 1px;
+    width: 3rem;
+    background: var(--gold);
+    transform-origin: left center;
+    transform: scaleX(0);
+    opacity: 0;
+    animation: ci-accent-wipe linear both;
+    animation-timeline: view(block);
+    animation-range: entry 5% entry 55%;
+  }
+
+  /* Strip: floats upward as user scrolls away from hero */
+  @keyframes ci-strip-float {
+    from { transform: translateY(0px); }
+    to   { transform: translateY(-18px); }
+  }
+
+  .ci-strip-rise {
+    animation: ci-strip-float linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0px 600px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ci-draw-scroll  { animation: none; transform: scaleX(1); }
+    .ci-heading-accent { animation: none; opacity: 0.45; transform: scaleX(1); }
+    .ci-strip-rise   { animation: none; transform: none; }
   }
 }
 

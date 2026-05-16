@@ -67,20 +67,20 @@ export function StickerCard({
       transition={{ duration: 0.2, ease: "easeOut" }}
       onClick={onOpen}
     >
-      {/* White card frame */}
+      {/* Card frame */}
       <div
         className="relative overflow-hidden"
         style={{
-          background: "#ffffff",
+          background: "white",
           borderRadius: "var(--radius-card)",
-          border: "1px solid rgba(0,0,0,0.06)",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+          border: "1px solid var(--border)",
+          boxShadow: "0 1px 4px rgba(107,31,42,0.05)",
         }}
       >
         {/* Image area */}
         <div
           className="relative aspect-square overflow-hidden"
-          style={{ background: "#ffffff" }}
+          style={{ background: "white" }}
         >
           <Image
             src={product.imageUrl}
@@ -174,8 +174,9 @@ export function StickerCard({
           className="leading-snug"
           style={{
             fontFamily: "var(--font-serif)",
-            fontSize: "0.95rem",
+            fontSize: "1rem",
             color: "var(--text)",
+            letterSpacing: "-0.005em",
           }}
         >
           {product.name}

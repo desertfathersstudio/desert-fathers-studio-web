@@ -36,9 +36,9 @@ export function HeroSection({
         />
       </div>
 
-      {/* Gold hairline top accent */}
+      {/* Gold hairline top accent — draws outward from center on load */}
       <div
-        className="absolute top-16 inset-x-0 h-px"
+        className="ci-hairline-load absolute top-16 inset-x-0 h-px"
         style={{ background: "linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent)" }}
         aria-hidden
       />
@@ -58,13 +58,13 @@ export function HeroSection({
             </motion.p>
 
             <motion.h1
-              className="leading-[1.05] mb-6"
+              className="leading-[1.02] mb-6"
               style={{
                 fontFamily: "var(--font-serif)",
-                fontSize: "clamp(2.8rem, 5vw, 4.5rem)",
+                fontSize: "clamp(3rem, 6.5vw, 5.5rem)",
                 fontWeight: 300,
                 color: "var(--text)",
-                letterSpacing: "-0.01em",
+                letterSpacing: "-0.025em",
               }}
               initial={reduced ? {} : { opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
@@ -118,9 +118,9 @@ export function HeroSection({
         </div>
       </div>
 
-      {/* Sticker strip */}
+      {/* Sticker strip — floats upward as user scrolls */}
       <motion.div
-        className="relative z-10 pt-16 pb-12"
+        className="ci-strip-rise relative z-10 pt-16 pb-12"
         initial={reduced ? {} : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.7, delay: 0.75 }}

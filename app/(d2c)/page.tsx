@@ -124,11 +124,12 @@ function UseCasesSection() {
               fontSize: "clamp(1.9rem, 3.5vw, 2.8rem)",
               fontWeight: 300,
               color: "var(--text-inverse)",
-              letterSpacing: "-0.01em",
+              letterSpacing: "-0.02em",
             }}
           >
             Take your faith with you.
           </h2>
+          <div className="ci-heading-accent mt-5" style={{ background: "var(--gold-light)" }} />
         </div>
 
         {/* Cards */}

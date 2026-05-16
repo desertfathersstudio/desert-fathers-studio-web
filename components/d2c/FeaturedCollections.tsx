@@ -81,11 +81,12 @@ export function FeaturedCollections({
               fontSize: "clamp(1.9rem, 3.5vw, 2.8rem)",
               fontWeight: 400,
               color: "var(--text)",
-              letterSpacing: "-0.01em",
+              letterSpacing: "-0.015em",
             }}
           >
             Find your sticker.
           </h2>
+          <div className="ci-heading-accent mt-5" />
         </motion.div>
 
         {/* Cards grid */}
