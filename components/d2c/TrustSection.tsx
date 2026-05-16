@@ -29,11 +29,7 @@ export function TrustSection() {
 
   return (
     <section ref={ref} className="py-20 md:py-28" style={{ background: "var(--bg)" }}>
-      {/* Gold hairline top */}
-      <div
-        className="max-w-7xl mx-auto px-6 md:px-10"
-        style={{ borderTop: "1px solid var(--border)", paddingTop: "3rem" }}
-      >
+      <div className="max-w-7xl mx-auto px-6 md:px-10">
         <motion.div
           className="mb-12"
           initial={reduced ? {} : { opacity: 0, y: 20 }}
@@ -58,12 +54,18 @@ export function TrustSection() {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-10">
+        {/* Ruled list — no card wrappers */}
+        <div
+          className="grid sm:grid-cols-3"
+          style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}
+        >
           {PILLARS.map((p, i) => {
             const Icon = p.icon;
             return (
               <motion.div
                 key={p.title}
+                className={`flex gap-5 items-start py-8 sm:px-8 ${i > 0 ? "border-t sm:border-t-0 sm:border-l" : ""}`}
+                style={i > 0 ? { borderColor: "var(--border)" } : undefined}
                 initial={reduced ? {} : { opacity: 0, y: 24 }}
                 animate={
                   inView
@@ -75,27 +77,29 @@ export function TrustSection() {
                 transition={{ duration: 0.5, delay: reduced ? 0 : i * 0.09, ease: "easeOut" }}
               >
                 <div
-                  className="w-9 h-9 flex items-center justify-center rounded-full mb-4"
+                  className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full mt-0.5"
                   style={{ background: "var(--cream)" }}
                 >
                   <Icon size={17} style={{ color: "var(--brand)" }} strokeWidth={1.5} />
                 </div>
-                <h3
-                  className="mb-2 font-medium"
-                  style={{
-                    fontFamily: "var(--font-serif)",
-                    fontSize: "1.05rem",
-                    color: "var(--text)",
-                  }}
-                >
-                  {p.title}
-                </h3>
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {p.body}
-                </p>
+                <div>
+                  <h3
+                    className="mb-1.5 font-medium"
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "1.05rem",
+                      color: "var(--text)",
+                    }}
+                  >
+                    {p.title}
+                  </h3>
+                  <p
+                    className="text-sm leading-relaxed"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {p.body}
+                  </p>
+                </div>
               </motion.div>
             );
           })}

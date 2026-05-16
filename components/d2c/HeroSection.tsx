@@ -24,15 +24,14 @@ export function HeroSection({
           src="/images/hero-church.jpg"
           alt=""
           fetchPriority="high"
-          decoding="sync"
           className="absolute inset-0 w-full h-full object-cover object-center"
           style={{ opacity: 0.22, filter: "saturate(0.35) sepia(0.15)" }}
         />
-        <div className="absolute inset-0" style={{ background: "rgba(248,244,236,0.50)" }} />
+        <div className="absolute inset-0" style={{ background: "rgba(var(--bg-rgb) / 0.50)" }} />
         <div
           className="absolute inset-0"
           style={{
-            background: "linear-gradient(to bottom, #F8F4EC 0%, #F8F4EC 12%, transparent 38%, transparent 72%, #F8F4EC 100%)",
+            background: "linear-gradient(to bottom, var(--bg) 0%, var(--bg) 12%, transparent 38%, transparent 72%, var(--bg) 100%)",
           }}
         />
       </div>

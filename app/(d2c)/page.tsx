@@ -123,7 +123,7 @@ function UseCasesSection() {
               fontFamily: "var(--font-serif)",
               fontSize: "clamp(1.9rem, 3.5vw, 2.8rem)",
               fontWeight: 300,
-              color: "#F8F4EC",
+              color: "var(--text-inverse)",
               letterSpacing: "-0.01em",
             }}
           >
@@ -160,14 +160,14 @@ function UseCasesSection() {
                   fontFamily: "var(--font-serif)",
                   fontSize: "1.05rem",
                   fontWeight: 400,
-                  color: "#F8F4EC",
+                  color: "var(--text-inverse)",
                 }}
               >
                 {headline}
               </h3>
               <p
                 className="text-xs leading-relaxed mt-auto pt-3"
-                style={{ color: "rgba(248,244,236,0.5)" }}
+                style={{ color: "rgba(var(--bg-rgb) / 0.5)" }}
               >
                 {body}
               </p>

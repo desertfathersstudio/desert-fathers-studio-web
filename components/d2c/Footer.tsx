@@ -28,7 +28,7 @@ export function Footer() {
         </h3>
         <p
           className="mb-6 text-sm leading-relaxed mx-auto"
-          style={{ color: "rgba(248,244,236,0.55)", maxWidth: "44ch" }}
+          style={{ color: "rgba(var(--bg-rgb) /0.55)", maxWidth: "44ch" }}
         >
           We offer bulk pricing for parishes, Sunday schools,
           and church bookstores. Fill out a quick inquiry form and we'll be in touch.
@@ -54,7 +54,7 @@ export function Footer() {
             <Logo variant="light" className="mb-5" />
             <p
               className="text-sm leading-relaxed max-w-xs mb-6"
-              style={{ color: "rgba(248,244,236,0.5)" }}
+              style={{ color: "rgba(var(--bg-rgb) /0.5)" }}
             >
               Coptic Orthodox icon stickers, hand-designed for everyday faithful
               life.
@@ -65,7 +65,7 @@ export function Footer() {
               style={{
                 background: "rgba(255,255,255,0.06)",
                 border: "1px solid rgba(255,255,255,0.1)",
-                color: "rgba(248,244,236,0.55)",
+                color: "rgba(var(--bg-rgb) /0.55)",
               }}
             >
               <Lock size={11} style={{ color: "var(--gold)" }} />
@@ -73,7 +73,7 @@ export function Footer() {
             </div>
             <div
               className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg text-[10px] font-medium tracking-wide"
-              style={{ color: "rgba(248,244,236,0.35)" }}
+              style={{ color: "rgba(var(--bg-rgb) /0.35)" }}
             >
               VISA · MASTERCARD · AMEX · DISCOVER
             </div>
@@ -96,7 +96,7 @@ export function Footer() {
                   <Link
                     href={href}
                     className="text-sm transition-opacity hover:opacity-60"
-                    style={{ color: "rgba(248,244,236,0.65)" }}
+                    style={{ color: "rgba(var(--bg-rgb) /0.65)" }}
                   >
                     {label}
                   </Link>
@@ -122,7 +122,7 @@ export function Footer() {
                   <Link
                     href={href}
                     className="text-sm transition-opacity hover:opacity-60"
-                    style={{ color: "rgba(248,244,236,0.65)" }}
+                    style={{ color: "rgba(var(--bg-rgb) /0.65)" }}
                   >
                     {label}
                   </Link>
@@ -150,7 +150,7 @@ export function Footer() {
                   <Link
                     href={href}
                     className="text-sm transition-opacity hover:opacity-60"
-                    style={{ color: "rgba(248,244,236,0.65)" }}
+                    style={{ color: "rgba(var(--bg-rgb) /0.65)" }}
                   >
                     {label}
                   </Link>
@@ -165,7 +165,7 @@ export function Footer() {
           className="mt-16 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs"
           style={{
             borderTop: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(248,244,236,0.35)",
+            color: "rgba(var(--bg-rgb) /0.35)",
           }}
         >
           <p>© {new Date().getFullYear()} Desert Fathers Studio. All rights reserved.</p>

@@ -48,7 +48,7 @@ export function Nav() {
       <header
         className="fixed top-0 inset-x-0 z-50 transition-all duration-300"
         style={{
-          background: scrolled ? "rgba(248,244,236,0.96)" : "rgba(248,244,236,0.72)",
+          background: scrolled ? "rgba(var(--bg-rgb) / 0.96)" : "rgba(var(--bg-rgb) / 0.72)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           borderBottom: scrolled ? "1px solid var(--border)" : "1px solid transparent",
@@ -73,7 +73,7 @@ export function Nav() {
                 onClick={() => setShopDropdown((v) => !v)}
                 className="flex items-center gap-1 text-sm font-medium transition-opacity hover:opacity-55"
                 style={{ color: "var(--text)", background: "none", border: "none", cursor: "pointer" }}
-                aria-haspopup="true"
+                aria-haspopup="menu"
                 aria-expanded={shopDropdown}
               >
                 Shop
@@ -146,6 +146,22 @@ export function Nav() {
               aria-label={`Shopping cart, ${count} item${count !== 1 ? "s" : ""}`}
             >
               <ShoppingBag size={20} style={{ color: "var(--text)" }} />
+              {/* Persistent live region — announces count changes to screen readers */}
+              <span
+                aria-live="polite"
+                aria-atomic="true"
+                style={{
+                  position: "absolute",
+                  width: 1, height: 1,
+                  padding: 0, margin: -1,
+                  overflow: "hidden",
+                  clip: "rect(0,0,0,0)",
+                  whiteSpace: "nowrap",
+                  borderWidth: 0,
+                }}
+              >
+                {count > 0 ? `${count} item${count !== 1 ? "s" : ""} in cart` : "Cart is empty"}
+              </span>
               <AnimatePresence>
                 {count > 0 && (
                   <motion.span
@@ -163,8 +179,7 @@ export function Nav() {
                       lineHeight: 1,
                       padding: "0 3px",
                     }}
-                    aria-live="polite"
-                    aria-atomic="true"
+                    aria-hidden="true"
                   >
                     {count}
                   </motion.span>

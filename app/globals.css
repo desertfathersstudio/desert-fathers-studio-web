@@ -11,6 +11,7 @@
   --cream:          #EFE7D6;
 
   --bg:             #F8F4EC;
+  --bg-rgb:         248 244 236;
   --bg-card:        #f5f0e8;
   --bg-dark:        #1a0e05;
 
@@ -40,7 +41,7 @@
   --color-ink-muted:    var(--text-muted);
   --color-border:       var(--border);
   --font-serif:         var(--font-cormorant);
-  --font-sans:          var(--font-inter);
+  --font-sans:          "Cabinet Grotesk", var(--font-inter), system-ui, sans-serif;
 }
 
 /* ── Base ──────────────────────────────────────────────────────────── */
@@ -51,7 +52,7 @@ html { -webkit-font-smoothing: antialiased; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: "Cabinet Grotesk", var(--font-inter), system-ui, sans-serif;
   min-height: 100dvh;
 }
 

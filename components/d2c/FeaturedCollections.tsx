@@ -105,7 +105,7 @@ export function FeaturedCollections({
                   <div
                     className="relative overflow-hidden"
                     style={{
-                      background: "#fff",
+                      background: "white",
                       borderBottom: "1px solid var(--border)",
                     }}
                   >
