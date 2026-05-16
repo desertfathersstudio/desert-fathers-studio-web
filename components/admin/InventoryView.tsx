@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { AnimatePresence } from "framer-motion";
 import { Plus, Search, ArrowUpDown, Upload } from "lucide-react";
 import type { AdminStats, ProductWithInventory } from "@/lib/admin/types";
 import { StatCard } from "./StatCard";
@@ -371,18 +370,16 @@ export function InventoryView({
           onDeleted={handleProductDeleted}
         />
       )}
-      <AnimatePresence>
-        {detailProduct && (
-          <ProductDetailDrawer
-            product={detailProduct}
-            onClose={() => setDetailProduct(null)}
-            onEdit={() => {
-              setEditProduct(detailProduct);
-              setDetailProduct(null);
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {detailProduct && (
+        <ProductDetailDrawer
+          product={detailProduct}
+          onClose={() => setDetailProduct(null)}
+          onEdit={() => {
+            setEditProduct(detailProduct);
+            setDetailProduct(null);
+          }}
+        />
+      )}
     </div>
   );
 }

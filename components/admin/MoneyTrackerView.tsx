@@ -74,8 +74,9 @@ export function MoneyTrackerView({ mfgOrders, miscExpenses, salesOrders, wholesa
   const now = new Date();
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     return {
-      key: d.toISOString().slice(0, 7),
+      key,
       label: d.toLocaleString("default", { month: "short", year: "2-digit" }),
     };
   });

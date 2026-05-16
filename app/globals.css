@@ -260,6 +260,13 @@ h1, h2, h3, h4, [data-serif] {
   }
 }
 
+/* ── Prevent iOS auto-zoom on input focus (font-size < 16px triggers it) */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* ── Admin dashboard interactive polish ────────────────────────── */
 .admin-btn {
   transition: transform 120ms ease-out, opacity 120ms ease-out;
