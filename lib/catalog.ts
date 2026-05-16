@@ -17,6 +17,7 @@ export type CategoryKey =
   | "saints"
   | "prophets"
   | "scenes"
+  | "great-lent"
   | "holy-week"
   | "resurrection";
 
@@ -43,13 +44,14 @@ export const CATEGORY_LABELS: Record<Exclude<CategoryKey, "all" | "individuals">
   saints: "Saints",
   prophets: "Prophets & Patriarchs",
   scenes: "Scenes",
+  "great-lent": "Great Lent Pack",
   "holy-week": "Holy Week",
   resurrection: "Resurrection",
 };
 
 export const CATEGORY_ORDER: Exclude<CategoryKey, "all" | "individuals">[] = [
   "packs", "christ", "our-lady", "angels", "saints",
-  "prophets", "scenes", "holy-week", "resurrection",
+  "prophets", "scenes", "great-lent", "holy-week", "resurrection",
 ];
 
 export const CATALOG: Sticker[] = [

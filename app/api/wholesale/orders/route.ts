@@ -6,6 +6,7 @@ import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
 import { getSessionAccountId } from "@/lib/wholesale/validate-session";
 import { generateOrderPdf } from "@/lib/wholesale/generate-order-pdf";
 import type { WholesaleOrder, WholesaleOrderItem, OrderStage } from "@/types/wholesale";
+import { stickerCount } from "@/lib/wholesale/sticker-count";
 
 const ADMIN_EMAIL = "desertfathersstudio@gmail.com";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://desertfathersstudio.com";
@@ -24,6 +25,7 @@ function readLogoBase64(): string | null {
   return null;
 }
 const LOGO_B64 = readLogoBase64();
+
 
 async function nextOrderNumber(sb: ReturnType<typeof createSupabaseService>): Promise<string> {
   const { count } = await sb
@@ -447,7 +449,7 @@ async function sendAdminEmail(opts: {
     </table>
 
     <p style="margin:16px 0 0;font-size:12px;color:#7a8ea8;text-align:right">
-      ${items.reduce((s, i) => s + i.qty, 0)} total stickers &nbsp;·&nbsp; ${items.length} line item${items.length !== 1 ? "s" : ""}
+      ${stickerCount(items)} total stickers &nbsp;·&nbsp; ${items.length} line item${items.length !== 1 ? "s" : ""}
     </p>
 
   </div>

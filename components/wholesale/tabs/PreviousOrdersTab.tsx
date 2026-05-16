@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ORDER_STAGES } from "@/types/wholesale";
 import type { WholesaleOrder, OrderStage } from "@/types/wholesale";
+import { stickerCount } from "@/lib/wholesale/sticker-count";
 
 interface Props {
   accountId: string;
@@ -21,18 +22,6 @@ const STAGE_COLOR: Record<OrderStage, { bg: string; text: string; dot: string }>
   Delivered:  { bg: "#dcfce7", text: "#15803d", dot: "#22c55e" },
   Cancelled:  { bg: "#fee2e2", text: "#991b1b", dot: "#ef4444" },
 };
-
-function stickerCount(items: { productId: string; size: string; qty: number }[]): number {
-  return items.reduce((total, item) => {
-    const id = item.productId.toUpperCase();
-    if (id === "HWP_PACK") return total + item.qty * 23;
-    if (id === "RP_PACK")  return total + item.qty * 10;
-    if (id === "PK-3")     return total + item.qty * 6;
-    const setMatch = item.size?.match(/^Set of (\d+)$/i);
-    if (setMatch) return total + item.qty * parseInt(setMatch[1], 10);
-    return total + item.qty;
-  }, 0);
-}
 
 export function PreviousOrdersTab({ accountId, refreshKey }: Props) {
   const [orders, setOrders] = useState<WholesaleOrder[] | null>(null);

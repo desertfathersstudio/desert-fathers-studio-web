@@ -34,20 +34,24 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    // Fetch wholesale_price for generic PK-# packs (PK-3+) from sticker_packs
-    // and apply any per-account packPrices override
-    const genericPackSkus = (data ?? [])
+    // Fetch pack metadata (wholesale_price + pack_size) for all PK-# products
+    // from sticker_packs. pack_size is used to set "Set of N" on cart lines so
+    // sticker counting works automatically for any new pack without code changes.
+    const allPackSkus = (data ?? [])
       .map((r) => String(r.sku ?? "").toUpperCase())
-      .filter((s) => /^PK-\d+$/.test(s) && s !== "PK-1" && s !== "PK-2");
+      .filter((s) => /^PK-\d+$/.test(s));
 
     const packWholesalePrices: Record<string, number> = {};
-    if (genericPackSkus.length > 0) {
+    const packSizes: Record<string, number> = {};
+    if (allPackSkus.length > 0) {
       const { data: packMeta } = await sb
         .from("sticker_packs")
-        .select("sku, wholesale_price")
-        .in("sku", genericPackSkus);
+        .select("sku, wholesale_price, pack_size")
+        .in("sku", allPackSkus);
       for (const pm of packMeta ?? []) {
-        packWholesalePrices[String(pm.sku).toUpperCase()] = Number(pm.wholesale_price ?? 0);
+        const s = String(pm.sku).toUpperCase();
+        if (pm.wholesale_price != null) packWholesalePrices[s] = Number(pm.wholesale_price);
+        if (pm.pack_size       != null) packSizes[s]           = Number(pm.pack_size);
       }
     }
     const accountConfig = getServerAccountByAccountId(accountId);
@@ -86,11 +90,14 @@ export async function GET(req: NextRequest) {
       const dateAdded = row.created_at as string;
       const isNew = new Date(dateAdded).getTime() > NEW_BADGE_CUTOFF;
 
-      // For generic PK-# packs (not RP or HWP), embed the effective wholesale price
-      const isGenericPack = isPackProduct && !packType && /^PK-\d+$/.test(skuUp);
+      // For PK-# packs, embed wholesale price (account override → DB price)
+      // and pack_size so the cart can set "Set of N" automatically.
+      const isDbPack = isPackProduct && /^PK-\d+$/.test(skuUp);
+      const isGenericPack = isDbPack && !packType; // PK-3+ (not RP/HWP)
       const wholesalePrice = isGenericPack
         ? (accountPackPrices[skuUp] ?? packWholesalePrices[skuUp])
         : undefined;
+      const packSize = isDbPack ? packSizes[skuUp] : undefined;
 
       return [{
         id: String(row.id),
@@ -110,6 +117,7 @@ export async function GET(req: NextRequest) {
         categoryText: categoryTextColor(category),
         isNew,
         ...(wholesalePrice !== undefined ? { wholesalePrice } : {}),
+        ...(packSize       !== undefined ? { packSize }       : {}),
       }];
     });
 

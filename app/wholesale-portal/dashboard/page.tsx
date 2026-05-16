@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { SESSION_KEY, CART_KEY_PREFIX } from "@/types/wholesale";
 import type { WholesaleProduct, WholesaleCartLine, WholesaleSession } from "@/types/wholesale";
+import { stickerCount } from "@/lib/wholesale/sticker-count";
 import { WholesaleHeader } from "@/components/wholesale/WholesaleHeader";
 import { CatalogTab } from "@/components/wholesale/tabs/CatalogTab";
 import { PendingTab } from "@/components/wholesale/tabs/PendingTab";
@@ -28,15 +29,6 @@ function saveCart(accountId: string, cart: WholesaleCartLine[]) {
   } catch {}
 }
 
-function cartStickerQty(line: { productId: string; size: string; qty: number }): number {
-  const id = line.productId.toUpperCase();
-  if (id === "HWP_PACK") return line.qty * 23;
-  if (id === "RP_PACK")  return line.qty * 10;
-  if (id === "PK-3")     return line.qty * 6;
-  const setMatch = line.size?.match(/^Set of (\d+)$/i);
-  if (setMatch) return line.qty * parseInt(setMatch[1], 10);
-  return line.qty;
-}
 
 export default function WholesaleDashboard() {
   const router = useRouter();
@@ -157,7 +149,7 @@ export default function WholesaleDashboard() {
     setActiveTab("orders");
   }, [setCart]);
 
-  const cartCount = cart.reduce((sum, l) => sum + cartStickerQty(l), 0);
+  const cartCount = stickerCount(cart);
 
   if (!session) {
     return (

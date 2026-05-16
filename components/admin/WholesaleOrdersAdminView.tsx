@@ -13,18 +13,7 @@ import {
   adminDeleteWholesaleOrder,
   adminApplyDiscount,
 } from "@/app/admin/wholesale/actions";
-
-function stickerCount(items: { productId: string; size: string; qty: number }[]): number {
-  return items.reduce((total, item) => {
-    const id = item.productId.toUpperCase();
-    if (id === "HWP_PACK") return total + item.qty * 23;
-    if (id === "RP_PACK")  return total + item.qty * 10;
-    if (id === "PK-3")     return total + item.qty * 6;
-    const setMatch = item.size?.match(/^Set of (\d+)$/i);
-    if (setMatch) return total + item.qty * parseInt(setMatch[1], 10);
-    return total + item.qty;
-  }, 0);
-}
+import { stickerCount } from "@/lib/wholesale/sticker-count";
 
 const PORTAL_CONFIG: Record<string, { label: string; short: string; color: string; bg: string; border: string; badge: string; badgeText: string }> = {
   abbey: {

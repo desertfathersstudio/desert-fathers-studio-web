@@ -7,6 +7,7 @@ import type { WholesaleProduct, WholesaleCartLine } from "@/types/wholesale";
 import { unitPriceForSku } from "@/lib/wholesale/pricing";
 import { stickerImageUrl } from "@/lib/catalog";
 import { getAccountById } from "@/config/wholesale-accounts";
+import { stickerCount } from "@/lib/wholesale/sticker-count";
 
 const QTY_OPTIONS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
@@ -176,7 +177,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
       productId: p.sku,
       designName: p.name,
       category: p.isPackProduct ? "Pack" : p.category,
-      size: p.size,
+      size: p.isPackProduct && p.packSize ? `Set of ${p.packSize}` : p.size,
       imageUrl: p.imageUrl,
       qty,
       unitPrice: p.isPackProduct ? (p.wholesalePrice ?? 0) : priceSingle,
@@ -201,7 +202,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
         productId: p.sku,
         designName: p.name,
         category: p.isPackProduct ? "Pack" : p.category,
-        size: p.size,
+        size: p.isPackProduct && p.packSize ? `Set of ${p.packSize}` : p.size,
         imageUrl: p.imageUrl,
         qty: bulkQty,
         unitPrice: p.isPackProduct ? (p.wholesalePrice ?? 0) : priceSingle,
@@ -253,17 +254,7 @@ export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitt
 
   const grandTotal = cart.reduce((s, l) => s + l.unitPrice * l.qty, 0);
 
-  function cartStickerQty(line: { productId: string; size: string; qty: number }): number {
-    const id = line.productId.toUpperCase();
-    if (id === "HWP_PACK") return line.qty * 23;
-    if (id === "RP_PACK")  return line.qty * 10;
-    if (id === "PK-3")     return line.qty * 6;
-    const setMatch = line.size?.match(/^Set of (\d+)$/i);
-    if (setMatch) return line.qty * parseInt(setMatch[1], 10);
-    return line.qty;
-  }
-
-  const cartCount = cart.reduce((s, l) => s + cartStickerQty(l), 0);
+  const cartCount = cart.reduce((s, l) => s + stickerCount([l]), 0);
   const isPackLine = (l: { productId: string }) =>
     l.productId === "HWP_PACK" || l.productId === "RP_PACK" || /^PK-\d+$/i.test(l.productId);
   const hasPackInCart = cart.some(isPackLine);

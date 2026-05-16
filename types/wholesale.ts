@@ -19,6 +19,8 @@ export interface WholesaleProduct {
   isNew: boolean;
   /** Pre-computed wholesale price for generic pack products (PK-3+). Undefined for regular stickers and RP/HWP packs. */
   wholesalePrice?: number;
+  /** Number of constituent stickers in this pack. Set for all PK-N products; used to populate size as "Set of N" in cart lines. */
+  packSize?: number;
 }
 
 export interface WholesaleCartLine {
