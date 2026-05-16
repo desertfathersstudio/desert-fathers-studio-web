@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ChevronDown, ChevronUp, Truck, CheckCircle2, Package, XCircle, Trash2, ExternalLink, Save } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
@@ -220,14 +221,24 @@ export function OrdersView({
                     <p style={{ margin: 0, fontSize: "0.72rem", color: "#9a7080" }}>{order.total_qty ?? "?"} units</p>
                   </div>
 
-                  <div style={{ color: "#9a7080" }}>
-                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </div>
+                  <motion.div
+                    style={{ color: "#9a7080" }}
+                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                    transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                  >
+                    <ChevronDown size={16} />
+                  </motion.div>
                 </div>
 
                 {/* Expanded content */}
+                <AnimatePresence initial={false}>
                 {isExpanded && (
-                  <div style={{ borderTop: "1px solid #f0e8e0", padding: "0.875rem 1rem" }}>
+                  <motion.div
+                    style={{ borderTop: "1px solid #f0e8e0", padding: "0.875rem 1rem" }}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] } }}
+                    exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                  >
 
                     {/* Items */}
                     {(order.mfg_order_items ?? []).length > 0 && (
@@ -406,8 +417,9 @@ export function OrdersView({
                         Delete
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
             );
           })}

@@ -1,6 +1,7 @@
 "use client";
 
 import { X, Edit2, ExternalLink, Package } from "lucide-react";
+import { motion } from "framer-motion";
 import type { ProductWithInventory } from "@/lib/admin/types";
 import { InventoryBadge, ReviewBadge, IncomingBadge } from "./StatusBadge";
 import { withVersion } from "@/lib/image-version";
@@ -31,7 +32,7 @@ export function ProductDetailDrawer({
   return (
     <>
       {/* Backdrop */}
-      <div
+      <motion.div
         style={{
           position: "fixed",
           inset: 0,
@@ -39,10 +40,13 @@ export function ProductDetailDrawer({
           background: "rgba(0,0,0,0.35)",
         }}
         onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1, transition: { duration: 0.2 } }}
+        exit={{ opacity: 0, transition: { duration: 0.18 } }}
       />
 
       {/* Drawer */}
-      <div
+      <motion.div
         style={{
           position: "fixed",
           top: 0,
@@ -56,6 +60,9 @@ export function ProductDetailDrawer({
           flexDirection: "column",
           overflowY: "auto",
         }}
+        initial={{ x: "100%" }}
+        animate={{ x: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+        exit={{ x: "100%", transition: { duration: 0.22, ease: [0.32, 0.72, 0, 1] } }}
       >
         {/* Header */}
         <div
@@ -234,7 +241,7 @@ export function ProductDetailDrawer({
             Added {new Date(product.created_at).toLocaleDateString()}
           </p>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 }
