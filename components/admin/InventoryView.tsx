@@ -163,6 +163,7 @@ export function InventoryView({
             placeholder="Search designs, SKU, category…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="admin-input"
             style={{
               width: "100%",
               boxSizing: "border-box",
@@ -177,6 +178,7 @@ export function InventoryView({
               fontFamily: "Inter, system-ui, sans-serif",
               color: "#2a1a0e",
               outline: "none",
+              transition: "border-color 0.15s, box-shadow 0.15s",
             }}
           />
         </div>
@@ -187,6 +189,7 @@ export function InventoryView({
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
+              className="admin-pill"
               style={{
                 padding: "6px 12px",
                 borderRadius: 20,
@@ -198,7 +201,6 @@ export function InventoryView({
                 fontWeight: filter === f.id ? 600 : 400,
                 cursor: "pointer",
                 fontFamily: "Inter, system-ui, sans-serif",
-                transition: "all 0.12s",
               }}
             >
               {f.label}
@@ -231,6 +233,7 @@ export function InventoryView({
         {/* Replace Images button */}
         <button
           onClick={() => setBatchReplaceOpen(true)}
+          className="admin-btn"
           style={{
             display: "flex",
             alignItems: "center",
@@ -254,6 +257,7 @@ export function InventoryView({
         {/* Add Pack button */}
         <button
           onClick={() => setAddPackOpen(true)}
+          className="admin-btn"
           style={{
             display: "flex",
             alignItems: "center",
@@ -277,6 +281,7 @@ export function InventoryView({
         {/* Add Design button */}
         <button
           onClick={() => setAddOpen(true)}
+          className="admin-btn"
           style={{
             display: "flex",
             alignItems: "center",

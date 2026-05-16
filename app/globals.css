@@ -259,3 +259,33 @@ h1, h2, h3, h4, [data-serif] {
     overflow-y: visible !important;
   }
 }
+
+/* ── Admin dashboard interactive polish ────────────────────────── */
+.admin-btn {
+  transition: transform 120ms ease-out, opacity 120ms ease-out;
+}
+.admin-btn:active {
+  transform: scale(0.96);
+}
+
+/* Focus ring for admin inputs */
+.admin-input:focus {
+  outline: none;
+  border-color: #6b1d3b !important;
+  box-shadow: 0 0 0 3px rgba(107, 29, 59, 0.12);
+}
+
+/* Filter pill press feedback */
+.admin-pill {
+  transition: transform 100ms ease-out, background 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+}
+.admin-pill:active {
+  transform: scale(0.96);
+}
+
+/* Bottom tab active press */
+@media (hover: none) {
+  .admin-tab:active {
+    opacity: 0.7;
+  }
+}

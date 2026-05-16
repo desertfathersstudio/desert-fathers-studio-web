@@ -1,3 +1,5 @@
+"use client";
+
 import type { ProductWithInventory } from "@/lib/admin/types";
 import { InventoryBadge, ReviewBadge, IncomingBadge } from "./StatusBadge";
 import { withVersion } from "@/lib/image-version";
@@ -18,6 +20,7 @@ export function InventoryCard({
 
   return (
     <div
+      onClick={onDetail}
       style={{
         background: "#fff",
         border: "1px solid #e8ddd5",
@@ -27,6 +30,16 @@ export function InventoryCard({
         gap: "0.875rem",
         alignItems: "flex-start",
         fontFamily: "Inter, system-ui, sans-serif",
+        cursor: "pointer",
+        transition: "box-shadow 0.15s ease, border-color 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(107,29,59,0.10)";
+        (e.currentTarget as HTMLElement).style.borderColor = "#d4a8b8";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = "none";
+        (e.currentTarget as HTMLElement).style.borderColor = "#e8ddd5";
       }}
     >
       {/* Thumbnail */}
@@ -92,13 +105,13 @@ export function InventoryCard({
       {/* Actions */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
         <button
-          onClick={onDetail}
+          onClick={(e) => { e.stopPropagation(); onDetail(); }}
           style={btnStyle("ghost")}
         >
           Details
         </button>
         <button
-          onClick={onEdit}
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
           style={btnStyle("outline")}
         >
           Edit
@@ -120,5 +133,6 @@ function btnStyle(variant: "ghost" | "outline"): React.CSSProperties {
     cursor: "pointer",
     fontFamily: "Inter, system-ui, sans-serif",
     whiteSpace: "nowrap" as const,
+    transition: "transform 120ms ease-out, opacity 120ms ease-out",
   };
 }

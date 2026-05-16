@@ -17,6 +17,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Toaster } from "sonner";
 import { PasskeySetup } from "./PasskeySetup";
@@ -310,7 +311,8 @@ export function AdminShell({
               border: "none",
               color: C.inactiveText,
               cursor: "pointer",
-              padding: 4,
+              padding: 8,
+              margin: -4,
             }}
             aria-label="Open menu"
           >
@@ -333,93 +335,101 @@ export function AdminShell({
       </div>
 
       {/* ── Mobile: slide-in full menu ───────────────────────────────── */}
-      {mobileMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-50"
-            style={{ background: "rgba(0,0,0,0.5)" }}
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <div
-            className="fixed right-0 top-0 bottom-0 z-50 flex flex-col"
-            style={{
-              width: 240,
-              background: C.sidebarBg,
-              borderLeft: `1px solid ${C.sidebarBorder}`,
-            }}
-          >
-            <div
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-50"
+              style={{ background: "rgba(0,0,0,0.5)" }}
+              onClick={() => setMobileMenuOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { duration: 0.2 } }}
+              exit={{ opacity: 0, transition: { duration: 0.18 } }}
+            />
+            <motion.div
+              className="fixed right-0 top-0 bottom-0 z-50 flex flex-col"
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "1rem",
-                borderBottom: `1px solid ${C.sidebarBorder}`,
+                width: 240,
+                background: C.sidebarBg,
+                borderLeft: `1px solid ${C.sidebarBorder}`,
               }}
+              initial={{ x: "100%" }}
+              animate={{ x: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+              exit={{ x: "100%", transition: { duration: 0.22, ease: [0.32, 0.72, 0, 1] } }}
             >
-              <span style={{ color: "#f5f0ea", fontWeight: 700, fontSize: "0.9rem" }}>
-                Menu
-              </span>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ background: "none", border: "none", color: C.inactiveText, cursor: "pointer" }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <nav style={{ flex: 1, padding: "0.75rem 0.5rem", overflowY: "auto" }}>
-              {NAV.map(({ href, label, icon: Icon }) => {
-                const active = isActive(href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.625rem",
-                      padding: "0.65rem 0.75rem",
-                      borderRadius: 8,
-                      marginBottom: 2,
-                      color: active ? C.activeText : C.inactiveText,
-                      background: active ? C.activeBg : "transparent",
-                      fontWeight: active ? 600 : 400,
-                      fontSize: "0.9rem",
-                      textDecoration: "none",
-                    }}
-                  >
-                    <Icon size={17} strokeWidth={active ? 2.2 : 1.8} />
-                    {label}
-                  </Link>
-                );
-              })}
-            </nav>
-            <div style={{ padding: "0.75rem 0.5rem", borderTop: `1px solid ${C.sidebarBorder}` }}>
-              <button
-                onClick={handleLogout}
+              <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.625rem",
-                  width: "100%",
-                  padding: "0.65rem 0.75rem",
-                  borderRadius: 8,
-                  color: "#f87171",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "0.9rem",
-                  fontFamily: "inherit",
+                  justifyContent: "space-between",
+                  padding: "1rem",
+                  borderBottom: `1px solid ${C.sidebarBorder}`,
                 }}
               >
-                <LogOut size={17} strokeWidth={1.8} />
-                Sign out
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+                <span style={{ color: "#f5f0ea", fontWeight: 700, fontSize: "0.9rem" }}>
+                  Menu
+                </span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ background: "none", border: "none", color: C.inactiveText, cursor: "pointer", padding: 6 }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <nav style={{ flex: 1, padding: "0.75rem 0.5rem", overflowY: "auto" }}>
+                {NAV.map(({ href, label, icon: Icon }) => {
+                  const active = isActive(href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.625rem",
+                        padding: "0.65rem 0.75rem",
+                        borderRadius: 8,
+                        marginBottom: 2,
+                        color: active ? C.activeText : C.inactiveText,
+                        background: active ? C.activeBg : "transparent",
+                        fontWeight: active ? 600 : 400,
+                        fontSize: "0.9rem",
+                        textDecoration: "none",
+                      }}
+                    >
+                      <Icon size={17} strokeWidth={active ? 2.2 : 1.8} />
+                      {label}
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div style={{ padding: "0.75rem 0.5rem", borderTop: `1px solid ${C.sidebarBorder}` }}>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.625rem",
+                    width: "100%",
+                    padding: "0.65rem 0.75rem",
+                    borderRadius: 8,
+                    color: "#f87171",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "0.9rem",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  <LogOut size={17} strokeWidth={1.8} />
+                  Sign out
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Passkey setup prompt ─────────────────────────────────────── */}
       {showPasskeySetup && (
@@ -448,6 +458,7 @@ export function AdminShell({
             <Link
               key={href}
               href={href}
+              className="admin-tab"
               style={{
                 flex: 1,
                 height: 58,
@@ -458,6 +469,7 @@ export function AdminShell({
                 gap: 3,
                 textDecoration: "none",
                 color: active ? "#d4849c" : C.inactiveText,
+                transition: "color 0.12s",
               }}
             >
               <Icon size={20} strokeWidth={active ? 2.2 : 1.8} />
@@ -470,6 +482,7 @@ export function AdminShell({
         {/* More → opens slide menu */}
         <button
           onClick={() => setMobileMenuOpen(true)}
+          className="admin-tab"
           style={{
             flex: 1,
             height: 58,
@@ -483,6 +496,7 @@ export function AdminShell({
             color: C.inactiveText,
             cursor: "pointer",
             fontFamily: "inherit",
+            transition: "color 0.12s",
           }}
         >
           <Menu size={20} strokeWidth={1.8} />
