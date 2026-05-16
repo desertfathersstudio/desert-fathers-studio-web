@@ -128,17 +128,15 @@ export function MoneyTrackerView({ mfgOrders, miscExpenses, salesOrders, wholesa
                   <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 120 }}>
                     <div
                       title={`Spent $${(m.printing + m.misc).toFixed(2)}`}
-                      style={{ width: "100%", maxWidth: 18, height: Math.max(spendH, 2), background: "#e57373", borderRadius: "3px 3px 0 0" }}
+                      style={{ width: 14, flexShrink: 0, height: Math.max(spendH, 2), background: "#e57373", borderRadius: "3px 3px 0 0" }}
                     />
-                    {m.totalRevenue > 0 && (
-                      <div
-                        title={`Revenue $${m.totalRevenue.toFixed(2)} (D2C $${m.sales.toFixed(2)} + WS $${m.wholesale.toFixed(2)})`}
-                        style={{ width: "100%", maxWidth: 18, height: Math.max(revH, 2), borderRadius: "3px 3px 0 0", overflow: "hidden", display: "flex", flexDirection: "column" }}
-                      >
-                        <div style={{ height: `${wsRatio}%`, background: "#38bdf8", flexShrink: 0 }} />
-                        <div style={{ height: `${d2cRatio}%`, background: "#66bb6a", flexShrink: 0 }} />
-                      </div>
-                    )}
+                    <div
+                      title={m.totalRevenue > 0 ? `Revenue $${m.totalRevenue.toFixed(2)} (D2C $${m.sales.toFixed(2)} + WS $${m.wholesale.toFixed(2)})` : "No revenue"}
+                      style={{ width: 14, flexShrink: 0, height: Math.max(revH, 2), borderRadius: "3px 3px 0 0", overflow: "hidden", display: "flex", flexDirection: "column", opacity: m.totalRevenue > 0 ? 1 : 0.15 }}
+                    >
+                      <div style={{ height: `${wsRatio}%`, background: "#38bdf8", flexShrink: 0 }} />
+                      <div style={{ flex: 1, background: "#66bb6a" }} />
+                    </div>
                   </div>
                   <p style={{ margin: 0, fontSize: "0.62rem", color: "#9a7080", textAlign: "center" }}>{m.label}</p>
                 </div>

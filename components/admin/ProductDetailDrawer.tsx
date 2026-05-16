@@ -68,7 +68,10 @@ export function ProductDetailDrawer({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "0.875rem 1.125rem",
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.875rem)",
+            paddingBottom: "0.875rem",
+            paddingLeft: "1.125rem",
+            paddingRight: "1.125rem",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
