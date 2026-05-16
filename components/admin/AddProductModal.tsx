@@ -281,7 +281,7 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+    <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
       {children}
     </label>
   );
@@ -312,7 +312,6 @@ const modalTitle: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
   color: "#2a1a0e",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const footerStyle: React.CSSProperties = {
@@ -339,7 +338,6 @@ const inputStyle: React.CSSProperties = {
   border: "1px solid #e8ddd5",
   borderRadius: 7,
   fontSize: "0.85rem",
-  fontFamily: "Inter, system-ui, sans-serif",
   color: "#2a1a0e",
   background: "#fff",
   outline: "none",
@@ -370,7 +368,6 @@ const primaryBtn: React.CSSProperties = {
   fontSize: "0.82rem",
   fontWeight: 600,
   cursor: "pointer",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const outlineBtn: React.CSSProperties = {
@@ -385,5 +382,4 @@ const outlineBtn: React.CSSProperties = {
   fontSize: "0.82rem",
   fontWeight: 500,
   cursor: "pointer",
-  fontFamily: "Inter, system-ui, sans-serif",
 };

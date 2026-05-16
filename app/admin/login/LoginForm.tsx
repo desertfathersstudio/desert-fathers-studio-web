@@ -13,7 +13,6 @@ const inputStyle: React.CSSProperties = {
   padding: "0.65rem 0.875rem",
   color: "#f5f0ea",
   fontSize: "0.9rem",
-  fontFamily: "Inter, system-ui, sans-serif",
   outline: "none",
 };
 
@@ -25,7 +24,6 @@ const labelStyle: React.CSSProperties = {
   marginBottom: "0.375rem",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 export function LoginForm() {
@@ -90,7 +88,6 @@ export function LoginForm() {
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <h2
         style={{
-          fontFamily: "Inter, system-ui, sans-serif",
           fontWeight: 600,
           fontSize: "0.95rem",
           color: "#f5f0ea",
@@ -139,7 +136,6 @@ export function LoginForm() {
           style={{
             color: "#f87171",
             fontSize: "0.8rem",
-            fontFamily: "Inter, system-ui, sans-serif",
             margin: 0,
           }}
         >
@@ -156,7 +152,6 @@ export function LoginForm() {
           border: "none",
           borderRadius: 8,
           padding: "0.75rem",
-          fontFamily: "Inter, system-ui, sans-serif",
           fontWeight: 600,
           fontSize: "0.9rem",
           cursor: loading ? "not-allowed" : "pointer",
@@ -169,7 +164,7 @@ export function LoginForm() {
       {/* Passkey / Face ID sign-in */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", margin: "0.25rem 0" }}>
         <div style={{ flex: 1, height: 1, background: "#2d1320" }} />
-        <span style={{ fontSize: "0.72rem", color: "#8a6070", fontFamily: "Inter, system-ui, sans-serif" }}>or</span>
+        <span style={{ fontSize: "0.72rem", color: "#8a6070" }}>or</span>
         <div style={{ flex: 1, height: 1, background: "#2d1320" }} />
       </div>
 
@@ -187,7 +182,6 @@ export function LoginForm() {
           border: "1px solid #2d1320",
           borderRadius: 8,
           padding: "0.7rem",
-          fontFamily: "Inter, system-ui, sans-serif",
           fontWeight: 500,
           fontSize: "0.88rem",
           cursor: passkeyLoading ? "not-allowed" : "pointer",

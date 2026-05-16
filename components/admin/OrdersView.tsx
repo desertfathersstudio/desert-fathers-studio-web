@@ -131,7 +131,7 @@ export function OrdersView({
     .reduce((s, o) => s + (o.total_cost ?? 0), 0);
 
   return (
-    <div style={{ padding: "1.25rem", maxWidth: 900, margin: "0 auto", fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ padding: "1.25rem", maxWidth: 900, margin: "0 auto" }}>
 
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "0.75rem", marginBottom: "1.25rem" }}>
@@ -433,5 +433,4 @@ const sectionLabel: React.CSSProperties = {
   color: "#6b4050",
   textTransform: "uppercase",
   letterSpacing: "0.07em",
-  fontFamily: "Inter, system-ui, sans-serif",
 };

@@ -29,7 +29,6 @@ export function InventoryCard({
         display: "flex",
         gap: "0.875rem",
         alignItems: "flex-start",
-        fontFamily: "Inter, system-ui, sans-serif",
         cursor: "pointer",
         transition: "box-shadow 0.15s ease, border-color 0.15s ease",
       }}
@@ -73,7 +72,7 @@ export function InventoryCard({
           style={{
             margin: "0 0 2px",
             fontWeight: 600,
-            fontSize: "0.85rem",
+            fontSize: "0.875rem",
             color: "#2a1a0e",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -131,7 +130,6 @@ function btnStyle(variant: "ghost" | "outline"): React.CSSProperties {
     fontSize: "0.75rem",
     fontWeight: 600,
     cursor: "pointer",
-    fontFamily: "Inter, system-ui, sans-serif",
     whiteSpace: "nowrap" as const,
     transition: "transform 120ms ease-out, opacity 120ms ease-out",
   };

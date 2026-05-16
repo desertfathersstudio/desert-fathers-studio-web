@@ -30,9 +30,9 @@ interface MoneyTrackerProps {
 function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
   return (
     <div style={{ background: "#fff", border: "1px solid #e8ddd5", borderRadius: 12, padding: "1rem 1.125rem" }}>
-      <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 600, color: "#9a7080", textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "Inter, system-ui, sans-serif" }}>{label}</p>
-      <p style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: accent ?? "#2a1a0e", letterSpacing: "-0.03em", lineHeight: 1, fontFamily: "Inter, system-ui, sans-serif" }}>{value}</p>
-      {sub && <p style={{ margin: "4px 0 0", fontSize: "0.72rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>{sub}</p>}
+      <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 600, color: "#9a7080", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</p>
+      <p style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, color: accent ?? "#2a1a0e", letterSpacing: "-0.03em", lineHeight: 1 }}>{value}</p>
+      {sub && <p style={{ margin: "4px 0 0", fontSize: "0.72rem", color: "#9a7080" }}>{sub}</p>}
     </div>
   );
 }
@@ -40,7 +40,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: "1.5rem" }}>
-      <h2 style={{ margin: "0 0 0.75rem", fontSize: "0.78rem", fontWeight: 700, color: "#6b4050", textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "Inter, system-ui, sans-serif" }}>{title}</h2>
+      <h2 style={{ margin: "0 0 0.75rem", fontSize: "0.78rem", fontWeight: 700, color: "#6b4050", textTransform: "uppercase", letterSpacing: "0.08em" }}>{title}</h2>
       {children}
     </div>
   );
@@ -100,7 +100,7 @@ export function MoneyTrackerView({ mfgOrders, miscExpenses, salesOrders, wholesa
   const maxMonthVal = Math.max(...monthlyData.map((m) => Math.max(m.printing + m.misc, m.totalRevenue)), 1);
 
   return (
-    <div style={{ padding: "1.25rem", maxWidth: 900, margin: "0 auto", fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ padding: "1.25rem", maxWidth: 900, margin: "0 auto" }}>
 
       {/* Top stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "0.75rem", marginBottom: "1.75rem" }}>

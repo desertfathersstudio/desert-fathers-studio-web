@@ -62,7 +62,6 @@ function Badge({
         padding: "2px 8px",
         fontSize: "0.72rem",
         fontWeight: 600,
-        fontFamily: "Inter, system-ui, sans-serif",
         whiteSpace: "nowrap",
       }}
     >

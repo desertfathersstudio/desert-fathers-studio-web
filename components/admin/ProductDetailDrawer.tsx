@@ -54,7 +54,6 @@ export function ProductDetailDrawer({
           boxShadow: "-8px 0 32px rgba(0,0,0,0.18)",
           display: "flex",
           flexDirection: "column",
-          fontFamily: "Inter, system-ui, sans-serif",
           overflowY: "auto",
         }}
       >
@@ -243,7 +242,7 @@ export function ProductDetailDrawer({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ margin: "0 0 0.625rem", fontSize: "0.7rem", fontWeight: 700, color: "#6b4050", textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <p style={{ margin: "0 0 0.625rem", fontSize: "0.7rem", fontWeight: 700, color: "#6b4050", textTransform: "uppercase", letterSpacing: "0.07em" }}>
         {title}
       </p>
       {children}
@@ -254,10 +253,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Metric({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div>
-      <p style={{ margin: "0 0 2px", fontSize: "0.68rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <p style={{ margin: "0 0 2px", fontSize: "0.68rem", color: "#9a7080" }}>
         {label}
       </p>
-      <p style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: accent ?? "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif", letterSpacing: "-0.02em" }}>
+      <p style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: accent ?? "#2a1a0e", letterSpacing: "-0.02em" }}>
         {value}
       </p>
     </div>

@@ -229,10 +229,10 @@ export function EditProductModal({
             }}
           >
             <div>
-              <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 600, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 600, color: "#2a1a0e" }}>
                 Coming Soon
               </p>
-              <p style={{ margin: "2px 0 0", fontSize: "0.68rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <p style={{ margin: "2px 0 0", fontSize: "0.68rem", color: "#9a7080" }}>
                 {comingSoon
                   ? "Hidden from shop — shown in Coming Soon tab. Turning off will notify subscribers."
                   : "Product is visible in the shop."}
@@ -283,10 +283,10 @@ export function EditProductModal({
             }}
           >
             <div>
-              <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 600, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 600, color: "#2a1a0e" }}>
                 Featured (Bestseller)
               </p>
-              <p style={{ margin: "2px 0 0", fontSize: "0.68rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <p style={{ margin: "2px 0 0", fontSize: "0.68rem", color: "#9a7080" }}>
                 {featured
                   ? "Shown in the Bestsellers section on the homepage."
                   : "Not shown in the Bestsellers section."}
@@ -370,7 +370,7 @@ export function EditProductModal({
           </div>
 
           {/* Derived status preview */}
-          <p style={{ fontSize: "0.75rem", color: "#9a7080", margin: 0, fontFamily: "Inter, system-ui, sans-serif" }}>
+          <p style={{ fontSize: "0.75rem", color: "#9a7080", margin: 0 }}>
             Status will be:{" "}
             <strong style={{ color: onHand === 0 ? "#dc2626" : onHand <= threshold ? "#a16207" : "#16a34a" }}>
               {onHand === 0 ? "Sold Out" : onHand <= threshold ? "Low" : "In Stock"}
@@ -383,7 +383,7 @@ export function EditProductModal({
           {confirmDelete ? (
             <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", flex: 1 }}>
               <AlertTriangle size={14} color="#dc2626" />
-              <span style={{ fontSize: "0.8rem", color: "#dc2626", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <span style={{ fontSize: "0.8rem", color: "#dc2626" }}>
                 Archive this design?
               </span>
               <button onClick={handleDelete} disabled={isPending} style={{ ...primaryBtn, background: "#dc2626", marginLeft: 4 }}>
@@ -438,7 +438,7 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+    <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
       {children}
     </label>
   );
@@ -471,14 +471,12 @@ const modalTitle: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
   color: "#2a1a0e",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const modalSub: React.CSSProperties = {
   margin: "2px 0 0",
   fontSize: "0.75rem",
   color: "#9a7080",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const footerStyle: React.CSSProperties = {
@@ -505,7 +503,6 @@ const inputStyle: React.CSSProperties = {
   border: "1px solid #e8ddd5",
   borderRadius: 7,
   fontSize: "0.85rem",
-  fontFamily: "Inter, system-ui, sans-serif",
   color: "#2a1a0e",
   background: "#fff",
   outline: "none",
@@ -536,7 +533,6 @@ const primaryBtn: React.CSSProperties = {
   fontSize: "0.82rem",
   fontWeight: 600,
   cursor: "pointer",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const outlineBtn: React.CSSProperties = {
@@ -551,5 +547,4 @@ const outlineBtn: React.CSSProperties = {
   fontSize: "0.82rem",
   fontWeight: 500,
   cursor: "pointer",
-  fontFamily: "Inter, system-ui, sans-serif",
 };

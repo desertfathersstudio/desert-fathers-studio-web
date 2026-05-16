@@ -336,7 +336,6 @@ export function NewOrderModal({
                       fontSize: "0.72rem",
                       fontWeight: active ? 700 : 400,
                       cursor: "pointer",
-                      fontFamily: "Inter, system-ui, sans-serif",
                       whiteSpace: "nowrap",
                       transition: "color 120ms",
                     }}
@@ -355,7 +354,7 @@ export function NewOrderModal({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search designs…"
-                  style={{ flex: 1, border: "none", outline: "none", fontSize: "0.82rem", background: "transparent", color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif" }}
+                  style={{ flex: 1, border: "none", outline: "none", fontSize: "0.82rem", background: "transparent", color: "#2a1a0e" }}
                 />
                 {search && (
                   <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#9a7080", padding: 0, fontSize: "0.78rem" }}>✕</button>
@@ -378,7 +377,7 @@ export function NewOrderModal({
                       });
                     }
                   }}
-                  style={{ background: "none", border: "1px solid #e8ddd5", borderRadius: 5, cursor: "pointer", color: "#6b1d3b", padding: "2px 8px", fontSize: "0.72rem", fontWeight: 600, whiteSpace: "nowrap", fontFamily: "Inter, system-ui, sans-serif" }}
+                  style={{ background: "none", border: "1px solid #e8ddd5", borderRadius: 5, cursor: "pointer", color: "#6b1d3b", padding: "2px 8px", fontSize: "0.72rem", fontWeight: 600, whiteSpace: "nowrap" }}
                 >
                   {filteredProducts.length > 0 && filteredProducts.every((p) => !!selected[p.id]) ? "Deselect All" : "Select All"}
                 </button>
@@ -485,14 +484,14 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>{children}</label>;
+  return <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>{children}</label>;
 }
 
 const modalStyle: React.CSSProperties = { background: "#fff", borderRadius: 14, boxShadow: "0 20px 60px rgba(0,0,0,0.25)", width: "100%", maxWidth: 640, maxHeight: "92dvh", display: "flex", flexDirection: "column", overflow: "hidden" };
 const headerStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.125rem 0.875rem", borderBottom: "1px solid #e8ddd5" };
 const footerStyle: React.CSSProperties = { display: "flex", gap: "0.625rem", alignItems: "center", justifyContent: "flex-end", padding: "0.875rem 1.125rem", borderTop: "1px solid #e8ddd5" };
-const titleStyle: React.CSSProperties = { margin: 0, fontSize: "1rem", fontWeight: 700, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif" };
+const titleStyle: React.CSSProperties = { margin: 0, fontSize: "1rem", fontWeight: 700, color: "#2a1a0e" };
 const closeBtn: React.CSSProperties = { background: "none", border: "none", cursor: "pointer", color: "#9a7080", padding: 4 };
-const inputStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box" as const, padding: "7px 10px", border: "1px solid #e8ddd5", borderRadius: 7, fontSize: "0.85rem", fontFamily: "Inter, system-ui, sans-serif", color: "#2a1a0e", background: "#fff", outline: "none" };
-const primaryBtn: React.CSSProperties = { display: "flex", alignItems: "center", gap: 5, padding: "7px 16px", borderRadius: 7, background: "#6b1d3b", color: "#fff", border: "none", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif" };
-const outlineBtn: React.CSSProperties = { display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 7, background: "transparent", color: "#6b4050", border: "1px solid #e8ddd5", fontSize: "0.82rem", fontWeight: 500, cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif" };
+const inputStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box" as const, padding: "7px 10px", border: "1px solid #e8ddd5", borderRadius: 7, fontSize: "0.85rem", color: "#2a1a0e", background: "#fff", outline: "none" };
+const primaryBtn: React.CSSProperties = { display: "flex", alignItems: "center", gap: 5, padding: "7px 16px", borderRadius: 7, background: "#6b1d3b", color: "#fff", border: "none", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" };
+const outlineBtn: React.CSSProperties = { display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 7, background: "transparent", color: "#6b4050", border: "1px solid #e8ddd5", fontSize: "0.82rem", fontWeight: 500, cursor: "pointer" };

@@ -358,10 +358,10 @@ export function AddPackModal({
             border: `1px solid ${packOnly ? "#e8c8c8" : "#e8ddd5"}`,
           }}>
             <div>
-              <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 600, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 600, color: "#2a1a0e" }}>
                 Mark stickers as pack-only
               </p>
-              <p style={{ margin: "2px 0 0", fontSize: "0.68rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <p style={{ margin: "2px 0 0", fontSize: "0.68rem", color: "#9a7080" }}>
                 {packOnly
                   ? "All stickers in this pack will not be sold individually (can_buy_individually = false)."
                   : "Stickers can still be purchased individually in the main catalog."}
@@ -390,12 +390,12 @@ export function AddPackModal({
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
               <Label>Upload New Sticker Images</Label>
               {stickerUploads.length > 0 && (
-                <span style={{ fontSize: "0.72rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+                <span style={{ fontSize: "0.72rem", color: "#9a7080" }}>
                   {completedUploads.length} ready{anyUploading ? `, ${stickerUploads.filter(u => u.uploading).length} uploading…` : ""}
                 </span>
               )}
             </div>
-            <p style={{ margin: "0 0 8px", fontSize: "0.72rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+            <p style={{ margin: "0 0 8px", fontSize: "0.72rem", color: "#9a7080" }}>
               Each image becomes a new inventory item with <strong>under review</strong> status, auto-assigned STK-### SKU, linked to this pack.
             </p>
             <input
@@ -458,7 +458,6 @@ export function AddPackModal({
                         minWidth: 0,
                         padding: "4px 6px",
                         fontSize: "0.78rem",
-                        fontFamily: "Inter, system-ui, sans-serif",
                         color: "#2a1a0e",
                         border: "1px solid #e8ddd5",
                         borderRadius: 5,
@@ -491,7 +490,7 @@ export function AddPackModal({
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
               <Label>Link Existing Stickers</Label>
               <div style={{ display: "flex", gap: 8 }}>
-                <span style={{ fontSize: "0.72rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif", alignSelf: "center" }}>
+                <span style={{ fontSize: "0.72rem", color: "#9a7080", alignSelf: "center" }}>
                   {selected.size} selected
                 </span>
                 {filteredProducts.length > 0 && (
@@ -517,11 +516,11 @@ export function AddPackModal({
               background: "#fdfaf8",
             }}>
               {loadingProds ? (
-                <p style={{ padding: "1rem", fontSize: "0.82rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif", margin: 0 }}>
+                <p style={{ padding: "1rem", fontSize: "0.82rem", color: "#9a7080", margin: 0 }}>
                   Loading stickers…
                 </p>
               ) : filteredProducts.length === 0 ? (
-                <p style={{ padding: "1rem", fontSize: "0.82rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif", margin: 0 }}>
+                <p style={{ padding: "1rem", fontSize: "0.82rem", color: "#9a7080", margin: 0 }}>
                   {prodSearch ? `No stickers match "${prodSearch}"` : "No stickers available"}
                 </p>
               ) : (
@@ -549,10 +548,10 @@ export function AddPackModal({
                         style={{ flexShrink: 0, accentColor: "#6b1d3b" }}
                       />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: "0.82rem", color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <p style={{ margin: 0, fontSize: "0.82rem", color: "#2a1a0e", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {p.name}
                         </p>
-                        <p style={{ margin: 0, fontSize: "0.68rem", fontFamily: "Inter, system-ui, sans-serif", color: alreadyInPack ? "#a16207" : "#9a7080" }}>
+                        <p style={{ margin: 0, fontSize: "0.68rem", color: alreadyInPack ? "#a16207" : "#9a7080" }}>
                           {p.sku}{alreadyInPack ? " · already in a pack" : ""}
                         </p>
                       </div>
@@ -593,17 +592,17 @@ export function AddPackModal({
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+    <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
       {children}
     </label>
   );
 }
 
 const modalTitle: React.CSSProperties = {
-  margin: 0, fontSize: "1rem", fontWeight: 700, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif",
+  margin: 0, fontSize: "1rem", fontWeight: 700, color: "#2a1a0e",
 };
 const modalSub: React.CSSProperties = {
-  margin: "2px 0 0", fontSize: "0.75rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif",
+  margin: "2px 0 0", fontSize: "0.75rem", color: "#9a7080",
 };
 const closeBtn: React.CSSProperties = {
   background: "none", border: "none", cursor: "pointer", color: "#9a7080", padding: 4, flexShrink: 0,
@@ -611,7 +610,7 @@ const closeBtn: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   width: "100%", boxSizing: "border-box" as const, padding: "7px 10px",
   border: "1px solid #e8ddd5", borderRadius: 7, fontSize: "0.85rem",
-  fontFamily: "Inter, system-ui, sans-serif", color: "#2a1a0e", background: "#fff", outline: "none",
+  color: "#2a1a0e", background: "#fff", outline: "none",
 };
 const thumbBox: React.CSSProperties = {
   width: 64, height: 64, borderRadius: 8, background: "#f5f0ea",
@@ -621,16 +620,16 @@ const thumbBox: React.CSSProperties = {
 const primaryBtn: React.CSSProperties = {
   display: "flex", alignItems: "center", gap: 5, padding: "7px 14px",
   borderRadius: 7, background: "#6b1d3b", color: "#fff", border: "none",
-  fontSize: "0.82rem", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif",
+  fontSize: "0.82rem", fontWeight: 600, cursor: "pointer",
 };
 const outlineBtn: React.CSSProperties = {
   display: "flex", alignItems: "center", gap: 5, padding: "7px 12px",
   borderRadius: 7, background: "transparent", color: "#6b4050",
   border: "1px solid #e8ddd5", fontSize: "0.82rem", fontWeight: 500,
-  cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif",
+  cursor: "pointer",
 };
 const tinyBtn: React.CSSProperties = {
   padding: "2px 8px", borderRadius: 4, border: "1px solid #e8ddd5",
   background: "transparent", color: "#6b4050", fontSize: "0.7rem",
-  cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif",
+  cursor: "pointer",
 };

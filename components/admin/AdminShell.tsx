@@ -92,7 +92,7 @@ export function AdminShell({
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100dvh", fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ display: "flex", minHeight: "100dvh" }}>
       <Toaster position="top-right" richColors />
 
       {/* ── Desktop sidebar ─────────────────────────────────────────── */}
@@ -270,15 +270,15 @@ export function AdminShell({
 
           {/* Desktop: breadcrumb-style label */}
           <div className="hidden md:flex" style={{ alignItems: "center", gap: "0.5rem", flex: 1, minWidth: 0 }}>
-            <span style={{ color: C.inactiveText, fontSize: "0.82rem", fontWeight: 400 }}>
+            <span style={{ color: C.inactiveText, fontSize: "0.78rem", fontWeight: 400, letterSpacing: "0.01em" }}>
               DFS Admin
             </span>
-            <span style={{ color: C.inactiveText, fontSize: "0.82rem" }}>/</span>
+            <span style={{ color: C.inactiveText, fontSize: "0.78rem" }}>/</span>
             <h1
               style={{
                 color: "#f5f0ea",
-                fontWeight: 700,
-                fontSize: "0.95rem",
+                fontWeight: 600,
+                fontSize: "1rem",
                 letterSpacing: "-0.01em",
                 margin: 0,
               }}
@@ -293,8 +293,8 @@ export function AdminShell({
             style={{
               flex: 1,
               color: "#f5f0ea",
-              fontWeight: 700,
-              fontSize: "0.95rem",
+              fontWeight: 600,
+              fontSize: "1rem",
               letterSpacing: "-0.01em",
               margin: 0,
             }}

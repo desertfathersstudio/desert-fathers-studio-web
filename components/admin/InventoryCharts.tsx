@@ -27,7 +27,6 @@ const cardTitle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: "0.07em",
   marginBottom: "1rem",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const DONUT_COLORS = {
@@ -100,13 +99,13 @@ export function InventoryCharts({ products }: { products: ProductWithInventory[]
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{ fontSize: "0.78rem", fontFamily: "Inter, system-ui, sans-serif" }}
+                contentStyle={{ fontSize: "0.78rem" }}
               />
             </PieChart>
           </ResponsiveContainer>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {stockHealth.map((d) => (
-              <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "0.8rem", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "0.8rem" }}>
                 <span style={{ width: 10, height: 10, borderRadius: "50%", background: d.color, flexShrink: 0 }} />
                 <span style={{ color: "#6b4050" }}>{d.name}</span>
                 <span style={{ fontWeight: 700, color: "#2a1a0e", marginLeft: "auto" }}>{d.value}</span>
@@ -121,14 +120,14 @@ export function InventoryCharts({ products }: { products: ProductWithInventory[]
         <p style={cardTitle}>Designs by Category</p>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart data={byCategory} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
-            <XAxis type="number" tick={{ fontSize: 10, fontFamily: "Inter, system-ui, sans-serif" }} />
+            <XAxis type="number" tick={{ fontSize: 10 }} />
             <YAxis
               dataKey="name"
               type="category"
               width={100}
-              tick={{ fontSize: 10, fontFamily: "Inter, system-ui, sans-serif" }}
+              tick={{ fontSize: 10 }}
             />
-            <Tooltip contentStyle={{ fontSize: "0.78rem", fontFamily: "Inter, system-ui, sans-serif" }} />
+            <Tooltip contentStyle={{ fontSize: "0.78rem" }} />
             <Bar dataKey="count" fill="#6b1d3b" radius={3} />
           </BarChart>
         </ResponsiveContainer>
@@ -139,14 +138,14 @@ export function InventoryCharts({ products }: { products: ProductWithInventory[]
         <p style={cardTitle}>Review Pipeline</p>
         <ResponsiveContainer width="100%" height={100}>
           <BarChart data={byReview} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
-            <XAxis type="number" tick={{ fontSize: 10, fontFamily: "Inter, system-ui, sans-serif" }} />
+            <XAxis type="number" tick={{ fontSize: 10 }} />
             <YAxis
               dataKey="name"
               type="category"
               width={100}
-              tick={{ fontSize: 10, fontFamily: "Inter, system-ui, sans-serif" }}
+              tick={{ fontSize: 10 }}
             />
-            <Tooltip contentStyle={{ fontSize: "0.78rem", fontFamily: "Inter, system-ui, sans-serif" }} />
+            <Tooltip contentStyle={{ fontSize: "0.78rem" }} />
             <Bar dataKey="count" radius={3}>
               {byReview.map((entry) => (
                 <Cell key={entry.name} fill={entry.color} />
@@ -160,7 +159,7 @@ export function InventoryCharts({ products }: { products: ProductWithInventory[]
       <div style={cardStyle}>
         <p style={cardTitle}>Needs Reorder ({reorderNeeded.length})</p>
         {reorderNeeded.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "1.5rem 0", color: "#22c55e", fontSize: "0.85rem", fontFamily: "Inter, system-ui, sans-serif" }}>
+          <div style={{ textAlign: "center", padding: "1.5rem 0", color: "#22c55e", fontSize: "0.85rem" }}>
             ✅ No reorders needed
           </div>
         ) : (
@@ -187,14 +186,14 @@ export function InventoryCharts({ products }: { products: ProductWithInventory[]
                   <div style={{ width: 32, height: 32, borderRadius: 5, background: "#e8ddd5", flexShrink: 0 }} />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 600, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 600, color: "#2a1a0e", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {p.name}
                   </p>
-                  <p style={{ margin: 0, fontSize: "0.7rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>
+                  <p style={{ margin: 0, fontSize: "0.7rem", color: "#9a7080" }}>
                     {p.inventory?.on_hand ?? 0} on hand
                   </p>
                 </div>
-                <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#ef4444", fontFamily: "Inter, system-ui, sans-serif", flexShrink: 0 }}>
+                <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#ef4444", flexShrink: 0 }}>
                   {p.inventory?.status === "sold_out" ? "Sold Out" : "Low"}
                 </span>
               </div>

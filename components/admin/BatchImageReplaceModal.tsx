@@ -311,14 +311,14 @@ export function BatchImageReplaceModal({
 
         {/* Mode toggle */}
         <div style={{ padding: "0.875rem 1.25rem", borderBottom: "1px solid #f0e8e0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6b4050", fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 4 }}>After upload:</span>
+          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6b4050", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 4 }}>After upload:</span>
           {(["live", "review"] as Mode[]).map((m) => (
             <button key={m} onClick={() => setMode(m)} disabled={isRunning || done}
-              style={{ padding: "5px 14px", borderRadius: 20, border: "1px solid", borderColor: mode === m ? "#6b1d3b" : "#e8ddd5", background: mode === m ? "#6b1d3b" : "transparent", color: mode === m ? "#fff" : "#6b4050", fontSize: "0.78rem", fontWeight: mode === m ? 600 : 400, cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif" }}>
+              style={{ padding: "5px 14px", borderRadius: 20, border: "1px solid", borderColor: mode === m ? "#6b1d3b" : "#e8ddd5", background: mode === m ? "#6b1d3b" : "transparent", color: mode === m ? "#fff" : "#6b4050", fontSize: "0.78rem", fontWeight: mode === m ? 600 : 400, cursor: "pointer" }}>
               {m === "live" ? "Push Live" : "Send to Review"}
             </button>
           ))}
-          <span style={{ marginLeft: 6, fontSize: "0.72rem", color: "#b09090", fontFamily: "Inter, system-ui, sans-serif" }}>
+          <span style={{ marginLeft: 6, fontSize: "0.72rem", color: "#b09090" }}>
             {mode === "live" ? "Images go live immediately" : "Sets status to Under Review"}
           </span>
         </div>
@@ -336,10 +336,10 @@ export function BatchImageReplaceModal({
               style={{ border: `2px dashed ${isDragging ? "#6b1d3b" : "#d4c4b8"}`, borderRadius: 10, padding: "1.5rem", textAlign: "center", cursor: "pointer", background: isDragging ? "#fdf5f8" : "#fdf9f4", transition: "all 0.15s" }}
             >
               <Upload size={22} style={{ color: isDragging ? "#6b1d3b" : "#b09090", margin: "0 auto 8px" }} />
-              <p style={{ margin: 0, fontSize: "0.85rem", color: isDragging ? "#6b1d3b" : "#6b4050", fontFamily: "Inter, system-ui, sans-serif", fontWeight: 500 }}>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: isDragging ? "#6b1d3b" : "#6b4050", fontWeight: 500 }}>
                 Drop images here or click to select
               </p>
-              <p style={{ margin: "4px 0 0", fontSize: "0.72rem", color: "#b09090", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <p style={{ margin: "4px 0 0", fontSize: "0.72rem", color: "#b09090" }}>
                 Files with STK-NNN auto-match by SKU · Others matched by name similarity
               </p>
               <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={handleFileInput} />
@@ -351,7 +351,7 @@ export function BatchImageReplaceModal({
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "0.5rem" }}>
                 <HelpCircle size={13} style={{ color: "#a16207" }} />
-                <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 600, color: "#a16207", fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 600, color: "#a16207", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Suggested matches ({fuzzyPending.length}) — confirm
                 </p>
               </div>
@@ -362,7 +362,7 @@ export function BatchImageReplaceModal({
                     <div style={thumbStyle}>
                       <img src={fp.preview} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                     </div>
-                    <span style={{ fontSize: "0.72rem", color: "#b09090", fontFamily: "Inter, system-ui, sans-serif", flexShrink: 0 }}>→</span>
+                    <span style={{ fontSize: "0.72rem", color: "#b09090", flexShrink: 0 }}>→</span>
                     {/* Candidate product current image */}
                     <div style={thumbStyle}>
                       {fp.candidateProduct.image_url
@@ -371,22 +371,22 @@ export function BatchImageReplaceModal({
                     </div>
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: "0.72rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <p style={{ margin: 0, fontSize: "0.72rem", color: "#9a7080", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         "{fp.file.name}"
                       </p>
-                      <p style={{ margin: "2px 0 0", fontSize: "0.82rem", fontWeight: 600, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <p style={{ margin: "2px 0 0", fontSize: "0.82rem", fontWeight: 600, color: "#2a1a0e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {fp.candidateProduct.name}
                       </p>
-                      <p style={{ margin: "1px 0 0", fontSize: "0.68rem", color: "#b09090", fontFamily: "Inter, system-ui, sans-serif" }}>
+                      <p style={{ margin: "1px 0 0", fontSize: "0.68rem", color: "#b09090" }}>
                         {fp.candidateProduct.sku} · {Math.round(fp.score * 100)}% match
                       </p>
                     </div>
                     {/* Actions */}
                     <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                      <button onClick={() => acceptFuzzy(idx)} style={{ padding: "5px 12px", borderRadius: 6, background: "#16a34a", color: "#fff", border: "none", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif" }}>
+                      <button onClick={() => acceptFuzzy(idx)} style={{ padding: "5px 12px", borderRadius: 6, background: "#16a34a", color: "#fff", border: "none", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
                         Accept
                       </button>
-                      <button onClick={() => dismissFuzzy(idx)} style={{ padding: "5px 10px", borderRadius: 6, background: "transparent", color: "#9a7080", border: "1px solid #e8ddd5", fontSize: "0.75rem", cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif" }}>
+                      <button onClick={() => dismissFuzzy(idx)} style={{ padding: "5px 10px", borderRadius: 6, background: "transparent", color: "#9a7080", border: "1px solid #e8ddd5", fontSize: "0.75rem", cursor: "pointer" }}>
                         Dismiss
                       </button>
                     </div>
@@ -400,12 +400,12 @@ export function BatchImageReplaceModal({
           {assignments.length > 0 && (
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 600, color: "#6b4050", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Queued ({assignments.length})
                 </p>
                 {assignments.length > 4 && (
                   <input type="text" placeholder="Filter…" value={search} onChange={(e) => setSearch(e.target.value)}
-                    style={{ padding: "4px 8px", border: "1px solid #e8ddd5", borderRadius: 6, fontSize: "0.78rem", fontFamily: "Inter, system-ui, sans-serif", outline: "none", color: "#2a1a0e", width: 140 }} />
+                    style={{ padding: "4px 8px", border: "1px solid #e8ddd5", borderRadius: 6, fontSize: "0.78rem", outline: "none", color: "#2a1a0e", width: 140 }} />
                 )}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -418,17 +418,17 @@ export function BatchImageReplaceModal({
                           ? <img src={withVersion(product.image_url, product.image_updated_at) ?? product.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                           : <ImageIcon size={16} style={{ color: "#c9b5b5" }} />}
                       </div>
-                      <span style={{ fontSize: "0.72rem", color: "#b09090", fontFamily: "Inter, system-ui, sans-serif", flexShrink: 0 }}>→</span>
+                      <span style={{ fontSize: "0.72rem", color: "#b09090", flexShrink: 0 }}>→</span>
                       <div style={thumbStyle}>
                         <img src={preview} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: "0.82rem", fontWeight: 600, color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.name}</p>
-                        <p style={{ margin: "1px 0 0", fontSize: "0.7rem", color: "#9a7080", fontFamily: "Inter, system-ui, sans-serif" }}>{product.sku}</p>
+                        <p style={{ margin: 0, fontSize: "0.82rem", fontWeight: 600, color: "#2a1a0e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.name}</p>
+                        <p style={{ margin: "1px 0 0", fontSize: "0.7rem", color: "#9a7080" }}>{product.sku}</p>
                       </div>
                       {status === "done" ? <CheckCircle size={16} style={{ color: "#16a34a", flexShrink: 0 }} />
                         : status === "error" ? <AlertCircle size={16} style={{ color: "#dc2626", flexShrink: 0 }} />
-                        : status === "uploading" ? <span style={{ fontSize: "0.7rem", color: "#6b1d3b", fontFamily: "Inter, system-ui, sans-serif", flexShrink: 0 }}>Uploading…</span>
+                        : status === "uploading" ? <span style={{ fontSize: "0.7rem", color: "#6b1d3b", flexShrink: 0 }}>Uploading…</span>
                         : !done ? (
                           <button onClick={() => removeAssignment(product.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c9b5b5", padding: 2, flexShrink: 0 }}><X size={14} /></button>
                         ) : null}
@@ -442,7 +442,7 @@ export function BatchImageReplaceModal({
           {/* Unmatched */}
           {unmatched.length > 0 && (
             <div>
-              <p style={{ margin: "0 0 0.5rem", fontSize: "0.72rem", fontWeight: 600, color: "#a16207", fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <p style={{ margin: "0 0 0.5rem", fontSize: "0.72rem", fontWeight: 600, color: "#a16207", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Unmatched ({unmatched.length}) — assign manually
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -452,12 +452,12 @@ export function BatchImageReplaceModal({
                       <img src={u.preview} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: "0.78rem", color: "#2a1a0e", fontFamily: "Inter, system-ui, sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.file.name}</p>
+                      <p style={{ margin: 0, fontSize: "0.78rem", color: "#2a1a0e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.file.name}</p>
                     </div>
                     <select
                       value={unmatchedSelections.get(idx) ?? ""}
                       onChange={(e) => { if (e.target.value) assignUnmatched(idx, e.target.value); }}
-                      style={{ padding: "5px 8px", border: "1px solid #d4c4b8", borderRadius: 7, fontSize: "0.78rem", fontFamily: "Inter, system-ui, sans-serif", color: "#2a1a0e", background: "#fff", outline: "none", maxWidth: 200 }}
+                      style={{ padding: "5px 8px", border: "1px solid #d4c4b8", borderRadius: 7, fontSize: "0.78rem", color: "#2a1a0e", background: "#fff", outline: "none", maxWidth: 200 }}
                     >
                       <option value="">Match to product…</option>
                       {availableProducts
@@ -473,7 +473,7 @@ export function BatchImageReplaceModal({
 
           {/* Empty state */}
           {assignments.length === 0 && fuzzyPending.length === 0 && unmatched.length === 0 && !done && (
-            <p style={{ textAlign: "center", fontSize: "0.82rem", color: "#b09090", fontFamily: "Inter, system-ui, sans-serif", padding: "1rem 0" }}>
+            <p style={{ textAlign: "center", fontSize: "0.82rem", color: "#b09090", padding: "1rem 0" }}>
               No images queued yet — drop files above to get started.
             </p>
           )}
@@ -481,7 +481,7 @@ export function BatchImageReplaceModal({
           {/* Done summary */}
           {done && (
             <div style={{ padding: "1rem", borderRadius: 8, background: errorItems.length > 0 ? "#fef2f2" : "#f0fdf4", border: `1px solid ${errorItems.length > 0 ? "#fecaca" : "#bbf7d0"}`, textAlign: "center" }}>
-              <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: errorItems.length > 0 ? "#dc2626" : "#16a34a", fontFamily: "Inter, system-ui, sans-serif" }}>
+              <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: errorItems.length > 0 ? "#dc2626" : "#16a34a" }}>
                 {doneCount} of {assignments.length} replaced successfully{errorItems.length > 0 && ` · ${errorItems.length} failed`}
               </p>
             </div>
@@ -533,14 +533,12 @@ const titleStyle: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
   color: "#2a1a0e",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const subStyle: React.CSSProperties = {
   margin: "2px 0 0",
   fontSize: "0.75rem",
   color: "#9a7080",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const closeBtnStyle: React.CSSProperties = {
@@ -564,7 +562,6 @@ const primaryBtnStyle: React.CSSProperties = {
   fontSize: "0.82rem",
   fontWeight: 600,
   cursor: "pointer",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 
 const outlineBtnStyle: React.CSSProperties = {
@@ -579,5 +576,4 @@ const outlineBtnStyle: React.CSSProperties = {
   fontSize: "0.82rem",
   fontWeight: 500,
   cursor: "pointer",
-  fontFamily: "Inter, system-ui, sans-serif",
 };

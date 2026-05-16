@@ -175,7 +175,6 @@ export function InventoryView({
               borderRadius: 8,
               background: "#fff",
               fontSize: "0.85rem",
-              fontFamily: "Inter, system-ui, sans-serif",
               color: "#2a1a0e",
               outline: "none",
               transition: "border-color 0.15s, box-shadow 0.15s",
@@ -200,8 +199,7 @@ export function InventoryView({
                 fontSize: "0.78rem",
                 fontWeight: filter === f.id ? 600 : 400,
                 cursor: "pointer",
-                fontFamily: "Inter, system-ui, sans-serif",
-              }}
+                }}
             >
               {f.label}
             </button>
@@ -217,7 +215,6 @@ export function InventoryView({
             style={{
               paddingLeft: 26, paddingRight: 10, paddingTop: 7, paddingBottom: 7,
               border: "1px solid #e8ddd5", borderRadius: 8, background: "#fff",
-              fontSize: "0.82rem", fontFamily: "Inter, system-ui, sans-serif",
               color: "#2a1a0e", outline: "none", cursor: "pointer", appearance: "none" as const,
             }}
           >
@@ -246,7 +243,6 @@ export function InventoryView({
             fontSize: "0.82rem",
             fontWeight: 500,
             cursor: "pointer",
-            fontFamily: "Inter, system-ui, sans-serif",
             flexShrink: 0,
           }}
         >
@@ -270,7 +266,6 @@ export function InventoryView({
             fontSize: "0.82rem",
             fontWeight: 600,
             cursor: "pointer",
-            fontFamily: "Inter, system-ui, sans-serif",
             flexShrink: 0,
           }}
         >
@@ -294,7 +289,6 @@ export function InventoryView({
             fontSize: "0.82rem",
             fontWeight: 600,
             cursor: "pointer",
-            fontFamily: "Inter, system-ui, sans-serif",
             flexShrink: 0,
           }}
         >
@@ -309,7 +303,6 @@ export function InventoryView({
           fontSize: "0.75rem",
           color: "#9a7080",
           marginBottom: "0.75rem",
-          fontFamily: "Inter, system-ui, sans-serif",
         }}
       >
         {filtered.length} design{filtered.length !== 1 ? "s" : ""}
@@ -323,7 +316,6 @@ export function InventoryView({
             padding: "3rem 1rem",
             color: "#9a7080",
             fontSize: "0.9rem",
-            fontFamily: "Inter, system-ui, sans-serif",
           }}
         >
           No designs match your filter.

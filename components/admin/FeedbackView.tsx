@@ -64,7 +64,6 @@ function ProductList({
             textTransform: "uppercase",
             letterSpacing: "0.07em",
             margin: 0,
-            fontFamily: "Inter, system-ui, sans-serif",
           }}
         >
           {products.length} design{products.length === 1 ? "" : "s"} with feedback
@@ -140,7 +139,6 @@ function ProductList({
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
-                    fontFamily: "Inter, system-ui, sans-serif",
                     lineHeight: 1.3,
                   }}
                 >
@@ -161,7 +159,6 @@ function ProductList({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontFamily: "Inter, system-ui, sans-serif",
                     }}
                   >
                     {unresolved}
@@ -173,7 +170,6 @@ function ProductList({
                   fontSize: "0.76rem",
                   color: isActive ? "rgba(255,255,255,0.65)" : C.textMuted,
                   margin: "3px 0 0",
-                  fontFamily: "Inter, system-ui, sans-serif",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
@@ -187,7 +183,6 @@ function ProductList({
                   fontSize: "0.68rem",
                   color: isActive ? "rgba(255,255,255,0.4)" : C.textMuted,
                   margin: "2px 0 0",
-                  fontFamily: "Inter, system-ui, sans-serif",
                 }}
               >
                 {product.comments.length} comment{product.comments.length === 1 ? "" : "s"}
@@ -253,7 +248,7 @@ export function FeedbackView() {
 
   if (loading) {
     return (
-      <div style={{ padding: "3rem", textAlign: "center", color: C.textMuted, fontFamily: "Inter, system-ui, sans-serif", fontSize: "0.9rem" }}>
+      <div style={{ padding: "3rem", textAlign: "center", color: C.textMuted, fontSize: "0.9rem" }}>
         Loading feedback…
       </div>
     );
@@ -261,7 +256,7 @@ export function FeedbackView() {
 
   if (products.length === 0) {
     return (
-      <div style={{ padding: "3rem", textAlign: "center", color: C.textMuted, fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div style={{ padding: "3rem", textAlign: "center", color: C.textMuted }}>
         <p style={{ fontSize: "1rem", fontWeight: 600, color: C.text, marginBottom: "0.5rem" }}>No feedback yet</p>
         <p style={{ fontSize: "0.85rem", margin: 0 }}>
           Comments added in the wholesale Pending tab will appear here.
@@ -312,7 +307,6 @@ export function FeedbackView() {
               justifyContent: "center",
               color: C.textMuted,
               fontSize: "0.85rem",
-              fontFamily: "Inter, system-ui, sans-serif",
             }}
           >
             Select a design to view feedback
@@ -521,7 +515,6 @@ function ProductDetail({
               color: C.brand,
               fontSize: "0.85rem",
               fontWeight: 600,
-              fontFamily: "Inter, system-ui, sans-serif",
               cursor: "pointer",
               padding: "0 0 0.75rem",
             }}
@@ -563,23 +556,22 @@ function ProductDetail({
                 fontWeight: 700,
                 color: C.text,
                 margin: "0 0 0.2rem",
-                fontFamily: "Inter, system-ui, sans-serif",
                 lineHeight: 1.3,
               }}
             >
               {product.name}
             </h2>
-            <p style={{ fontSize: "0.75rem", color: C.textMuted, margin: "0 0 0.45rem", fontFamily: "Inter, system-ui, sans-serif" }}>
+            <p style={{ fontSize: "0.75rem", color: C.textMuted, margin: "0 0 0.45rem" }}>
               {product.sku} · {product.category}
             </p>
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
               {unresolved > 0 && (
-                <span style={{ padding: "2px 9px", borderRadius: 999, fontSize: "0.68rem", fontWeight: 700, background: "#fef3c7", color: "#92400e", fontFamily: "Inter, system-ui, sans-serif" }}>
+                <span style={{ padding: "2px 9px", borderRadius: 999, fontSize: "0.68rem", fontWeight: 700, background: "#fef3c7", color: "#92400e" }}>
                   {unresolved} unresolved
                 </span>
               )}
               {product.comments.some((c) => c.is_resolved) && (
-                <span style={{ padding: "2px 9px", borderRadius: 999, fontSize: "0.68rem", fontWeight: 700, background: "#d1fae5", color: "#065f46", fontFamily: "Inter, system-ui, sans-serif" }}>
+                <span style={{ padding: "2px 9px", borderRadius: 999, fontSize: "0.68rem", fontWeight: 700, background: "#d1fae5", color: "#065f46" }}>
                   ✓ Some resolved
                 </span>
               )}
@@ -601,7 +593,7 @@ function ProductDetail({
         }}
       >
         {threads.length === 0 && (
-          <p style={{ color: C.textMuted, fontSize: "0.875rem", fontFamily: "Inter, system-ui, sans-serif", fontStyle: "italic" }}>
+          <p style={{ color: C.textMuted, fontSize: "0.875rem", fontStyle: "italic" }}>
             No comments yet on this design.
           </p>
         )}
@@ -621,21 +613,21 @@ function ProductDetail({
             <div style={{ padding: "1rem 1.125rem" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem", marginBottom: "0.5rem" }}>
                 <div>
-                  <span style={{ fontSize: "0.82rem", fontWeight: 700, color: C.brand, fontFamily: "Inter, system-ui, sans-serif" }}>
+                  <span style={{ fontSize: "0.82rem", fontWeight: 700, color: C.brand }}>
                     {parent.author}
                   </span>
-                  <span style={{ display: "block", fontSize: "0.68rem", color: C.textMuted, fontFamily: "Inter, system-ui, sans-serif", marginTop: 1 }}>
+                  <span style={{ display: "block", fontSize: "0.68rem", color: C.textMuted, marginTop: 1 }}>
                     {formatDate(parent.created_at)}
                   </span>
                 </div>
                 {parent.is_resolved && (
-                  <span style={{ fontSize: "0.64rem", fontWeight: 700, color: "#065f46", background: "#d1fae5", padding: "3px 8px", borderRadius: 999, fontFamily: "Inter, system-ui, sans-serif", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  <span style={{ fontSize: "0.64rem", fontWeight: 700, color: "#065f46", background: "#d1fae5", padding: "3px 8px", borderRadius: 999, whiteSpace: "nowrap", flexShrink: 0 }}>
                     ✓ Resolved
                   </span>
                 )}
               </div>
 
-              <p style={{ fontSize: "0.9rem", color: C.text, margin: "0 0 1rem", lineHeight: 1.6, fontFamily: "Inter, system-ui, sans-serif" }}>
+              <p style={{ fontSize: "0.9rem", color: C.text, margin: "0 0 1rem", lineHeight: 1.6 }}>
                 {parent.body}
               </p>
 
@@ -662,7 +654,7 @@ function ProductDetail({
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="Write your reply…"
                     rows={3}
-                    style={{ width: "100%", padding: "0.625rem 0.75rem", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: "0.875rem", fontFamily: "Inter, system-ui, sans-serif", color: C.text, outline: "none", resize: "vertical", boxSizing: "border-box", background: "#fff", lineHeight: 1.5 }}
+                    style={{ width: "100%", padding: "0.625rem 0.75rem", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: "0.875rem", color: C.text, outline: "none", resize: "vertical", boxSizing: "border-box", background: "#fff", lineHeight: 1.5 }}
                   />
                   <div style={{ display: "flex", gap: "0.5rem" }}>
                     <ActionBtn onClick={() => handleReply(parent.id)} loading={busy === parent.id + "-reply"} variant="primary">Send Reply</ActionBtn>
@@ -677,10 +669,10 @@ function ProductDetail({
               <div key={reply.id} style={{ borderTop: `1px solid ${C.border}`, background: "#faf6ef", padding: "0.875rem 1.125rem 0.875rem 1.5rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.35rem", flexWrap: "wrap" }}>
                   <span style={{ fontSize: "0.78rem", color: C.gold, fontWeight: 700 }}>↳</span>
-                  <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#8B6914", fontFamily: "Inter, system-ui, sans-serif" }}>{reply.author}</span>
-                  <span style={{ fontSize: "0.68rem", color: C.textMuted, fontFamily: "Inter, system-ui, sans-serif" }}>{formatDate(reply.created_at)}</span>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#8B6914" }}>{reply.author}</span>
+                  <span style={{ fontSize: "0.68rem", color: C.textMuted }}>{formatDate(reply.created_at)}</span>
                 </div>
-                <p style={{ fontSize: "0.875rem", color: C.text, margin: "0 0 0.625rem", lineHeight: 1.6, fontFamily: "Inter, system-ui, sans-serif" }}>
+                <p style={{ fontSize: "0.875rem", color: C.text, margin: "0 0 0.625rem", lineHeight: 1.6 }}>
                   {reply.body}
                 </p>
                 <ActionBtn onClick={() => handleDelete(reply.id)} loading={busy === reply.id + "-delete"} variant="danger">Delete</ActionBtn>
@@ -692,7 +684,7 @@ function ProductDetail({
 
       {/* ── New comment footer ── */}
       <div style={{ padding: "1rem 1.25rem", borderTop: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
-        <p style={{ fontSize: "0.68rem", fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.5rem", fontFamily: "Inter, system-ui, sans-serif" }}>
+        <p style={{ fontSize: "0.68rem", fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.5rem" }}>
           Add admin note
         </p>
         <textarea
@@ -700,7 +692,7 @@ function ProductDetail({
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Write a note on this design…"
           rows={3}
-          style={{ width: "100%", padding: "0.625rem 0.75rem", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: "0.875rem", fontFamily: "Inter, system-ui, sans-serif", color: C.text, outline: "none", resize: "none", background: C.contentBg, lineHeight: 1.5, boxSizing: "border-box", marginBottom: "0.625rem" }}
+          style={{ width: "100%", padding: "0.625rem 0.75rem", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: "0.875rem", color: C.text, outline: "none", resize: "none", background: C.contentBg, lineHeight: 1.5, boxSizing: "border-box", marginBottom: "0.625rem" }}
         />
         <ActionBtn onClick={handleNewComment} loading={busy === "new"} variant="primary">
           Add Note
@@ -740,7 +732,6 @@ function ActionBtn({
         fontSize: "0.8rem",
         fontWeight: 600,
         cursor: loading ? "not-allowed" : "pointer",
-        fontFamily: "Inter, system-ui, sans-serif",
         opacity: loading ? 0.6 : 1,
         transition: "opacity 0.12s",
         whiteSpace: "nowrap",

@@ -36,7 +36,6 @@ export default function AdminLoginPage({
             <span
               style={{
                 color: "#fff",
-                fontFamily: "Inter, system-ui, sans-serif",
                 fontWeight: 800,
                 fontSize: "1rem",
                 letterSpacing: "-0.02em",
@@ -47,7 +46,6 @@ export default function AdminLoginPage({
           </div>
           <h1
             style={{
-              fontFamily: "Inter, system-ui, sans-serif",
               fontWeight: 700,
               fontSize: "1.2rem",
               color: "#f5f0ea",
@@ -59,7 +57,6 @@ export default function AdminLoginPage({
           </h1>
           <p
             style={{
-              fontFamily: "Inter, system-ui, sans-serif",
               fontSize: "0.8rem",
               color: "#8a6070",
               marginTop: "0.25rem",
@@ -88,7 +85,6 @@ export default function AdminLoginPage({
                 marginBottom: "1.25rem",
                 color: "#f87171",
                 fontSize: "0.82rem",
-                fontFamily: "Inter, system-ui, sans-serif",
               }}
             >
               Access denied. This account is not authorized.
@@ -104,7 +100,6 @@ export default function AdminLoginPage({
                 marginBottom: "1.25rem",
                 color: "#f87171",
                 fontSize: "0.82rem",
-                fontFamily: "Inter, system-ui, sans-serif",
               }}
             >
               Sign-in link expired or invalid. Try again.

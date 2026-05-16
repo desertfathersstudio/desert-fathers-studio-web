@@ -64,7 +64,6 @@ export function PasskeySetup({ onDismiss }: { onDismiss: () => void }) {
           width: "100%",
           maxWidth: 480,
           boxShadow: "0 -8px 32px rgba(0,0,0,0.2)",
-          fontFamily: "Inter, system-ui, sans-serif",
         }}
       >
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "1rem" }}>
