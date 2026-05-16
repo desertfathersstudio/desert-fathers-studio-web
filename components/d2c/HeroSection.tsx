@@ -93,7 +93,7 @@ export function HeroSection({
             >
               <Link
                 href="/shop"
-                className="inline-flex items-center gap-2 px-7 py-3.5 text-sm font-medium transition-opacity hover:opacity-85"
+                className="btn-press inline-flex items-center gap-2 px-7 py-3.5 text-sm font-medium transition-opacity hover:opacity-85"
                 style={{
                   background: "var(--brand)",
                   color: "#fff",
@@ -104,7 +104,7 @@ export function HeroSection({
               </Link>
               <Link
                 href="#what-you-get"
-                className="inline-flex items-center gap-2 px-7 py-3.5 text-sm font-medium transition-opacity hover:opacity-70"
+                className="btn-press inline-flex items-center gap-2 px-7 py-3.5 text-sm font-medium transition-opacity hover:opacity-70"
                 style={{
                   border: "1px solid var(--border-dark)",
                   color: "var(--text)",

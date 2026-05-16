@@ -7,6 +7,18 @@ import { X, Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { stickerImageUrl } from "@/lib/catalog";
 
+const drawerVariants = {
+  hidden:  { x: "100%" },
+  visible: { x: 0,      transition: { duration: 0.38, ease: [0.32, 0.72, 0, 1] as const } },
+  exit:    { x: "100%", transition: { duration: 0.26, ease: [0.32, 0.72, 0, 1] as const } },
+};
+
+const backdropVariants = {
+  hidden:  { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.2  } },
+  exit:    { opacity: 0, transition: { duration: 0.15 } },
+};
+
 export function CartDrawer() {
   const { items, isOpen, closeCart, remove, setQty, count, total } = useCart();
 
@@ -18,10 +30,10 @@ export function CartDrawer() {
           <motion.div
             className="fixed inset-0 z-50"
             style={{ background: "rgba(28,42,58,0.4)" }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             onClick={closeCart}
             aria-hidden
           />
@@ -34,10 +46,10 @@ export function CartDrawer() {
               background: "var(--bg)",
               borderLeft: "1px solid var(--border)",
             }}
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 28, stiffness: 220 }}
+            variants={drawerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             aria-label="Shopping cart"
             role="dialog"
             aria-modal="true"
@@ -228,7 +240,7 @@ export function CartDrawer() {
                 <Link
                   href="/checkout"
                   onClick={closeCart}
-                  className="block w-full py-3 text-sm font-medium text-center transition-opacity hover:opacity-90 active:opacity-75"
+                  className="btn-press block w-full py-3 text-sm font-medium text-center transition-opacity hover:opacity-90"
                   style={{
                     background: "var(--brand)",
                     color: "#fff",

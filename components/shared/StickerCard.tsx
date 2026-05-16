@@ -62,9 +62,7 @@ export function StickerCard({
 
   return (
     <motion.article
-      className={cn("group relative flex flex-col cursor-pointer", className)}
-      whileHover={reduced ? {} : { y: -4 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={cn("sticker-card-hover group relative flex flex-col cursor-pointer", className)}
       onClick={onOpen}
     >
       {/* Card frame */}
@@ -151,7 +149,8 @@ export function StickerCard({
             className="translate-y-full group-hover:translate-y-0 transition-transform duration-200"
           >
             <button
-              className="w-full py-2 text-xs font-medium text-center"
+              type="button"
+              className="btn-press w-full py-2 text-xs font-medium text-center"
               style={{
                 background: "var(--brand)",
                 color: "#fff",

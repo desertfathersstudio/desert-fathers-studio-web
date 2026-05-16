@@ -57,7 +57,7 @@ export function FeaturedCollections({
       : inView
       ? { opacity: 1, y: 0 }
       : { opacity: 0, y: 26 },
-    transition: { duration: 0.55, delay, ease: "easeOut" as const },
+    transition: { duration: 0.55, delay, ease: [0.23, 1, 0.32, 1] as const },
   });
 
   return (
@@ -115,7 +115,7 @@ export function FeaturedCollections({
                         src={col.image}
                         alt={col.title}
                         fill
-                        className="object-contain p-10 transition-transform duration-500 group-hover:scale-[1.05]"
+                        className="object-contain p-10 transition-transform duration-300 ease-out group-hover:scale-[1.05]"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       />
                     </div>

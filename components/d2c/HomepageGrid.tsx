@@ -105,8 +105,8 @@ export function HomepageGrid({
                 }
                 transition={{
                   duration: 0.5,
-                  delay: reduced ? 0 : i * 0.06,
-                  ease: "easeOut",
+                  delay: reduced ? 0 : Math.min(i, 4) * 0.06,
+                  ease: [0.23, 1, 0.32, 1],
                 }}
               >
                 <StickerCard

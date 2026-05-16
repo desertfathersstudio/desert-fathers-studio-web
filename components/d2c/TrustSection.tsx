@@ -77,7 +77,7 @@ export function TrustSection() {
                     ? { opacity: 1, y: 0 }
                     : { opacity: 0, y: 24 }
                 }
-                transition={{ duration: 0.5, delay: reduced ? 0 : i * 0.09, ease: "easeOut" }}
+                transition={{ duration: 0.5, delay: reduced ? 0 : i * 0.09, ease: [0.23, 1, 0.32, 1] }}
               >
                 <div
                   className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full mt-0.5"

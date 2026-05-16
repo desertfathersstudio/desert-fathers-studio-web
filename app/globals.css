@@ -181,6 +181,28 @@ h1, h2, h3, h4, [data-serif] {
 :root {
   --ease-out-strong:  cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out-ui:   cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer:      cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ── Press feedback — every interactive element ────────────────────── */
+.btn-press {
+  transition: transform 160ms var(--ease-out-strong);
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* ── Card hover — hardware-accelerated, touch-safe ─────────────────── */
+.sticker-card-hover {
+  will-change: transform;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sticker-card-hover {
+    transition: transform 200ms var(--ease-out-strong);
+  }
+  .sticker-card-hover:hover {
+    transform: translateY(-4px);
+  }
 }
 
 /* ── Wholesale portal interactive polish ───────────────────────────── */
