@@ -704,7 +704,14 @@ function NotesPanel({ accountId }: { accountId: string }) {
     setContent(val);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      startTransition(async () => { await upsertAdminNote(accountId, val); });
+      startTransition(async () => {
+        try {
+          await upsertAdminNote(accountId, val);
+        } catch (e) {
+          console.error("[NotesPanel] auto-save failed:", e);
+          toast.error(e instanceof Error ? e.message : "Note save failed");
+        }
+      });
     }, 1200);
   }
 
@@ -1088,46 +1095,54 @@ function CreateAccountModal({
   onClose: () => void;
   onCreated: (account: AccountRow) => void;
 }) {
-  const [pending, startTransition] = useTransition();
+  // Use plain useState rather than useTransition so try/catch reliably catches
+  // server action rejections in React 19 (async transitions have edge cases
+  // where errors bypass catch and route to the nearest error boundary instead).
+  const [pending, setPending]      = useState(false);
   const [slug, setSlug]            = useState("");
   const [name, setName]            = useState("");
   const [email, setEmail]          = useState(templateAccount?.notify_email ?? "st.mosesbookstore@gmail.com");
   const [pin, setPin]              = useState("");
 
-  function handleCreate() {
-    if (!slug.trim() || !name.trim() || !pin.trim()) {
+  async function handleCreate() {
+    if (pending) return;
+    const trimmedSlug = slug.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!trimmedSlug || !name.trim() || !pin.trim()) {
       toast.error("Slug, display name, and PIN are required");
       return;
     }
-    startTransition(async () => {
-      try {
-        let created: AccountRow;
-        if (templateAccount) {
-          created = await duplicateAccount(templateAccount.id, slug.trim(), name.trim(), pin.trim());
-        } else {
-          created = await createAccount({
-            account_id:           slug.trim().toLowerCase().replace(/\s+/g, "-"),
-            display_name:         name.trim(),
-            notify_email:         email.trim() || "st.mosesbookstore@gmail.com",
-            pin:                  pin.trim(),
-            has_pending_tab:      false,
-            can_edit_fulfillment: false,
-            contact_names:        [],
-            price_single:         null,
-            price_rp_pack:        null,
-            price_hwp_pack:       null,
-            currency_symbol:      "$",
-            min_qty:              null,
-            qty_options:          null,
-            pack_prices:          null,
-          });
-        }
-        onCreated(created);
-        toast.success(`Account "${created.display_name}" created`);
-      } catch (e) {
-        toast.error(String(e));
+    setPending(true);
+    try {
+      let created: AccountRow;
+      if (templateAccount) {
+        created = await duplicateAccount(templateAccount.id, trimmedSlug, name.trim(), pin.trim());
+      } else {
+        created = await createAccount({
+          account_id:           trimmedSlug,
+          display_name:         name.trim(),
+          notify_email:         email.trim() || "st.mosesbookstore@gmail.com",
+          pin:                  pin.trim(),
+          has_pending_tab:      false,
+          can_edit_fulfillment: false,
+          contact_names:        [],
+          price_single:         null,
+          price_rp_pack:        null,
+          price_hwp_pack:       null,
+          currency_symbol:      "$",
+          min_qty:              null,
+          qty_options:          null,
+          pack_prices:          null,
+        });
       }
-    });
+      onCreated(created);
+      toast.success(`Account "${created.display_name}" created`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[CreateAccountModal]", e);
+      toast.error(msg);
+    } finally {
+      setPending(false);
+    }
   }
 
   return (

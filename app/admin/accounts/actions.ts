@@ -91,7 +91,17 @@ export async function createAccount(fields: {
     .insert(fields)
     .select()
     .single();
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[createAccount]", error.code, error.message, { account_id: fields.account_id });
+    if (error.code === "23505") {
+      // Unique constraint — surface which field collided
+      const detail = (error as { details?: string }).details ?? error.message;
+      if (detail.includes("account_id")) {
+        throw new Error(`Account slug "${fields.account_id}" is already in use`);
+      }
+    }
+    throw new Error(error.message);
+  }
   return data as AccountRow;
 }
 
@@ -168,23 +178,18 @@ export async function getAdminNote(accountId: string): Promise<AdminNote | null>
 
 export async function upsertAdminNote(accountId: string, content: string): Promise<void> {
   const sb = createSupabaseService();
-  const { data: existing } = await sb
+  // Uses INSERT … ON CONFLICT DO UPDATE (requires UNIQUE on account_id — added
+  // in migration 035).  The old check-then-insert was racy and could create
+  // duplicate rows, causing subsequent .maybeSingle() calls to throw.
+  const { error } = await sb
     .from("account_admin_notes")
-    .select("id")
-    .eq("account_id", accountId)
-    .maybeSingle();
-
-  if (existing) {
-    const { error } = await sb
-      .from("account_admin_notes")
-      .update({ content, updated_at: new Date().toISOString() })
-      .eq("id", existing.id);
-    if (error) throw new Error(error.message);
-  } else {
-    const { error } = await sb
-      .from("account_admin_notes")
-      .insert({ account_id: accountId, content });
-    if (error) throw new Error(error.message);
+    .upsert(
+      { account_id: accountId, content, updated_at: new Date().toISOString() },
+      { onConflict: "account_id" }
+    );
+  if (error) {
+    console.error("[upsertAdminNote]", error.code, error.message, { accountId });
+    throw new Error(error.message);
   }
 }
 
