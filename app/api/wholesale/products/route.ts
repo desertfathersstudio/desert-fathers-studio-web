@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
-import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
-import { getSessionAccountId } from "@/lib/wholesale/validate-session";
-import { getServerAccountByAccountId } from "@/lib/wholesale/accounts-server";
+import { validateWholesaleAccount } from "@/lib/wholesale/accounts-server";
 import {
   getPackType,
   isStandalonePackDesign,
@@ -14,15 +12,12 @@ import { withVersion } from "@/lib/image-version";
 import type { WholesaleProduct } from "@/types/wholesale";
 
 export async function GET(req: NextRequest) {
-  // SECURITY: validate server-side session cookie
-  const sessionAccountId = getSessionAccountId(req);
-  if (!sessionAccountId) {
+  // SECURITY: validate server-side session cookie and look up account from DB
+  const accountConfig = await validateWholesaleAccount(req);
+  if (!accountConfig) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const accountId = sessionAccountId; // use session, not client-supplied param
-  if (!ALL_ACCOUNT_IDS.has(accountId)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const accountId = accountConfig.accountId;
 
   try {
     const sb = createSupabaseService();
@@ -54,8 +49,7 @@ export async function GET(req: NextRequest) {
         if (pm.pack_size       != null) packSizes[s]           = Number(pm.pack_size);
       }
     }
-    const accountConfig = getServerAccountByAccountId(accountId);
-    const accountPackPrices = accountConfig?.packPrices ?? {};
+    const accountPackPrices = accountConfig.packPrices ?? {};
 
     const cacheBust = String(Date.now());
     // Only designs added after this date get the "New" badge going forward

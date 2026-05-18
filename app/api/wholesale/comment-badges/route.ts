@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
-import { getAccountById } from "@/config/wholesale-accounts";
-import { getSessionAccountId } from "@/lib/wholesale/validate-session";
+import { validateWholesaleAccount } from "@/lib/wholesale/accounts-server";
 
 // Returns per-product badge data for the pending tab.
 // Shows when admin has replied so the reviewer knows to check back.
 export async function GET(req: NextRequest) {
-  const sessionAccountId = getSessionAccountId(req);
-  if (!sessionAccountId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const account = getAccountById(sessionAccountId);
+  const account = await validateWholesaleAccount(req);
   if (!account || !account.hasPendingTab) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

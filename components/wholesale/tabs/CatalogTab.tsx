@@ -9,7 +9,6 @@ import {
   extractDriveFileId,
   driveThumbUrl,
 } from "@/lib/wholesale/pricing";
-import { getAccountById } from "@/config/wholesale-accounts";
 
 const SORT_OPTIONS = [
   { value: "newest",  label: "Newest first" },
@@ -34,12 +33,12 @@ interface Props {
   priceHwpPack: number;
   currencySymbol: string;
   minQty: number;
+  qtyOptions?: number[];
 }
 
-export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved, priceSingle, priceRpPack, priceHwpPack, currencySymbol, minQty }: Props) {
-  const accountConfig = getAccountById(accountId);
+export function CatalogTab({ products, onAddToCart, accountId, hasPendingTab, onProductUnapproved, priceSingle, priceRpPack, priceHwpPack, currencySymbol, minQty, qtyOptions: sessionQtyOptions }: Props) {
   const baseOptions = QTY_OPTIONS.filter((q) => q >= minQty);
-  const extras = (accountConfig?.qtyOptions ?? []).filter((q) => !baseOptions.includes(q));
+  const extras = (sessionQtyOptions ?? []).filter((q) => !baseOptions.includes(q));
   const qtyOptions = [...extras, ...baseOptions];
 
   const [search, setSearch] = useState("");

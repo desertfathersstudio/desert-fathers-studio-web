@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
-import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
-import { getSessionAccountId } from "@/lib/wholesale/validate-session";
+import { validateWholesaleAccount } from "@/lib/wholesale/accounts-server";
 import type { OrderStage } from "@/types/wholesale";
 
 type Params = { params: Promise<{ orderId: string }> };
@@ -15,12 +14,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const adminKey = req.headers.get("x-admin-key");
   const isAdmin = adminKey && adminKey === process.env.ADMIN_SECRET_KEY;
 
-  const sessionAccountId = isAdmin ? null : getSessionAccountId(req);
+  let accountId = "admin";
 
-  if (!isAdmin && (!sessionAccountId || !ALL_ACCOUNT_IDS.has(sessionAccountId))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isAdmin) {
+    const account = await validateWholesaleAccount(req);
+    if (!account) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    accountId = account.accountId;
   }
-  const accountId = sessionAccountId ?? "admin";
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch {

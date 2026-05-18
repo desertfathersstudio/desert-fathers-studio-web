@@ -1,6 +1,6 @@
-// SECURITY: ACCOUNT_MAPPING and getAccountByPin moved to
-// lib/wholesale/accounts-server.ts (server-only) to keep PINs out of the
-// client-side JS bundle. Only account IDs (not PINs) live here.
+// SECURITY: Account data (including PINs) is now stored in the wholesale_accounts
+// DB table and accessed via lib/wholesale/accounts-server.ts (server-only).
+// This file contains only the shared type interface used across the codebase.
 
 export interface WholesaleAccountConfig {
   accountId: string;
@@ -23,95 +23,3 @@ export interface WholesaleAccountConfig {
   /** Wholesale price overrides for specific pack SKUs (e.g. { "PK-3": 2.25 }) */
   packPrices?: Record<string, number>;
 }
-
-// Client-safe: accountIds only, no PINs.
-const KNOWN_ACCOUNTS: WholesaleAccountConfig[] = [
-  {
-    accountId:          "abbey",
-    displayName:        "St. Mary and St. Moses Abbey",
-    notifyEmail:        "st.mosesbookstore@gmail.com",
-    hasPendingTab:      true,
-    canEditFulfillment: true,
-    contactNames: [
-      "Fr. Arsanios Abba Moses",
-      "Fr. Karas Abba Moses",
-      "Fr. Zosima Abba Moses",
-      "Br. Abanob Abba Moses",
-    ],
-    minQty: 25,
-    qtyOptions: [5, 10],
-  },
-  {
-    accountId:          "demiana",
-    displayName:        "St. Demiana Convent, GA",
-    notifyEmail:        "stdemianabookstore@suscopts.org",
-    hasPendingTab:      false,
-    canEditFulfillment: false,
-    contactNames: ["Omina Dolagy"],
-    priceSingle:  0.90,
-    priceRpPack:  5.00,
-    priceHwpPack: 10.00,
-  },
-  {
-    accountId:          "antony",
-    displayName:        "Saint Antony Coptic Orthodox Monastery",
-    notifyEmail:        "st.mosesbookstore@gmail.com",
-    hasPendingTab:      false,
-    canEditFulfillment: false,
-    contactNames:       [],
-    priceSingle:  0.90,
-    priceRpPack:  5.00,
-    priceHwpPack: 10.00,
-  },
-  {
-    accountId:          "paul",
-    displayName:        "Saint Paul Coptic Orthodox Monastery",
-    notifyEmail:        "st.mosesbookstore@gmail.com",
-    hasPendingTab:      false,
-    canEditFulfillment: false,
-    contactNames:       [],
-    priceSingle:  0.90,
-    priceRpPack:  5.00,
-    priceHwpPack: 10.00,
-  },
-  {
-    accountId:          "katherine",
-    displayName:        "Saint Katherine of Alexandria & Saint Verena Coptic Orthodox Convent",
-    notifyEmail:        "st.mosesbookstore@gmail.com",
-    hasPendingTab:      false,
-    canEditFulfillment: false,
-    contactNames:       [],
-    priceSingle:  0.90,
-    priceRpPack:  5.00,
-    priceHwpPack: 10.00,
-  },
-  {
-    accountId:          "shenouda",
-    displayName:        "Saint Shenouda Monastery",
-    notifyEmail:        "st.mosesbookstore@gmail.com",
-    hasPendingTab:      false,
-    canEditFulfillment: false,
-    contactNames:       [],
-    priceSingle:  1.40,
-    priceRpPack:  8.00,
-    priceHwpPack: 16.00,
-    currencySymbol: "A$",
-  },
-  {
-    accountId:          "maryjohn",
-    displayName:        "St. Mary & St. John Convent, Ohio",
-    notifyEmail:        "st.mosesbookstore@gmail.com",
-    hasPendingTab:      false,
-    canEditFulfillment: false,
-    contactNames:       [],
-    priceSingle:  0.90,
-    priceRpPack:  5.00,
-    priceHwpPack: 10.00,
-  },
-];
-
-export function getAccountById(accountId: string): WholesaleAccountConfig | null {
-  return KNOWN_ACCOUNTS.find((a) => a.accountId === accountId) ?? null;
-}
-
-export const ALL_ACCOUNT_IDS = new Set(KNOWN_ACCOUNTS.map((a) => a.accountId));

@@ -70,6 +70,15 @@ const PORTAL_CONFIG: Record<string, { label: string; short: string; color: strin
     badge: "#ecfeff",
     badgeText: "#0e7490",
   },
+  maryjohn: {
+    label: "St. Mary & St. John Convent",
+    short: "OH Convent",
+    color: "#9d174d",
+    bg: "#fdf2f8",
+    border: "#f9a8d4",
+    badge: "#fdf2f8",
+    badgeText: "#9d174d",
+  },
 };
 
 function portalConfig(accountId: string) {

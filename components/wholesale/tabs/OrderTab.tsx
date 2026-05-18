@@ -6,7 +6,6 @@ import { Trash2, Plus, Minus } from "lucide-react";
 import type { WholesaleProduct, WholesaleCartLine } from "@/types/wholesale";
 import { unitPriceForSku } from "@/lib/wholesale/pricing";
 import { stickerImageUrl } from "@/lib/catalog";
-import { getAccountById } from "@/config/wholesale-accounts";
 import { stickerCount } from "@/lib/wholesale/sticker-count";
 
 const QTY_OPTIONS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
@@ -23,12 +22,9 @@ type AddMode = "single" | "bulk";
 
 export function OrderTab({ products, cart, onCartChange, session, onOrderSubmitted }: Props) {
   const { priceSingle, priceRpPack, priceHwpPack, contactNames, currencySymbol } = session;
-  // Read qty config from the live client-safe account config so it's always
-  // current — bypasses stale session data cached in sessionStorage at login time.
-  const accountConfig = getAccountById(session.accountId);
-  const minQty = accountConfig?.minQty ?? session.minQty ?? 25;
+  const minQty = session.minQty ?? 25;
   const baseOptions = QTY_OPTIONS.filter((q) => q >= minQty);
-  const extras = (accountConfig?.qtyOptions ?? []).filter((q) => !baseOptions.includes(q));
+  const extras = (session.qtyOptions ?? []).filter((q) => !baseOptions.includes(q));
   const qtyOptions = [...extras, ...baseOptions];
 
   const [mode, setMode] = useState<AddMode>("single");

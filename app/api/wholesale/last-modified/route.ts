@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseService } from "@/lib/supabase/service";
-import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
-import { getSessionAccountId } from "@/lib/wholesale/validate-session";
+import { validateWholesaleAccount } from "@/lib/wholesale/accounts-server";
 
 export async function GET(req: NextRequest) {
-  const sessionAccountId = getSessionAccountId(req);
-  if (!sessionAccountId || !ALL_ACCOUNT_IDS.has(sessionAccountId)) {
+  const account = await validateWholesaleAccount(req);
+  if (!account) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

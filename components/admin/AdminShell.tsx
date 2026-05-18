@@ -15,6 +15,7 @@ import {
   X,
   Receipt,
   TrendingUp,
+  BookUser,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +31,7 @@ const NAV = [
   { href: "/admin/money-tracker", label: "Money",        icon: TrendingUp },
   { href: "/admin/misc-expenses", label: "Expenses",     icon: Receipt },
   { href: "/admin/wholesale",     label: "Wholesale",    icon: Users },
+  { href: "/admin/accounts",      label: "Accounts",     icon: BookUser },
   { href: "/admin/suggestions",   label: "Suggestions",  icon: MessageSquare },
   { href: "/admin/feedback",      label: "Feedback",     icon: Flag },
 ];

@@ -2,8 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import fs from "fs";
 import path from "path";
 import { createSupabaseService } from "@/lib/supabase/service";
-import { ALL_ACCOUNT_IDS } from "@/config/wholesale-accounts";
-import { getSessionAccountId } from "@/lib/wholesale/validate-session";
+import { validateWholesaleAccount } from "@/lib/wholesale/accounts-server";
 import { generateOrderPdf } from "@/lib/wholesale/generate-order-pdf";
 import type { WholesaleOrder, WholesaleOrderItem, OrderStage } from "@/types/wholesale";
 import { stickerCount } from "@/lib/wholesale/sticker-count";
@@ -38,14 +37,11 @@ async function nextOrderNumber(sb: ReturnType<typeof createSupabaseService>): Pr
 
 export async function GET(req: NextRequest) {
   // SECURITY: validate server-side session cookie
-  const sessionAccountId = getSessionAccountId(req);
-  if (!sessionAccountId) {
+  const account = await validateWholesaleAccount(req);
+  if (!account) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const accountId = sessionAccountId;
-  if (!ALL_ACCOUNT_IDS.has(accountId)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const accountId = account.accountId;
 
   try {
     const sb = createSupabaseService();
@@ -87,8 +83,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   // SECURITY: validate server-side session cookie
-  const sessionAccountId = getSessionAccountId(req);
-  if (!sessionAccountId || !ALL_ACCOUNT_IDS.has(sessionAccountId)) {
+  const account = await validateWholesaleAccount(req);
+  if (!account) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -102,7 +98,7 @@ export async function POST(req: NextRequest) {
     items: WholesaleOrderItem[]; grandTotal: number; asap: boolean; notes?: string | null;
   };
   // SECURITY: use session-derived accountId, ignore any client-supplied one
-  const accountId = sessionAccountId;
+  const accountId = account.accountId;
 
   if (!items?.length) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });

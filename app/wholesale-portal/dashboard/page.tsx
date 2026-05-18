@@ -203,6 +203,7 @@ export default function WholesaleDashboard() {
               priceHwpPack={session.priceHwpPack}
               currencySymbol={session.currencySymbol}
               minQty={session.minQty ?? 25}
+              qtyOptions={session.qtyOptions}
             />
           )
         )}

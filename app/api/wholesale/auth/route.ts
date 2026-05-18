@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const pin = typeof body.pin === "string" ? body.pin.trim() : "";
   if (!pin) return NextResponse.json({ error: "PIN required" }, { status: 400 });
 
-  const account = getAccountByPin(pin);
+  const account = await getAccountByPin(pin);
   if (!account) {
     // Constant-time-ish delay to slow brute force
     await new Promise((r) => setTimeout(r, 400 + Math.random() * 200));
