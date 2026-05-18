@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useTransition, useRef } from "react";
 import { toast } from "sonner";
 import {
   Plus, Eye, EyeOff, Copy, Trash2, RotateCcw, Save,
-  ChevronRight, StickyNote, ScrollText, Bell, Settings,
+  ChevronLeft, ChevronRight, StickyNote, ScrollText, Bell, Settings,
   X, Check, CalendarDays, Loader2,
 } from "lucide-react";
 import {
@@ -31,6 +31,155 @@ const C = {
 };
 
 type Tab = "settings" | "notes" | "log" | "reminders";
+type MobileView = "list" | "detail";
+
+// ── CSS injected once for responsive layout ───────────────────────────────────
+const LAYOUT_CSS = `
+  @keyframes acct-spin { to { transform: rotate(360deg); } }
+
+  .acct-root {
+    position: relative;
+    min-height: calc(100dvh - 52px);
+    background: ${C.bg};
+  }
+
+  /* ── Mobile: single-pane navigation ── */
+  .acct-list-panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: #faf7f4;
+    min-height: calc(100dvh - 52px - 58px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+  }
+  .acct-detail-panel {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    min-height: calc(100dvh - 52px - 58px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+  }
+
+  /* detail view active on mobile */
+  .acct-root.show-detail .acct-list-panel   { display: none; }
+  .acct-root.show-detail .acct-detail-panel { display: flex; }
+
+  /* ── Desktop: two-column side-by-side ── */
+  @media (min-width: 768px) {
+    .acct-root {
+      display: flex;
+    }
+    .acct-list-panel {
+      width: 320px;
+      flex-shrink: 0;
+      border-right: 1px solid ${C.border};
+      min-height: calc(100dvh - 52px);
+    }
+    .acct-detail-panel {
+      display: flex !important;  /* always visible on desktop */
+      flex: 1;
+      min-width: 0;
+      min-height: calc(100dvh - 52px);
+    }
+    .acct-root.show-detail .acct-list-panel { display: flex !important; }
+    .acct-back-btn { display: none !important; }
+  }
+
+  /* ── Tabs: horizontally scrollable on mobile ── */
+  .acct-tabs {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-bottom: 1px solid ${C.border};
+    background: ${C.surface};
+    padding-left: 0.5rem;
+    flex-shrink: 0;
+  }
+  .acct-tabs::-webkit-scrollbar { display: none; }
+
+  .acct-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.75rem 0.875rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-bottom: -1px;
+    transition: color 0.12s;
+    color: ${C.muted};
+    font-weight: 400;
+  }
+  .acct-tab-btn.active {
+    border-bottom-color: ${C.brand};
+    color: ${C.brand};
+    font-weight: 600;
+  }
+
+  /* ── Tab content: bottom padding clears mobile nav bar ── */
+  .acct-tab-content {
+    flex: 1;
+    padding: 1.25rem;
+    max-width: 720px;
+    box-sizing: border-box;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 16px));
+  }
+  @media (min-width: 768px) {
+    .acct-tab-content {
+      padding: 1.5rem;
+      padding-bottom: 1.5rem;
+    }
+  }
+
+  /* ── Detail panel header ── */
+  .acct-detail-header {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid ${C.border};
+    background: ${C.surface};
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+  @media (min-width: 768px) {
+    .acct-detail-header { padding: 1rem 1.5rem; }
+  }
+
+  /* ── List header / cards ── */
+  .acct-list-header {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid ${C.border};
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+  .acct-list-body {
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  /* ── Form grids ── */
+  .acct-pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  @media (max-width: 480px) {
+    .acct-pricing-grid { grid-template-columns: 1fr; }
+  }
+`;
 
 // ── Account list card ─────────────────────────────────────────────────────────
 function AccountCard({
@@ -63,10 +212,11 @@ function AccountCard({
         display: "flex",
         flexDirection: "column",
         gap: "0.35rem",
+        position: "relative",
       }}
     >
       {/* Name + active badge */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0, paddingRight: "1.25rem" }}>
         <span
           style={{
             fontWeight: 600,
@@ -116,6 +266,7 @@ function AccountCard({
             padding: 0,
             color: C.muted,
             fontSize: "0.75rem",
+            minHeight: 44,
           }}
           title={pinVisible ? "Hide PIN" : "Reveal PIN"}
         >
@@ -141,7 +292,7 @@ function AccountCard({
       </div>
 
       {/* Chevron */}
-      <div style={{ position: "absolute", right: "1rem", top: "50%", transform: "translateY(-50%)", color: C.muted }}>
+      <div style={{ position: "absolute", right: "0.875rem", top: "50%", transform: "translateY(-50%)", color: C.muted }}>
         <ChevronRight size={16} />
       </div>
     </button>
@@ -168,7 +319,7 @@ function Badge({ color, text, children }: { color: string; text: string; childre
 
 // ── Text input helper ─────────────────────────────────────────────────────────
 function Field({
-  label, value, onChange, type = "text", placeholder, mono = false, hint,
+  label, value, onChange, type = "text", placeholder, mono = false, hint, readOnly,
 }: {
   label: string;
   value: string;
@@ -177,6 +328,7 @@ function Field({
   placeholder?: string;
   mono?: boolean;
   hint?: string;
+  readOnly?: boolean;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -188,17 +340,19 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        readOnly={readOnly}
         style={{
-          background: C.inputBg,
+          background: readOnly ? "#f0ebe8" : C.inputBg,
           border: `1px solid ${C.border}`,
           borderRadius: 7,
-          padding: "0.5rem 0.625rem",
+          padding: "0.55rem 0.625rem",
           fontSize: "0.875rem",
           fontFamily: mono ? "monospace" : "inherit",
-          color: C.text,
+          color: readOnly ? C.muted : C.text,
           outline: "none",
           width: "100%",
           boxSizing: "border-box",
+          minHeight: 44,
         }}
       />
       {hint && <span style={{ fontSize: "0.7rem", color: C.muted }}>{hint}</span>}
@@ -231,12 +385,13 @@ function NumField({
           background: C.inputBg,
           border: `1px solid ${C.border}`,
           borderRadius: 7,
-          padding: "0.5rem 0.625rem",
+          padding: "0.55rem 0.625rem",
           fontSize: "0.875rem",
           color: C.text,
           outline: "none",
           width: "100%",
           boxSizing: "border-box",
+          minHeight: 44,
         }}
       />
       {hint && <span style={{ fontSize: "0.7rem", color: C.muted }}>{hint}</span>}
@@ -260,6 +415,7 @@ function Toggle({
         justifyContent: "space-between",
         gap: "0.75rem",
         padding: "0.5rem 0",
+        minHeight: 44,
       }}
     >
       <div>
@@ -315,36 +471,24 @@ function SettingsPanel({
   const [pending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Form state
-  const [displayName, setDisplayName] = useState(account.display_name);
-  const [notifyEmail, setNotifyEmail] = useState(account.notify_email);
-  const [pin, setPin] = useState(account.pin);
-  const [hasPendingTab, setHasPendingTab] = useState(account.has_pending_tab);
+  const [displayName, setDisplayName]           = useState(account.display_name);
+  const [notifyEmail, setNotifyEmail]           = useState(account.notify_email);
+  const [pin, setPin]                           = useState(account.pin);
+  const [hasPendingTab, setHasPendingTab]       = useState(account.has_pending_tab);
   const [canEditFulfillment, setCanEditFulfillment] = useState(account.can_edit_fulfillment);
-  const [contactNamesRaw, setContactNamesRaw] = useState(
-    (account.contact_names ?? []).join("\n")
-  );
-  const [priceSingle, setPriceSingle] = useState(
-    account.price_single != null ? String(account.price_single) : ""
-  );
-  const [priceRp, setPriceRp] = useState(
-    account.price_rp_pack != null ? String(account.price_rp_pack) : ""
-  );
-  const [priceHwp, setPriceHwp] = useState(
-    account.price_hwp_pack != null ? String(account.price_hwp_pack) : ""
-  );
-  const [currencySymbol, setCurrencySymbol] = useState(account.currency_symbol ?? "$");
-  const [minQty, setMinQty] = useState(account.min_qty != null ? String(account.min_qty) : "");
-  const [qtyOptionsRaw, setQtyOptionsRaw] = useState(
-    (account.qty_options ?? []).join(", ")
-  );
-  const [packPricesRaw, setPackPricesRaw] = useState(
+  const [contactNamesRaw, setContactNamesRaw]   = useState((account.contact_names ?? []).join("\n"));
+  const [priceSingle, setPriceSingle]           = useState(account.price_single != null ? String(account.price_single) : "");
+  const [priceRp, setPriceRp]                   = useState(account.price_rp_pack != null ? String(account.price_rp_pack) : "");
+  const [priceHwp, setPriceHwp]                 = useState(account.price_hwp_pack != null ? String(account.price_hwp_pack) : "");
+  const [currencySymbol, setCurrencySymbol]     = useState(account.currency_symbol ?? "$");
+  const [minQty, setMinQty]                     = useState(account.min_qty != null ? String(account.min_qty) : "");
+  const [qtyOptionsRaw, setQtyOptionsRaw]       = useState((account.qty_options ?? []).join(", "));
+  const [packPricesRaw, setPackPricesRaw]       = useState(
     account.pack_prices != null
       ? Object.entries(account.pack_prices).map(([k, v]) => `${k}: ${v}`).join("\n")
       : ""
   );
 
-  // Sync form when account changes
   useEffect(() => {
     setDisplayName(account.display_name);
     setNotifyEmail(account.notify_email);
@@ -381,21 +525,21 @@ function SettingsPanel({
     startTransition(async () => {
       try {
         const fields = {
-          display_name:        displayName.trim(),
-          notify_email:        notifyEmail.trim(),
-          pin:                 pin.trim(),
-          has_pending_tab:     hasPendingTab,
+          display_name:         displayName.trim(),
+          notify_email:         notifyEmail.trim(),
+          pin:                  pin.trim(),
+          has_pending_tab:      hasPendingTab,
           can_edit_fulfillment: canEditFulfillment,
-          contact_names:       contactNamesRaw.split("\n").map((s) => s.trim()).filter(Boolean),
-          price_single:        priceSingle.trim() ? Number(priceSingle) : null,
-          price_rp_pack:       priceRp.trim() ? Number(priceRp) : null,
-          price_hwp_pack:      priceHwp.trim() ? Number(priceHwp) : null,
-          currency_symbol:     currencySymbol.trim() || "$",
-          min_qty:             minQty.trim() ? Number(minQty) : null,
-          qty_options:         qtyOptionsRaw.trim()
+          contact_names:        contactNamesRaw.split("\n").map((s) => s.trim()).filter(Boolean),
+          price_single:         priceSingle.trim() ? Number(priceSingle) : null,
+          price_rp_pack:        priceRp.trim() ? Number(priceRp) : null,
+          price_hwp_pack:       priceHwp.trim() ? Number(priceHwp) : null,
+          currency_symbol:      currencySymbol.trim() || "$",
+          min_qty:              minQty.trim() ? Number(minQty) : null,
+          qty_options:          qtyOptionsRaw.trim()
             ? qtyOptionsRaw.split(",").map((s) => Number(s.trim())).filter((n) => !isNaN(n))
             : null,
-          pack_prices:         parsePackPrices(packPricesRaw),
+          pack_prices: parsePackPrices(packPricesRaw),
         };
         await updateAccount(account.id, fields);
         onSaved({ ...account, ...fields });
@@ -431,22 +575,21 @@ function SettingsPanel({
     });
   }
 
+  const defaultPricingHint = `Global defaults: $${WS_PRICE_SINGLE}/sticker · $${WS_PRICE_RP_PACK}/RP · $${WS_PRICE_HWP_PACK}/HWP`;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      {/* Basic info */}
       <Section title="Basic Info">
         <Field label="Display Name" value={displayName} onChange={setDisplayName} />
         <Field label="Notify Email" value={notifyEmail} onChange={setNotifyEmail} type="email" />
         <Field label="PIN" value={pin} onChange={setPin} mono placeholder="e.g. 4321"
           hint="4–8 digit PIN used to log in to the wholesale portal" />
-        <Field label="Account ID (slug)" value={account.account_id} onChange={() => {}}
-          mono hint="Cannot be changed after creation — used in order records and URLs"
-        />
+        <Field label="Account ID (slug)" value={account.account_id} onChange={() => {}} mono readOnly
+          hint="Cannot be changed after creation" />
       </Section>
 
-      {/* Pricing */}
-      <Section title={`Pricing (global defaults: $${WS_PRICE_SINGLE}/sticker, $${WS_PRICE_RP_PACK}/RP, $${WS_PRICE_HWP_PACK}/HWP)`}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+      <Section title={`Pricing — ${defaultPricingHint}`}>
+        <div className="acct-pricing-grid">
           <NumField label="Price / Sticker" value={priceSingle} onChange={setPriceSingle}
             placeholder={`Default: ${WS_PRICE_SINGLE}`} />
           <Field label="Currency Symbol" value={currencySymbol} onChange={setCurrencySymbol}
@@ -483,12 +626,11 @@ function SettingsPanel({
         </div>
       </Section>
 
-      {/* Order settings */}
       <Section title="Order Settings">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+        <div className="acct-pricing-grid">
           <NumField label="Min Qty / Line" value={minQty} onChange={setMinQty} placeholder="Default: 50" />
           <Field label="Qty Options" value={qtyOptionsRaw} onChange={setQtyOptionsRaw}
-            placeholder="5, 10, 25" hint="Comma-separated; leave blank for default" />
+            placeholder="5, 10, 25" hint="Comma-separated; blank = default" />
         </div>
         <Toggle label="Pending Tab (product review)" value={hasPendingTab} onChange={setHasPendingTab}
           hint="Lets this account approve / comment on upcoming designs" />
@@ -496,7 +638,6 @@ function SettingsPanel({
           hint="Allows editing tracking numbers and order stages" />
       </Section>
 
-      {/* Contact names */}
       <Section title="Contact Names">
         <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
           <label style={{ fontSize: "0.75rem", fontWeight: 600, color: C.muted, letterSpacing: "0.03em" }}>
@@ -523,42 +664,21 @@ function SettingsPanel({
         </div>
       </Section>
 
-      {/* Actions */}
       <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", paddingTop: "0.25rem" }}>
-        <ActionBtn
-          onClick={handleSave}
-          loading={pending}
-          icon={<Save size={15} />}
-          label="Save Changes"
-          primary
-        />
-        <ActionBtn
-          onClick={() => onDuplicate(account)}
-          icon={<Copy size={15} />}
-          label="Duplicate"
-        />
+        <ActionBtn onClick={handleSave} loading={pending} icon={<Save size={15} />} label="Save Changes" primary />
+        <ActionBtn onClick={() => onDuplicate(account)} icon={<Copy size={15} />} label="Duplicate" />
         {account.active ? (
           confirmDelete ? (
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-              <span style={{ fontSize: "0.8rem", color: C.danger }}>Deactivate account?</span>
+              <span style={{ fontSize: "0.8rem", color: C.danger }}>Deactivate?</span>
               <ActionBtn onClick={handleDelete} loading={pending} icon={<Check size={14} />} label="Yes" danger />
               <ActionBtn onClick={() => setConfirmDelete(false)} icon={<X size={14} />} label="No" />
             </div>
           ) : (
-            <ActionBtn
-              onClick={() => setConfirmDelete(true)}
-              icon={<Trash2 size={15} />}
-              label="Deactivate"
-              danger
-            />
+            <ActionBtn onClick={() => setConfirmDelete(true)} icon={<Trash2 size={15} />} label="Deactivate" danger />
           )
         ) : (
-          <ActionBtn
-            onClick={handleRestore}
-            loading={pending}
-            icon={<RotateCcw size={15} />}
-            label="Restore"
-          />
+          <ActionBtn onClick={handleRestore} loading={pending} icon={<RotateCcw size={15} />} label="Restore" />
         )}
       </div>
     </div>
@@ -567,16 +687,14 @@ function SettingsPanel({
 
 // ── Notes panel ───────────────────────────────────────────────────────────────
 function NotesPanel({ accountId }: { accountId: string }) {
-  const [note, setNote] = useState<AdminNote | null>(null);
-  const [content, setContent] = useState("");
-  const [pending, startTransition] = useTransition();
-  const [loaded, setLoaded] = useState(false);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [content, setContent]           = useState("");
+  const [pending, startTransition]      = useTransition();
+  const [loaded, setLoaded]             = useState(false);
+  const saveTimer                       = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setLoaded(false);
     getAdminNote(accountId).then((n) => {
-      setNote(n);
       setContent(n?.content ?? "");
       setLoaded(true);
     });
@@ -586,16 +704,14 @@ function NotesPanel({ accountId }: { accountId: string }) {
     setContent(val);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      startTransition(async () => {
-        await upsertAdminNote(accountId, val);
-      });
+      startTransition(async () => { await upsertAdminNote(accountId, val); });
     }, 1200);
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
       <p style={{ fontSize: "0.8rem", color: C.muted, margin: 0 }}>
-        Private notes visible only to admins. Auto-saved after 1.2s.
+        Private notes — visible only to admins. Auto-saved after 1.2s.
       </p>
       {!loaded ? (
         <div style={{ color: C.muted, fontSize: "0.85rem" }}>Loading...</div>
@@ -623,21 +739,20 @@ function NotesPanel({ accountId }: { accountId: string }) {
       )}
       {pending && (
         <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", color: C.muted, fontSize: "0.75rem" }}>
-          <Loader2 size={12} style={{ animation: "spin 0.7s linear infinite" }} />
+          <Loader2 size={12} style={{ animation: "acct-spin 0.7s linear infinite" }} />
           Saving...
         </div>
       )}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
 
 // ── Log panel ─────────────────────────────────────────────────────────────────
 function LogPanel({ accountId }: { accountId: string }) {
-  const [entries, setEntries] = useState<LogEntry[]>([]);
-  const [draft, setDraft] = useState("");
-  const [pending, startTransition] = useTransition();
-  const [loaded, setLoaded] = useState(false);
+  const [entries, setEntries]        = useState<LogEntry[]>([]);
+  const [draft, setDraft]            = useState("");
+  const [pending, startTransition]   = useTransition();
+  const [loaded, setLoaded]          = useState(false);
 
   useEffect(() => {
     setLoaded(false);
@@ -651,9 +766,7 @@ function LogPanel({ accountId }: { accountId: string }) {
         const entry = await addLogEntry(accountId, draft.trim());
         setEntries((prev) => [entry, ...prev]);
         setDraft("");
-      } catch (e) {
-        toast.error(String(e));
-      }
+      } catch (e) { toast.error(String(e)); }
     });
   }
 
@@ -662,22 +775,17 @@ function LogPanel({ accountId }: { accountId: string }) {
       try {
         await deleteLogEntry(entryId);
         setEntries((prev) => prev.filter((e) => e.id !== entryId));
-      } catch (e) {
-        toast.error(String(e));
-      }
+      } catch (e) { toast.error(String(e)); }
     });
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-      {/* Add entry */}
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAdd();
-          }}
+          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAdd(); }}
           rows={3}
           placeholder="Add a log entry — what happened, what was discussed... (⌘+Enter to save)"
           style={{
@@ -709,19 +817,17 @@ function LogPanel({ accountId }: { accountId: string }) {
             cursor: "pointer",
             opacity: !draft.trim() ? 0.5 : 1,
             fontFamily: "inherit",
+            minHeight: 44,
           }}
         >
           Add
         </button>
       </div>
 
-      {/* Entries */}
       {!loaded ? (
         <div style={{ color: C.muted, fontSize: "0.85rem" }}>Loading...</div>
       ) : entries.length === 0 ? (
-        <div style={{ color: C.muted, fontSize: "0.875rem", fontStyle: "italic" }}>
-          No log entries yet.
-        </div>
+        <div style={{ color: C.muted, fontSize: "0.875rem", fontStyle: "italic" }}>No log entries yet.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
           {entries.map((entry) => (
@@ -750,14 +856,7 @@ function LogPanel({ accountId }: { accountId: string }) {
               </div>
               <button
                 onClick={() => handleDelete(entry.id)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: C.muted,
-                  padding: 4,
-                  flexShrink: 0,
-                }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, padding: 4, flexShrink: 0, minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
                 title="Delete entry"
               >
                 <Trash2 size={14} />
@@ -772,11 +871,11 @@ function LogPanel({ accountId }: { accountId: string }) {
 
 // ── Reminders panel ───────────────────────────────────────────────────────────
 function RemindersPanel({ accountId }: { accountId: string }) {
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [draft, setDraft] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [pending, startTransition] = useTransition();
-  const [loaded, setLoaded] = useState(false);
+  const [reminders, setReminders]    = useState<Reminder[]>([]);
+  const [draft, setDraft]            = useState("");
+  const [dueDate, setDueDate]        = useState("");
+  const [pending, startTransition]   = useTransition();
+  const [loaded, setLoaded]          = useState(false);
 
   useEffect(() => {
     setLoaded(false);
@@ -796,9 +895,7 @@ function RemindersPanel({ accountId }: { accountId: string }) {
         }));
         setDraft("");
         setDueDate("");
-      } catch (e) {
-        toast.error(String(e));
-      }
+      } catch (e) { toast.error(String(e)); }
     });
   }
 
@@ -821,18 +918,15 @@ function RemindersPanel({ accountId }: { accountId: string }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-      {/* Add form */}
-      <div
-        style={{
-          background: C.surface,
-          border: `1px solid ${C.border}`,
-          borderRadius: 9,
-          padding: "0.875rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.625rem",
-        }}
-      >
+      <div style={{
+        background: C.surface,
+        border: `1px solid ${C.border}`,
+        borderRadius: 9,
+        padding: "0.875rem",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.625rem",
+      }}>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -852,8 +946,8 @@ function RemindersPanel({ accountId }: { accountId: string }) {
             width: "100%",
           }}
         />
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          <CalendarDays size={15} color={C.muted} />
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          <CalendarDays size={15} color={C.muted} style={{ flexShrink: 0 }} />
           <input
             type="date"
             value={dueDate}
@@ -867,6 +961,7 @@ function RemindersPanel({ accountId }: { accountId: string }) {
               color: C.text,
               outline: "none",
               fontFamily: "inherit",
+              minHeight: 44,
             }}
           />
           <button
@@ -884,6 +979,7 @@ function RemindersPanel({ accountId }: { accountId: string }) {
               cursor: "pointer",
               opacity: !draft.trim() ? 0.5 : 1,
               fontFamily: "inherit",
+              minHeight: 44,
             }}
           >
             Add
@@ -896,9 +992,7 @@ function RemindersPanel({ accountId }: { accountId: string }) {
       ) : (
         <>
           {open.length === 0 && done.length === 0 && (
-            <div style={{ color: C.muted, fontSize: "0.875rem", fontStyle: "italic" }}>
-              No reminders yet.
-            </div>
+            <div style={{ color: C.muted, fontSize: "0.875rem", fontStyle: "italic" }}>No reminders yet.</div>
           )}
           {open.map((r) => <ReminderRow key={r.id} reminder={r} onToggle={handleToggle} onDelete={handleDelete} />)}
           {done.length > 0 && (
@@ -916,9 +1010,7 @@ function RemindersPanel({ accountId }: { accountId: string }) {
 }
 
 function ReminderRow({
-  reminder,
-  onToggle,
-  onDelete,
+  reminder, onToggle, onDelete,
 }: {
   reminder: Reminder;
   onToggle: (id: string, completed: boolean) => void;
@@ -930,25 +1022,23 @@ function ReminderRow({
     reminder.due_date < new Date().toISOString().slice(0, 10);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: "0.625rem",
-        alignItems: "flex-start",
-        padding: "0.625rem",
-        background: C.surface,
-        border: `1px solid ${isOverdue ? "#fca5a5" : C.border}`,
-        borderRadius: 8,
-        opacity: reminder.completed ? 0.5 : 1,
-      }}
-    >
+    <div style={{
+      display: "flex",
+      gap: "0.625rem",
+      alignItems: "flex-start",
+      padding: "0.625rem",
+      background: C.surface,
+      border: `1px solid ${isOverdue ? "#fca5a5" : C.border}`,
+      borderRadius: 8,
+      opacity: reminder.completed ? 0.5 : 1,
+    }}>
       <button
         onClick={() => onToggle(reminder.id, !reminder.completed)}
         style={{
           flexShrink: 0,
-          width: 18,
-          height: 18,
-          borderRadius: 4,
+          width: 22,
+          height: 22,
+          borderRadius: 5,
           border: `2px solid ${reminder.completed ? C.green : C.muted}`,
           background: reminder.completed ? C.green : "transparent",
           cursor: "pointer",
@@ -956,19 +1046,19 @@ function ReminderRow({
           alignItems: "center",
           justifyContent: "center",
           marginTop: 1,
+          minWidth: 44,
+          minHeight: 44,
         }}
       >
         {reminder.completed && <Check size={11} color="#fff" strokeWidth={3} />}
       </button>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: "0.875rem",
-            color: C.text,
-            textDecoration: reminder.completed ? "line-through" : "none",
-            lineHeight: 1.5,
-          }}
-        >
+        <div style={{
+          fontSize: "0.875rem",
+          color: C.text,
+          textDecoration: reminder.completed ? "line-through" : "none",
+          lineHeight: 1.5,
+        }}>
           {reminder.content}
         </div>
         {reminder.due_date && (
@@ -982,7 +1072,7 @@ function ReminderRow({
       </div>
       <button
         onClick={() => onDelete(reminder.id)}
-        style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, padding: 2, flexShrink: 0 }}
+        style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, padding: 2, flexShrink: 0, minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
       >
         <X size={13} />
       </button>
@@ -992,19 +1082,17 @@ function ReminderRow({
 
 // ── Create / Duplicate modal ──────────────────────────────────────────────────
 function CreateAccountModal({
-  templateAccount,
-  onClose,
-  onCreated,
+  templateAccount, onClose, onCreated,
 }: {
   templateAccount: AccountRow | null;
   onClose: () => void;
   onCreated: (account: AccountRow) => void;
 }) {
   const [pending, startTransition] = useTransition();
-  const [slug, setSlug] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState(templateAccount?.notify_email ?? "st.mosesbookstore@gmail.com");
-  const [pin, setPin] = useState("");
+  const [slug, setSlug]            = useState("");
+  const [name, setName]            = useState("");
+  const [email, setEmail]          = useState(templateAccount?.notify_email ?? "st.mosesbookstore@gmail.com");
+  const [pin, setPin]              = useState("");
 
   function handleCreate() {
     if (!slug.trim() || !name.trim() || !pin.trim()) {
@@ -1018,20 +1106,20 @@ function CreateAccountModal({
           created = await duplicateAccount(templateAccount.id, slug.trim(), name.trim(), pin.trim());
         } else {
           created = await createAccount({
-            account_id:          slug.trim().toLowerCase().replace(/\s+/g, "-"),
-            display_name:        name.trim(),
-            notify_email:        email.trim() || "st.mosesbookstore@gmail.com",
-            pin:                 pin.trim(),
-            has_pending_tab:     false,
+            account_id:           slug.trim().toLowerCase().replace(/\s+/g, "-"),
+            display_name:         name.trim(),
+            notify_email:         email.trim() || "st.mosesbookstore@gmail.com",
+            pin:                  pin.trim(),
+            has_pending_tab:      false,
             can_edit_fulfillment: false,
-            contact_names:       [],
-            price_single:        null,
-            price_rp_pack:       null,
-            price_hwp_pack:      null,
-            currency_symbol:     "$",
-            min_qty:             null,
-            qty_options:         null,
-            pack_prices:         null,
+            contact_names:        [],
+            price_single:         null,
+            price_rp_pack:        null,
+            price_hwp_pack:       null,
+            currency_symbol:      "$",
+            min_qty:              null,
+            qty_options:          null,
+            pack_prices:          null,
           });
         }
         onCreated(created);
@@ -1052,6 +1140,7 @@ function CreateAccountModal({
         alignItems: "center",
         justifyContent: "center",
         background: "rgba(0,0,0,0.4)",
+        padding: "1rem",
       }}
       onClick={onClose}
     >
@@ -1060,12 +1149,14 @@ function CreateAccountModal({
         style={{
           background: C.surface,
           borderRadius: 14,
-          padding: "1.5rem",
-          width: 420,
-          maxWidth: "calc(100vw - 2rem)",
+          padding: "1.25rem",
+          width: "100%",
+          maxWidth: 420,
           display: "flex",
           flexDirection: "column",
           gap: "1rem",
+          maxHeight: "90dvh",
+          overflowY: "auto",
         }}
       >
         <h3 style={{ margin: 0, fontWeight: 700, fontSize: "1.05rem", color: C.text }}>
@@ -1076,31 +1167,25 @@ function CreateAccountModal({
             Copies pricing structure. Private notes and order history are not copied.
           </p>
         )}
-        <Field
-          label="Account Slug (ID)"
-          value={slug}
-          onChange={setSlug}
-          mono
-          placeholder="e.g. antony-2"
-          hint="Lowercase, no spaces, used internally in orders"
-        />
+        <Field label="Account Slug (ID)" value={slug} onChange={setSlug} mono
+          placeholder="e.g. antony-2" hint="Lowercase, no spaces — used internally in orders" />
         <Field label="Display Name" value={name} onChange={setName}
           placeholder="e.g. Saint Antony Monastery #2" />
         <Field label="Notify Email" value={email} onChange={setEmail} type="email" />
-        <Field label="PIN" value={pin} onChange={setPin} mono placeholder="e.g. 7721"
-          hint="4–8 digits" />
-        <div style={{ display: "flex", gap: "0.625rem", justifyContent: "flex-end" }}>
+        <Field label="PIN" value={pin} onChange={setPin} mono placeholder="e.g. 7721" hint="4–8 digits" />
+        <div style={{ display: "flex", gap: "0.625rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
           <button
             onClick={onClose}
             style={{
               background: "none",
               border: `1px solid ${C.border}`,
               borderRadius: 8,
-              padding: "0.5rem 1.25rem",
+              padding: "0.55rem 1.25rem",
               cursor: "pointer",
               fontSize: "0.875rem",
               fontFamily: "inherit",
               color: C.text,
+              minHeight: 44,
             }}
           >
             Cancel
@@ -1113,12 +1198,13 @@ function CreateAccountModal({
               color: "#fff",
               border: "none",
               borderRadius: 8,
-              padding: "0.5rem 1.25rem",
+              padding: "0.55rem 1.25rem",
               cursor: "pointer",
               fontSize: "0.875rem",
               fontWeight: 600,
               fontFamily: "inherit",
               opacity: pending ? 0.7 : 1,
+              minHeight: 44,
             }}
           >
             {pending ? "Creating..." : "Create Account"}
@@ -1133,17 +1219,15 @@ function CreateAccountModal({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-      <div
-        style={{
-          fontSize: "0.7rem",
-          fontWeight: 700,
-          color: C.muted,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          paddingBottom: "0.25rem",
-          borderBottom: `1px solid ${C.border}`,
-        }}
-      >
+      <div style={{
+        fontSize: "0.7rem",
+        fontWeight: 700,
+        color: C.muted,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        paddingBottom: "0.25rem",
+        borderBottom: `1px solid ${C.border}`,
+      }}>
         {title}
       </div>
       {children}
@@ -1174,15 +1258,16 @@ function ActionBtn({
         color: primary ? "#fff" : danger ? C.danger : C.text,
         border: `1px solid ${primary ? C.brand : danger ? "#fca5a5" : C.border}`,
         borderRadius: 8,
-        padding: "0.5rem 1rem",
+        padding: "0.55rem 1rem",
         fontSize: "0.85rem",
         fontWeight: 600,
         cursor: loading ? "not-allowed" : "pointer",
         opacity: loading ? 0.7 : 1,
         fontFamily: "inherit",
+        minHeight: 44,
       }}
     >
-      {loading ? <Loader2 size={14} style={{ animation: "spin 0.7s linear infinite" }} /> : icon}
+      {loading ? <Loader2 size={14} style={{ animation: "acct-spin 0.7s linear infinite" }} /> : icon}
       {label}
     </button>
   );
@@ -1190,23 +1275,46 @@ function ActionBtn({
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 export function WholesaleAccountsView() {
-  const [accounts, setAccounts] = useState<AccountRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("settings");
+  const [accounts, setAccounts]       = useState<AccountRow[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [selectedId, setSelectedId]   = useState<string | null>(null);
+  const [activeTab, setActiveTab]     = useState<Tab>("settings");
   const [showInactive, setShowInactive] = useState(false);
-  const [createModal, setCreateModal] = useState<{
-    open: boolean;
-    template: AccountRow | null;
-  }>({ open: false, template: null });
+  const [mobileView, setMobileView]   = useState<MobileView>("list");
+  const [createModal, setCreateModal] = useState<{ open: boolean; template: AccountRow | null }>({
+    open: false, template: null,
+  });
 
   useEffect(() => {
     listAccounts().then((data) => {
       setAccounts(data);
+      // On desktop pre-select first account; on mobile stay on list
       if (data.length > 0) setSelectedId(data[0].id);
       setLoading(false);
     });
   }, []);
+
+  // Browser back button returns to list on mobile
+  useEffect(() => {
+    function onPopState() {
+      setMobileView("list");
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  function handleSelectAccount(id: string) {
+    setSelectedId(id);
+    setActiveTab("settings");
+    setMobileView("detail");
+    // Push a history entry so the system back button can return to list
+    window.history.pushState({ accountDetail: id }, "");
+  }
+
+  function handleBackToList() {
+    setMobileView("list");
+    window.history.back();
+  }
 
   const selected = accounts.find((a) => a.id === selectedId) ?? null;
 
@@ -1223,6 +1331,7 @@ export function WholesaleAccountsView() {
     if (!showInactive && selectedId === id) {
       const next = accounts.find((a) => a.id !== id && a.active);
       setSelectedId(next?.id ?? null);
+      if (!next) setMobileView("list");
     }
   }
 
@@ -1232,7 +1341,7 @@ export function WholesaleAccountsView() {
 
   function handleCreated(account: AccountRow) {
     setAccounts((prev) => [...prev, account]);
-    setSelectedId(account.id);
+    handleSelectAccount(account.id);
     setCreateModal({ open: false, template: null });
   }
 
@@ -1246,46 +1355,19 @@ export function WholesaleAccountsView() {
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "4rem" }}>
-        <Loader2 size={28} style={{ animation: "spin 0.7s linear infinite", color: C.muted }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <style>{LAYOUT_CSS}</style>
+        <Loader2 size={28} style={{ animation: "acct-spin 0.7s linear infinite", color: C.muted }} />
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "calc(100dvh - 52px)",
-        background: C.bg,
-      }}
-    >
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div className={`acct-root${mobileView === "detail" ? " show-detail" : ""}`}>
+      <style>{LAYOUT_CSS}</style>
 
       {/* ── Left: account list ────────────────────────────────────────────── */}
-      <div
-        style={{
-          width: 320,
-          flexShrink: 0,
-          borderRight: `1px solid ${C.border}`,
-          background: "#faf7f4",
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "auto",
-        }}
-        className="hidden md:flex"
-      >
-        {/* Header */}
-        <div
-          style={{
-            padding: "1rem",
-            borderBottom: `1px solid ${C.border}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "0.5rem",
-          }}
-        >
+      <div className="acct-list-panel">
+        <div className="acct-list-header">
           <div>
             <div style={{ fontWeight: 700, fontSize: "0.9rem", color: C.text }}>
               {visibleAccounts.length} Account{visibleAccounts.length !== 1 ? "s" : ""}
@@ -1293,13 +1375,8 @@ export function WholesaleAccountsView() {
             <button
               onClick={() => setShowInactive((v) => !v)}
               style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                fontSize: "0.72rem",
-                color: C.muted,
-                fontFamily: "inherit",
+                background: "none", border: "none", padding: 0,
+                cursor: "pointer", fontSize: "0.72rem", color: C.muted, fontFamily: "inherit",
               }}
             >
               {showInactive ? "Hide inactive" : "Show inactive"}
@@ -1315,11 +1392,12 @@ export function WholesaleAccountsView() {
               color: "#fff",
               border: "none",
               borderRadius: 8,
-              padding: "0.45rem 0.875rem",
+              padding: "0.55rem 0.875rem",
               fontSize: "0.82rem",
               fontWeight: 600,
               cursor: "pointer",
               fontFamily: "inherit",
+              minHeight: 44,
             }}
           >
             <Plus size={14} />
@@ -1327,19 +1405,14 @@ export function WholesaleAccountsView() {
           </button>
         </div>
 
-        {/* List */}
-        <div style={{ padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
+        <div className="acct-list-body">
           {visibleAccounts.map((account) => (
-            <div key={account.id} style={{ position: "relative" }}>
-              <AccountCard
-                account={account}
-                selected={selectedId === account.id}
-                onSelect={() => {
-                  setSelectedId(account.id);
-                  setActiveTab("settings");
-                }}
-              />
-            </div>
+            <AccountCard
+              key={account.id}
+              account={account}
+              selected={selectedId === account.id}
+              onSelect={() => handleSelectAccount(account.id)}
+            />
           ))}
           {visibleAccounts.length === 0 && (
             <div style={{ color: C.muted, fontSize: "0.875rem", padding: "1rem 0", fontStyle: "italic" }}>
@@ -1350,39 +1423,69 @@ export function WholesaleAccountsView() {
       </div>
 
       {/* ── Right: detail panel ───────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflowY: "auto" }}>
+      <div className="acct-detail-panel">
         {!selected ? (
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: C.muted,
-              fontSize: "0.9rem",
-            }}
-          >
+          <div style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: C.muted,
+            fontSize: "0.9rem",
+          }}>
             Select an account
           </div>
         ) : (
           <>
             {/* Panel header */}
-            <div
-              style={{
-                padding: "1rem 1.5rem",
-                borderBottom: `1px solid ${C.border}`,
-                background: C.surface,
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                flexWrap: "wrap",
-              }}
-            >
+            <div className="acct-detail-header">
+              {/* Back button — mobile only, hidden via CSS on desktop */}
+              <button
+                className="acct-back-btn"
+                onClick={handleBackToList}
+                aria-label="Back to accounts list"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: C.brand,
+                  padding: "0.25rem",
+                  fontFamily: "inherit",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  flexShrink: 0,
+                  minWidth: 44,
+                  minHeight: 44,
+                  justifyContent: "center",
+                  marginLeft: -8,
+                }}
+              >
+                <ChevronLeft size={20} strokeWidth={2.5} />
+              </button>
+
+              {/* Name + slug */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: "1rem", color: C.text }}>
+                <div style={{
+                  fontWeight: 700,
+                  fontSize: "1rem",
+                  color: C.text,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}>
                   {selected.display_name}
                 </div>
-                <div style={{ fontSize: "0.75rem", color: C.muted, fontFamily: "monospace" }}>
+                <div style={{
+                  fontSize: "0.75rem",
+                  color: C.muted,
+                  fontFamily: "monospace",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}>
                   {selected.account_id}
                   {!selected.active && (
                     <span style={{ marginLeft: "0.5rem", color: C.danger, fontFamily: "inherit", fontWeight: 600 }}>
@@ -1391,57 +1494,15 @@ export function WholesaleAccountsView() {
                   )}
                 </div>
               </div>
-
-              {/* Mobile: account selector */}
-              <select
-                value={selectedId ?? ""}
-                onChange={(e) => setSelectedId(e.target.value)}
-                className="flex md:hidden"
-                style={{
-                  background: C.inputBg,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 7,
-                  padding: "0.4rem 0.625rem",
-                  fontSize: "0.875rem",
-                  color: C.text,
-                  fontFamily: "inherit",
-                }}
-              >
-                {accounts.filter((a) => a.active || showInactive).map((a) => (
-                  <option key={a.id} value={a.id}>{a.display_name}</option>
-                ))}
-              </select>
             </div>
 
-            {/* Tabs */}
-            <div
-              style={{
-                display: "flex",
-                borderBottom: `1px solid ${C.border}`,
-                background: C.surface,
-                paddingLeft: "1rem",
-              }}
-            >
+            {/* Tabs — horizontally scrollable */}
+            <div className="acct-tabs">
               {TABS.map(({ key, label, icon }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.375rem",
-                    padding: "0.75rem 1rem",
-                    background: "none",
-                    border: "none",
-                    borderBottom: activeTab === key ? `2px solid ${C.brand}` : "2px solid transparent",
-                    cursor: "pointer",
-                    fontSize: "0.85rem",
-                    fontWeight: activeTab === key ? 600 : 400,
-                    color: activeTab === key ? C.brand : C.muted,
-                    fontFamily: "inherit",
-                    marginBottom: -1,
-                    transition: "color 0.12s",
-                  }}
+                  className={`acct-tab-btn${activeTab === key ? " active" : ""}`}
                 >
                   {icon}
                   {label}
@@ -1450,7 +1511,7 @@ export function WholesaleAccountsView() {
             </div>
 
             {/* Tab content */}
-            <div style={{ flex: 1, padding: "1.5rem", maxWidth: 720 }}>
+            <div className="acct-tab-content">
               {activeTab === "settings" && (
                 <SettingsPanel
                   account={selected}
@@ -1460,8 +1521,8 @@ export function WholesaleAccountsView() {
                   onDuplicate={(account) => setCreateModal({ open: true, template: account })}
                 />
               )}
-              {activeTab === "notes" && <NotesPanel accountId={selected.id} />}
-              {activeTab === "log"   && <LogPanel accountId={selected.id} />}
+              {activeTab === "notes"     && <NotesPanel accountId={selected.id} />}
+              {activeTab === "log"       && <LogPanel accountId={selected.id} />}
               {activeTab === "reminders" && <RemindersPanel accountId={selected.id} />}
             </div>
           </>
