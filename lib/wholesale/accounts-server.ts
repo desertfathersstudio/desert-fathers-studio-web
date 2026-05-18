@@ -1,5 +1,5 @@
 // SERVER-ONLY — never import this in a client component.
-// All account lookups go through the DB (wholesale_accounts table).
+// All account lookups go through the DB (wholesale_portal_accounts table).
 // PINs live only in the DB and never reach the client bundle.
 
 import type { NextRequest } from "next/server";
@@ -47,7 +47,7 @@ function rowToConfig(row: AccountRow): WholesaleAccountConfig {
 export async function getAccountByPin(pin: string): Promise<WholesaleAccountConfig | null> {
   const sb = createSupabaseService();
   const { data, error } = await sb
-    .from("wholesale_accounts")
+    .from("wholesale_portal_accounts")
     .select("*")
     .eq("pin", pin)
     .eq("active", true)
@@ -62,7 +62,7 @@ export async function getServerAccountByAccountId(
 ): Promise<WholesaleAccountConfig | null> {
   const sb = createSupabaseService();
   const { data, error } = await sb
-    .from("wholesale_accounts")
+    .from("wholesale_portal_accounts")
     .select("*")
     .eq("account_id", accountId)
     .eq("active", true)

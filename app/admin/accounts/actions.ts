@@ -51,7 +51,7 @@ export interface Reminder {
 export async function listAccounts(): Promise<AccountRow[]> {
   const sb = createSupabaseService();
   const { data, error } = await sb
-    .from("wholesale_accounts")
+    .from("wholesale_portal_accounts")
     .select("*")
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
@@ -61,7 +61,7 @@ export async function listAccounts(): Promise<AccountRow[]> {
 export async function getAccount(id: string): Promise<AccountRow | null> {
   const sb = createSupabaseService();
   const { data, error } = await sb
-    .from("wholesale_accounts")
+    .from("wholesale_portal_accounts")
     .select("*")
     .eq("id", id)
     .maybeSingle();
@@ -87,7 +87,7 @@ export async function createAccount(fields: {
 }): Promise<AccountRow> {
   const sb = createSupabaseService();
   const { data, error } = await sb
-    .from("wholesale_accounts")
+    .from("wholesale_portal_accounts")
     .insert(fields)
     .select()
     .single();
@@ -101,7 +101,7 @@ export async function updateAccount(
 ): Promise<void> {
   const sb = createSupabaseService();
   const { error } = await sb
-    .from("wholesale_accounts")
+    .from("wholesale_portal_accounts")
     .update(fields)
     .eq("id", id);
   if (error) throw new Error(error.message);
@@ -111,7 +111,7 @@ export async function deleteAccount(id: string): Promise<void> {
   const sb = createSupabaseService();
   // Soft delete: set active = false
   const { error } = await sb
-    .from("wholesale_accounts")
+    .from("wholesale_portal_accounts")
     .update({ active: false })
     .eq("id", id);
   if (error) throw new Error(error.message);
@@ -120,7 +120,7 @@ export async function deleteAccount(id: string): Promise<void> {
 export async function restoreAccount(id: string): Promise<void> {
   const sb = createSupabaseService();
   const { error } = await sb
-    .from("wholesale_accounts")
+    .from("wholesale_portal_accounts")
     .update({ active: true })
     .eq("id", id);
   if (error) throw new Error(error.message);

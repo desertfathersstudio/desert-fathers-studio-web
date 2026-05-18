@@ -1,4 +1,4 @@
-// SECURITY: Account data (including PINs) is now stored in the wholesale_accounts
+// SECURITY: Account data (including PINs) is now stored in the wholesale_portal_accounts
 // DB table and accessed via lib/wholesale/accounts-server.ts (server-only).
 // This file contains only the shared type interface used across the codebase.
 
